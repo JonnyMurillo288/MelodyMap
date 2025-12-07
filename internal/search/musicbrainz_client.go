@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
@@ -110,26 +111,31 @@ func (c *MBClient) LookupArtist(id string) (*mbArtistLookup, error) {
 func ResolveArtistOnce(dsn, name string) (*sixdegrees.Artists, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open db: %w", err)
 	}
 	defer db.Close()
-	_, _ = db.Exec("SET search_path TO musicbrainz;")
+
+	// Ensure search_path or use full schema
 	const q = `
-        SELECT gid, name
-        FROM artist
+        SELECT id, gid::text, name
+        FROM musicbrainz.artist
         WHERE lower(name) = lower($1)
-        ORDER BY name
         LIMIT 1;
     `
 
-	var gid, cname string
-	err = db.QueryRow(q, name).Scan(&gid, &cname)
+	var (
+		intID int
+		mbid  string
+		cname string
+	)
+
+	err = db.QueryRow(q, name).Scan(&intID, &mbid, &cname)
 	if err != nil {
 		return nil, err
 	}
 
 	return &sixdegrees.Artists{
-		ID:   gid,
+		ID:   strconv.Itoa(intID), // BFS uses string IDs but expects *integer values*
 		Name: cname,
 	}, nil
 }
