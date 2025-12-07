@@ -87,7 +87,10 @@ func RunSearchOptsBFS(
 		item := queue[0]
 		queue = queue[1:]
 		SearchTicker.Artist = item.A.Name
-		SearchTicker.Depth = item.Depth
+		// Only update if it goes up, do not revert down
+		if item.Depth > SearchTicker.Depth {
+			SearchTicker.Depth = item.Depth
+		}
 
 		// timeout
 		if time.Since(startTime) > maxSearchDuration {

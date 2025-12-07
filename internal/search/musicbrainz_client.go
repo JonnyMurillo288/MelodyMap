@@ -1,11 +1,14 @@
 package search
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
+
+	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
 
 const mbBaseURL = "https://musicbrainz.org/ws/2"
@@ -100,4 +103,33 @@ func (c *MBClient) LookupArtist(id string) (*mbArtistLookup, error) {
 		return nil, err
 	}
 	return &resp, nil
+}
+
+// NOT A CLIENT BY DB, GOING TO FIX IN THE FUTURE
+
+func ResolveArtistOnce(dsn, name string) (*sixdegrees.Artists, error) {
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	const q = `
+        SELECT gid, name
+        FROM artist
+        WHERE lower(name) = lower($1)
+        ORDER BY name
+        LIMIT 1;
+    `
+
+	var gid, cname string
+	err = db.QueryRow(q, name).Scan(&gid, &cname)
+	if err != nil {
+		return nil, err
+	}
+
+	return &sixdegrees.Artists{
+		ID:   gid,
+		Name: cname,
+	}, nil
 }

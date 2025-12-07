@@ -171,12 +171,19 @@ async function fetchNeighbors(name) {
   }
 }
 
+let lastTickerText = "";
+let lastWarningText = "";
+let tickerInterval = null;
+
 async function updateSearchTicker() {
+  const tickerEl = document.getElementById("searchTicker");
+  const warningEl = document.getElementById("searchWarning");
+  if (!tickerEl || !warningEl) return;
+
   try {
     const res = await fetch("/api/search/ticker", {
       headers: { "X-SDS-Token": window.SDSToken }
     });
-
     if (!res.ok) return;
 
     const data = await res.json();
@@ -184,36 +191,36 @@ async function updateSearchTicker() {
     const newTickerText = `Searching - ${data.artist}: ${data.count}/${data.max}`;
     const newWarningText = `Depth: ${data.depth} levels`;
 
-    // Fade out before updating text
-    ticker.classList.remove("visible");
-    searchWarning.classList.remove("visible");
+    // ------------------------------
+    // Only update DOM when changed
+    // ------------------------------
+    if (newTickerText !== lastTickerText) {
+      tickerEl.textContent = newTickerText;
+      lastTickerText = newTickerText;
+    }
 
-    // Wait a frame so CSS transition can apply cleanly
-    void ticker.offsetWidth;
-
-    ticker.textContent = newTickerText;
-    searchWarning.textContent = newWarningText;
-
-    // Fade back in
-    ticker.classList.add("visible");
-    searchWarning.classList.add("visible");
+    if (newWarningText !== lastWarningText) {
+      warningEl.textContent = newWarningText;
+      lastWarningText = newWarningText;
+    }
 
   } catch (err) {
     console.error("ticker error:", err);
   }
 }
 
-
-let tickerInterval = null;
-
 function startTicker() {
-  if (tickerInterval) clearInterval(tickerInterval);
-  tickerInterval = setInterval(updateSearchTicker, 400);
+  if (tickerInterval) return;  // already running, don’t start again
+  tickerInterval = setInterval(updateSearchTicker, 200);
 }
 
 function stopTicker() {
-  if (tickerInterval) clearInterval(tickerInterval);
+  if (!tickerInterval) return;
+  clearInterval(tickerInterval);
   tickerInterval = null;
+
+  // Don't clear the UI — persist last known state
+  // ticker stays on screen until a new search resets it
 }
 
 

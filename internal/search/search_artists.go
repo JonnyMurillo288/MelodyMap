@@ -2,10 +2,9 @@ package search
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
-
-	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
 
 // This version matches your handlers & background BFS.
@@ -27,29 +26,19 @@ func SearchArtists(
 
 	startTime := time.Now().UTC().Unix()
 
-	// Create MB searcher + provider internally
-	mb := NewMBClient()
-
 	// ------------------------
 	// Resolve START
-	startHits, err := mb.SearchArtist(start)
-	if err != nil || len(startHits) == 0 {
-		return 0, nil, fmt.Sprint(err), 404, nil
-	}
-	startArtist := &sixdegrees.Artists{
-		ID:   startHits[0].ID,
-		Name: startHits[0].Name,
+	startArtist, err := ResolveArtistOnce(os.Getenv("PG_DSN"), start)
+	if err != nil {
+		return 0, nil, "start artist not found", 404, nil
 	}
 
 	// ------------------------
 	// Resolve TARGET
-	targetHits, err := mb.SearchArtist(target)
-	if err != nil || len(targetHits) == 0 {
+
+	targetArtist, err := ResolveArtistOnce(os.Getenv("PG_DSN"), target)
+	if err != nil {
 		return 0, nil, "target artist not found", 404, nil
-	}
-	targetArtist := &sixdegrees.Artists{
-		ID:   targetHits[0].ID,
-		Name: targetHits[0].Name,
 	}
 
 	// ------------------------
