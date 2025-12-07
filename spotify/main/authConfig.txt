@@ -1,0 +1,9 @@
+{
+  "client_id": "9ce2d15fb4114cceb56097c7fa53e734",
+  "client_secret": "6a94edbec2cf45a290b4f3d53762c403",
+  "redirect_url": "http://127.0.0.1:8080/callback",
+  "scopes": [
+    "user-read-email",
+    "user-read-private"
+  ]
+}

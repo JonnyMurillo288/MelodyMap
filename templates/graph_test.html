@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>SixDegreeSpotify</title>
+
+
+  <script>
+    window.SDSToken = "{{ .Token }}";
+  </script>
+  <!-- Graphology + Sigma -->
+  <script src="https://unpkg.com/graphology@0.25.4/dist/graphology.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="static/style.css" type="text/css" />
+</head>
+
+<body>
+  <div class="page">
+    <header>
+      <div class="header-left">
+        <h1><span class="logo-dot"></span>SixDegreeSpotify</h1>
+        <div class="header-subtitle">
+          Visualize collaboration paths between artists & generate playlists from the links.
+        </div>
+        <div class="header-badges">
+          <span class="badge badge-accent">MusicBrainz + Spotify</span>
+          <span class="badge">Galaxy Graph View</span>
+          <span class="badge">Track-weighted edges</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn btn-ghost" href="https://jonnymurilloblog543591113.wordpress.com/" target="_blank">Other Projects</a>
+        <a class="btn btn-ghost" href="/status" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">>Status</a>
+        <a class="btn btn-primary" href="https://buymeacoffee.com/jmurillo" target="_blank">Buy Me a Coffee</a>
+        <a class="btn btn-primary" href="/ml" target="_blank">Advanced ML Analyses</a>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Left = Search card -->
+      <section class="card">
+        <h2 class="card-title">Search for a collaboration path</h2>
+        <div class="card-subtitle">
+          Pick two artists. I’ll resolve them via MusicBrainz, run a multi-hop BFS, and render the strongest links.
+        </div>
+        <!-- 🔥 Search Ticker -->
+        <div id="searchTicker" class="search-ticker" style="min-height:20px;"></div>
+        <div id="searchWarning" style="color:#f87171; margin-top:4px; font-size:0.9rem;"></div>
+
+        <form id="searchForm">
+
+          <div class="row">
+            <div class="field-group">
+              <label for="startArtist">Start Artist</label>
+              <div class="autocomplete-container">
+                <input id="startArtist" type="text" placeholder="Eminem" autocomplete="off" />
+                <div class="autocomplete-list" data-for="startArtist"></div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="targetArtist">Target Artist</label>
+              <div class="autocomplete-container">
+                <input id="targetArtist" type="text" placeholder="Taylor Swift" autocomplete="off" />
+                <div class="autocomplete-list" data-for="targetArtist"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field-group">
+              <label for="depth">Max Depth (optional)</label>
+              <div class="input-shell">
+                <input id="depth" type="number" min="-1" value="-1" />
+              </div>
+              <div class="muted">-1 = unlimited. Use 4–6 for faster results.</div>
+            </div>
+          </div>
+
+
+          <div class="search-actions">
+            <button class="btn btn-primary" type="submit">Search Path</button>
+            <span id="spinner" class="spinner">Searching graph…</span>
+            <div class="pill">
+              <span>ℹ︎</span>
+              <span>Heavy queries can take a while.</span>
+            </div>
+          </div>
+
+          <div class="field-group playlist-group">
+            <label for="playlistName">Spotify Playlist (optional)</label>
+            <div class="row">
+              <input id="playlistName" type="text" placeholder="Playlist Name (optional)" />
+              <button class="btn btn-ghost" type="button" id="createPlaylistBtn" onclick="createPlaylist()">
+                Create Spotify Playlist
+              </button>
+            </div>
+            <div class="muted">I'll match each link’s track to Spotify and build a playlist.</div>
+          </div>
+
+        </form>
+
+        <div id="results"></div>
+      </section>
+
+      <!-- Right = Graph -->
+      <section class="card" id="graph-card">
+        <div class="graph-header">
+          <div>
+            <h2 class="card-title">Collaboration Galaxy</h2>
+            <div class="card-subtitle">
+              Each node is an artist; edges scale by shared track count.
+            </div>
+            <div class="card-subtitle">
+              Desktop: Hover a Node to view path.
+              Mobile: Tap "Mobile Tap Neighbor Mode" to view path from selected node.
+            </div>
+          </div>
+        </div>
+
+        <div id="graph"></div>
+
+        <!-- Graph Controls -->
+        <div id="graph-controls">
+          <div class="graph-controls-left">
+
+            <!-- RENAMED BUTTON -->
+            <button class="btn btn-ghost" id="mobileTapBtn">
+              Mobile Tap Neighbor Mode
+            </button>
+
+
+            <button class="btn btn-ghost" id="toggleNeighborsBtn">Hide Neighbors</button>
+            <button class="btn btn-ghost" id="collapseNeighborsBtn">Collapse Neighbors</button>
+
+            <!-- Neighbor limit slider -->
+            <div class="neighbor-limit" style="display:flex;align-items:center;gap:8px;">
+              <label for="neighborLimit">Limit:</label>
+              <input type="range" id="neighborLimit" min="1" max="500" value="60" />
+              <span id="neighborLimitValue">40</span>
+            </div>
+          </div>
+
+          <div class="graph-controls-right">
+            <div class="graph-legend">
+              <span class="legend-item"><span class="legend-dot legend-start"></span> Start</span>
+              <span class="legend-item"><span class="legend-dot legend-target"></span> Target</span>
+              <span class="legend-item"><span class="legend-dot legend-path"></span> Path</span>
+              <span class="legend-item"><span class="legend-dot legend-neighbor"></span> Neighbors</span>
+            </div>
+
+            <div class="graph-jump">
+              <select id="nodeSelect"><option value="">Jump to node…</option></select>
+              <button class="btn btn-ghost" id="jumpToNodeBtn">Go</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </div>
+
+  <!-- App Logic -->
+  <script src="static/app_v2.js"></script>
+</body>
+</html>

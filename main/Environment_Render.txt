@@ -1,0 +1,6 @@
+SPOTIFY_CLIENT_ID=xxxx
+SPOTIFY_CLIENT_SECRET=yyyy
+SPOTIFY_REDIRECT_URL=https://yourdomain.com/auth
+SPOTIFY_SCOPES=user-read-email user-library-read
+PG_DSN="psql -h musicbrainz.cb06ssagi21v.us-east-2.rds.amazonaws.com -U postgres"
+SDS_TOKEN_SECRET="a-very-long-random-string"

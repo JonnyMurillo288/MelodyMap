@@ -1,0 +1,45 @@
+Pop artist from queue
+
+Call DB
+
+If missing, call API
+
+Merge albums
+
+Merge tracks
+
+Add edges
+
+Push new artists
+
+Repeat
+
+
+BFS → needs neighbors → call DB → call API → merge → cache → add neighbors → BFS...
+
+// ============== How we will change ===================
+Phase 1: Build / fetch artist node with all neighbors already known  
+Phase 2: BFS only traverses edges
+Search becomes pure graph traversal, not data-fetching.
+
+
+BFS
+├── pop queue
+├── call DB
+├── call API (sometimes)
+├── merge albums
+├── merge tracks
+├── cache writes
+├── add artist neighbors
+├── push queue
+└── repeat
+
+
+
+GraphBuilder.Enrich (DB/API)
+→ builds graph upfront
+
+Search.BFS
+→ only reads graph edges
+→ O(V+E)
+→ no external I/O

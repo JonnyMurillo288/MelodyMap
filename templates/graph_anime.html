@@ -1,0 +1,2376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SixDegreeSpotify</title>
+
+  <!-- Graph libs -->
+  <script src="https://unpkg.com/graphology@0.25.4/dist/graphology.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
+
+  <!-- Anime.js for subtle animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha512-98pw9V7P5Q3qj55HIT2MxvJ+mLjxJvLC+OtJk9g6r5Ge0XEt3G5UpiRaY1oCbcnZ6+QcmGeXjrfs9KqS2kXJaw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Fuse.js for fuzzy autocomplete -->
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.basic.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020617;
+      --bg-alt: #020617;
+      --card-bg: rgba(15, 23, 42, 0.92);
+      --card-border: rgba(148, 163, 184, 0.4);
+      --card-shadow: 0 24px 70px rgba(15, 23, 42, 0.9);
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.14);
+      --accent-strong: #4ade80;
+      --accent-gradient: linear-gradient(135deg, #22c55e, #38bdf8);
+      --danger: #f97373;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --text-soft: #6b7280;
+      --chip-bg: rgba(15, 23, 42, 0.9);
+      --hover-bg: rgba(15, 23, 42, 0.9);
+      --input-bg: rgba(15, 23, 42, 0.9);
+      --input-border: rgba(148, 163, 184, 0.6);
+      --pill-bg: rgba(15, 23, 42, 0.96);
+      --pill-border: rgba(148, 163, 184, 0.5);
+      --badge-bg: rgba(34, 197, 94, 0.12);
+      --badge-border: rgba(34, 197, 94, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.35), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(22, 163, 74, 0.4), transparent 60%),
+        radial-gradient(circle at 0% 75%, rgba(8, 47, 73, 0.7), transparent 50%),
+        linear-gradient(160deg, #020617, #020617);
+      padding: 1.75rem 1.5rem 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1320px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    .logo-pill {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background-image: radial-gradient(circle at 0 0, #22c55e 0, #22c55e 30%, #0ea5e9 85%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 0.9),
+        0 16px 45px rgba(34, 197, 94, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-pill span {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #ecfeff;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    h1 span.highlight {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .header-sub {
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      max-width: 520px;
+    }
+
+    .header-sub strong {
+      color: var(--accent-strong);
+      font-weight: 500;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.25rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.7);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: var(--text-muted);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
+    }
+
+    .badge-soft {
+      border-color: var(--badge-border);
+      background: var(--badge-bg);
+      color: var(--accent-strong);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-main);
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 550;
+      transition:
+        background 140ms ease,
+        border-color 140ms ease,
+        box-shadow 140ms ease,
+        transform 140ms ease,
+        opacity 140ms ease;
+      opacity: 0.96;
+    }
+
+    .btn-primary {
+      border-color: rgba(34, 197, 94, 0.7);
+      background-image: linear-gradient(135deg, #22c55e, #0ea5e9);
+      color: #f9fafb;
+      box-shadow:
+        0 8px 30px rgba(34, 197, 94, 0.45),
+        0 0 0 1px rgba(15, 23, 42, 0.7);
+    }
+
+    .btn-outline {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: transparent;
+      opacity: 0.9;
+    }
+
+    .btn small {
+      opacity: 0.8;
+      font-weight: 450;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-primary:hover {
+      background-image: linear-gradient(135deg, #4ade80, #38bdf8);
+      box-shadow:
+        0 12px 40px rgba(34, 197, 94, 0.6),
+        0 0 0 1px rgba(15, 23, 42, 0.7);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.8);
+    }
+
+    .btn-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 360px) minmax(0, 1.55fr);
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 1.4rem;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+      padding: 1.2rem 1.25rem 1.35rem;
+      backdrop-filter: blur(18px) saturate(145%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.65;
+      background:
+        radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.12), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.12), transparent 55%);
+      mix-blend-mode: soft-light;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.9rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-title-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.9);
+      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.28);
+    }
+
+    .card-sub {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    form {
+      margin-top: 0.7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .field-group {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    label span.label-pill {
+      font-size: 0.7rem;
+      padding: 0.05rem 0.4rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.9);
+      margin-left: 0.4rem;
+      vertical-align: middle;
+      color: var(--text-soft);
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 0.7rem;
+    }
+
+    input[type=text],
+    input[type=number] {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border-radius: 0.9rem;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition:
+        border-color 130ms ease,
+        box-shadow 130ms ease,
+        background 130ms ease,
+        transform 90ms ease;
+    }
+
+    input[type=text]::placeholder,
+    input[type=number]::placeholder {
+      color: rgba(156, 163, 175, 0.7);
+    }
+
+    input[type=text]:focus,
+    input[type=number]:focus {
+      border-color: rgba(34, 197, 94, 0.9);
+      box-shadow:
+        0 0 0 1px rgba(34, 197, 94, 0.5),
+        0 0 0 7px rgba(34, 197, 94, 0.18);
+      transform: translateY(-0.5px);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .helper-text {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      margin-top: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .helper-text strong {
+      color: var(--accent-strong);
+      font-weight: 500;
+    }
+
+    .helper-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.8);
+    }
+
+    .primary-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.4rem;
+    }
+
+    .spinner {
+      display: none;
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .spinner-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      border-top-color: rgba(34, 197, 94, 0.9);
+      animation: spin 580ms linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(1turn);
+      }
+    }
+
+    .muted {
+      color: var(--text-soft);
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+    }
+
+    .muted strong {
+      color: var(--accent-strong);
+      font-weight: 500;
+    }
+
+    .error {
+      color: var(--danger);
+      font-size: 0.8rem;
+      margin-top: 0.45rem;
+    }
+
+    .playlist-row {
+      margin-top: 0.55rem;
+      padding-top: 0.55rem;
+      border-top: 1px dashed rgba(148, 163, 184, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .playlist-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) auto;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    /* Autocomplete */
+
+    .autocomplete {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 0.28rem;
+      background: rgba(15, 23, 42, 0.98);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(51, 65, 85, 0.95);
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.85);
+      padding: 0.12rem;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 30;
+      display: none;
+    }
+
+    .autocomplete-item {
+      padding: 0.36rem 0.6rem;
+      border-radius: 0.6rem;
+      font-size: 0.8rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition:
+        background 120ms ease,
+        transform 80ms ease,
+        color 120ms ease;
+    }
+
+    .autocomplete-item span.key {
+      opacity: 0.85;
+    }
+
+    .autocomplete-item span.meta {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+    }
+
+    .autocomplete-item:hover {
+      background: rgba(15, 118, 110, 0.5);
+      transform: translateY(-0.5px);
+    }
+
+    /* Right side: Graph + timeline */
+
+    .graph-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(0, 0.95fr);
+      gap: 0.9rem;
+      height: 100%;
+    }
+
+    #graphCard {
+      padding: 0;
+    }
+
+    #graphCard .card-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #graphHeader {
+      padding: 0.9rem 1.05rem 0.6rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.9rem;
+    }
+
+    #graphTitleGroup {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    #graphTitle {
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    #graphTitle span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.35);
+    }
+
+    #graphSubtitle {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    #graphStats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      font-size: 0.7rem;
+    }
+
+    .stat-pill {
+      padding: 0.16rem 0.5rem;
+      border-radius: 999px;
+      background: var(--pill-bg);
+      border: 1px solid var(--pill-border);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--text-soft);
+    }
+
+    .stat-pill strong {
+      color: var(--accent-strong);
+      font-weight: 500;
+    }
+
+    #graph {
+      margin-top: 0;
+      border-top: none;
+      border-bottom-left-radius: 1.4rem;
+      border-bottom-right-radius: 1.4rem;
+      border: none;
+      height: 460px;
+      position: relative;
+      background: radial-gradient(circle at 0% 0%, rgba(8, 47, 73, 0.9), transparent 65%),
+                  radial-gradient(circle at 100% 100%, rgba(22, 101, 52, 0.9), transparent 55%),
+                  radial-gradient(circle at 0% 100%, rgba(30, 64, 175, 0.95), transparent 65%);
+      overflow: hidden;
+    }
+
+    #graphOverlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.4) 1px, transparent 0);
+      background-size: 26px 26px;
+      mix-blend-mode: screen;
+    }
+
+    #graph-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+      padding: 0.55rem 1.05rem 0.8rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      background: radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.98), transparent 60%);
+    }
+
+    .graph-controls-left,
+    .graph-controls-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .chip {
+      font-size: 0.72rem;
+      padding: 0.28rem 0.5rem;
+      border-radius: 999px;
+      background: var(--chip-bg);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      color: var(--text-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .chip strong {
+      color: var(--accent-strong);
+      font-weight: 500;
+    }
+
+    .control-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.95);
+      width: 26px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition:
+        background 120ms ease,
+        transform 100ms ease,
+        box-shadow 120ms ease,
+        border-color 120ms ease;
+    }
+
+    .control-btn:hover {
+      background: rgba(15, 118, 110, 0.7);
+      border-color: rgba(34, 197, 94, 0.75);
+      color: #f9fafb;
+      transform: translateY(-0.5px);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.9);
+    }
+
+    #nodeSelect {
+      padding: 0.24rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+      font-size: 0.78rem;
+      outline: none;
+      max-width: 200px;
+    }
+
+    #resultsCard {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    #results {
+      font-size: 0.8rem;
+      color: var(--text-main);
+    }
+
+    #results p {
+      margin: 0 0 0.35rem;
+    }
+
+    #results ol {
+      margin: 0.4rem 0 0;
+      padding-left: 1.1rem;
+    }
+
+    #results li {
+      margin-bottom: 0.35rem;
+      color: var(--text-soft);
+    }
+
+    #results strong {
+      color: var(--accent-strong);
+    }
+
+    .results-meta {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .timeline {
+      margin-top: 0.2rem;
+      border-top: 1px dashed rgba(148, 163, 184, 0.5);
+      padding-top: 0.6rem;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding: 0.4rem 0.55rem 0.4rem 1.4rem;
+      border-radius: 0.75rem;
+      margin-bottom: 0.35rem;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      transition:
+        transform 100ms ease,
+        box-shadow 120ms ease,
+        border-color 120ms ease,
+        background 120ms ease;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: 0.6rem;
+      top: 0.7rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-strong);
+      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.22);
+    }
+
+    .timeline-item:hover {
+      background: rgba(15, 118, 110, 0.7);
+      transform: translateY(-1px);
+      border-color: rgba(34, 197, 94, 0.8);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.95);
+    }
+
+    .timeline-main {
+      font-size: 0.8rem;
+      color: #e5e7eb;
+    }
+
+    .timeline-main span.artist {
+      font-weight: 500;
+    }
+
+    .timeline-main span.arrow {
+      opacity: 0.6;
+      margin: 0 0.3rem;
+    }
+
+    .timeline-track {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .timeline-meta {
+      font-size: 0.72rem;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .timeline-meta span {
+      margin-right: 0.55rem;
+    }
+
+    #edge-tooltip {
+      position: absolute;
+      background: radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.32), transparent 60%),
+                  rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      padding: 7px 7px 7px;
+      border-radius: 0.9rem;
+      display: none;
+      pointer-events: none;
+      z-index: 9999;
+      max-width: 260px;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(14px) saturate(140%);
+    }
+
+    #edge-tooltip img {
+      width: 110px;
+      height: 110px;
+      border-radius: 0.6rem;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 4px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+    }
+
+    #edge-tooltip .title {
+      color: var(--text-main);
+      font-size: 0.78rem;
+      margin-top: 2px;
+      text-align: center;
+      word-wrap: break-word;
+      font-weight: 500;
+    }
+
+    #edge-tooltip .subtitle {
+      color: var(--text-soft);
+      font-size: 0.7rem;
+      margin-top: 2px;
+      text-align: center;
+    }
+
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .graph-layout {
+        grid-template-columns: minmax(0, 1fr);
+        height: auto;
+      }
+      #graph {
+        height: 420px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1.1rem 1rem 1.5rem;
+      }
+      header {
+        gap: 1rem;
+      }
+      .actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .graph-layout {
+        gap: 0.75rem;
+      }
+      #graph {
+        height: 360px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="brand">
+        <div class="brand-row">
+          <div class="logo-pill">
+            <span>SD</span>
+          </div>
+          <h1>
+            <span>SixDegree</span>
+            <span class="highlight">Spotify</span>
+          </h1>
+        </div>
+        <div class="header-sub">
+          Map the <strong>shortest collaboration path</strong> between two artists and explore
+          the dense web of tracks that connects them.
+        </div>
+        <div class="badges">
+          <div class="badge badge-soft">
+            <span class="badge-dot"></span> MusicBrainz graph
+          </div>
+          <div class="badge">
+            <span>Weighted edges by track count</span>
+          </div>
+          <div class="badge">
+            <span>Interactive neighbor expansion</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="https://buymeacoffee.com/jmurillo" target="_blank" rel="noopener">
+          <span class="btn-icon">☕</span>
+          <span>Support</span>
+        </a>
+        <a class="btn btn-outline" href="https://jonnymurilloblog543591113.wordpress.com/" target="_blank" rel="noopener">
+          <span class="btn-icon">↗</span>
+          <span>Other Projects</span>
+        </a>
+        <a class="btn btn-ghost" href="/status" target="_blank" rel="noopener">
+          <span class="btn-icon" style="border-color: rgba(34,197,94,0.7); color: #bbf7d0;">●</span>
+          <span><small>Status</small></span>
+        </a>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- LEFT CARD: SEARCH / CONTROLS -->
+      <section class="card" id="searchCard">
+        <div class="card-inner">
+          <div class="card-header-row">
+            <div>
+              <div class="card-title">
+                <span class="card-title-dot"></span>
+                <span>Search Artists</span>
+              </div>
+              <div class="card-sub">
+                Type any two artists and we’ll try to find the collaboration path between them.
+              </div>
+            </div>
+          </div>
+
+          <form id="searchForm">
+            <div class="field-row">
+              <div class="field-group">
+                <label for="startArtist">
+                  Start Artist
+                  <span class="label-pill">Source</span>
+                </label>
+                <input id="startArtist" type="text" placeholder="Eminem" autocomplete="off" required />
+                <div class="autocomplete" id="startAutocomplete"></div>
+              </div>
+              <div class="field-group">
+                <label for="targetArtist">
+                  Target Artist
+                  <span class="label-pill">Destination</span>
+                </label>
+                <input id="targetArtist" type="text" placeholder="Taylor Swift" autocomplete="off" required />
+                <div class="autocomplete" id="targetAutocomplete"></div>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field-group">
+                <label for="depth">
+                  Max Depth
+                  <span class="label-pill">Optional</span>
+                </label>
+                <input id="depth" type="number" min="-1" step="1" value="-1"
+                       placeholder="-1 (unbounded up to cap)" />
+                <div class="helper-text">
+                  <span class="helper-dot"></span>
+                  <span><strong>-1</strong> will search until a cap; use <strong>3–6</strong> for quicker answers.</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label>
+                  Tips
+                  <span class="label-pill">Hints</span>
+                </label>
+                <div class="helper-text">
+                  <span class="helper-dot"></span>
+                  Try a mainstream artist on at least one side to hit the graph quickly.
+                </div>
+                <div class="helper-text">
+                  <span class="helper-dot"></span>
+                  Click nodes in the graph to expand their neighbors.
+                </div>
+              </div>
+            </div>
+
+            <div class="primary-actions">
+              <button class="btn btn-primary" type="submit" id="searchButton">
+                <span class="btn-icon">⏎</span>
+                <span>Search Path</span>
+              </button>
+              <div class="spinner" id="spinner">
+                <div class="spinner-dot"></div>
+                <span>Crunching collaboration graph… this can be slow for deep paths.</span>
+              </div>
+            </div>
+
+            <div class="muted">
+              For long paths and obscure artists, searches can take up to <strong>30 minutes</strong>.
+              You can keep exploring the graph while it runs.
+            </div>
+
+            <div class="playlist-row">
+              <div class="card-sub" style="font-size:0.78rem;">Generate a Spotify playlist from the path.</div>
+              <div class="playlist-fields">
+                <input id="playlistName" type="text" placeholder="Playlist Name (optional)"
+                       value="" autocomplete="off" />
+                <button class="btn btn-outline" type="button" onclick="startAuthAndPlaylist()">
+                  <span class="btn-icon">♪</span>
+                  <span>Create Playlist</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- RIGHT: GRAPH + RESULTS -->
+      <section class="graph-layout">
+        <div class="card" id="graphCard">
+          <div class="card-inner">
+            <div id="graphHeader">
+              <div id="graphTitleGroup">
+                <div id="graphTitle">
+                  <span class="dot"></span>
+                  <span>Collaboration Graph</span>
+                </div>
+                <div id="graphSubtitle">
+                  Edge width encodes <strong>number of tracks</strong> linking two artists.
+                  Hover edges to preview tracks.
+                </div>
+              </div>
+              <div id="graphStats">
+                <span class="stat-pill">
+                  Hops: <strong><span id="statHops">–</span></strong>
+                </span>
+                <span class="stat-pill">
+                  Artists on path: <strong><span id="statNodes">–</span></strong>
+                </span>
+                <span class="stat-pill">
+                  Tracks on path: <strong><span id="statTracks">–</span></strong>
+                </span>
+              </div>
+            </div>
+
+            <div id="graph">
+              <div id="graphOverlay"></div>
+              <!-- Sigma canvas mounts here -->
+            </div>
+
+            <div id="graph-controls">
+              <div class="graph-controls-left">
+                <button class="btn btn-outline" id="toggleNeighborsBtn" type="button">
+                  <span class="btn-icon">◎</span>
+                  <span>Hide Neighbors</span>
+                </button>
+                <button class="btn btn-outline" id="collapseNeighborsBtn" type="button">
+                  <span class="btn-icon">✕</span>
+                  <span>Collapse All</span>
+                </button>
+                <div class="chip">
+                  <span>Click nodes to expand neighbors.</span>
+                </div>
+              </div>
+
+              <div class="graph-controls-right">
+                <select id="nodeSelect">
+                  <option value="">Jump to node…</option>
+                </select>
+                <button class="btn btn-outline" id="jumpToNodeBtn" type="button">
+                  <span class="btn-icon">↦</span>
+                  <span>Go</span>
+                </button>
+                <div class="chip">
+                  <span>View</span>
+                  <button class="control-btn" id="zoomInBtn" type="button">＋</button>
+                  <button class="control-btn" id="zoomOutBtn" type="button">−</button>
+                  <button class="control-btn" id="resetViewBtn" type="button">◎</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="card" id="resultsCard">
+          <div class="card-inner">
+            <div class="card-header-row">
+              <div>
+                <div class="card-title">
+                  <span class="card-title-dot"></span>
+                  <span>Path Summary</span>
+                </div>
+                <div class="card-sub">
+                  Once a path is found, you’ll see each hop and its tracks listed here.
+                </div>
+              </div>
+            </div>
+
+            <div id="results"></div>
+
+            <div class="results-meta" id="resultsMeta"></div>
+
+            <div class="timeline" id="timeline"></div>
+          </div>
+        </section>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    /* ================================
+       GLOBALS / CONSTANTS
+    ===================================*/
+
+    const Graph = window.graphology.Graph;
+    const SigmaLib = window.Sigma;
+
+    let graph = null;
+    let renderer = null;
+
+    const START_COLOR         = "#22c55e";      // green
+    const TARGET_COLOR        = "#fb7185";      // soft red
+    const PATH_NODE_COLOR     = "#38bdf8";      // cyan
+    const NEIGHBOR_NODE_COLOR = "#64748b";      // slate grey
+
+    const START_SIZE          = 60;
+    const TARGET_SIZE         = 60;
+    const PATH_NODE_SIZE      = 38;
+    const NEIGHBOR_NODE_SIZE  = 16;
+
+    const NEIGHBOR_EDGE_COLOR = "#64748b";
+    const NEIGHBOR_EDGE_WIDTH = 1.5;
+    const PATH_EDGE_COLOR     = "#22c55e";
+
+    const HOVER_DIM_COLOR     = "#4b5563";
+
+    // Neighbor lookup:
+    // { "eminem": { ID, Name, Neighbors: [...] }, ... }
+    let neighborLookupIndex = null;
+
+    // Show/hide neighbors
+    let showNeighbors = true;
+
+    // Track expansions per anchor node: name -> { nodes: [], edges: [] }
+    const expandedByNode = new Map();
+
+    // Path highlight sets
+    let currentPath = [];
+    const pathNodeSet = new Set();
+    const pathEdgeSet = new Set();
+
+    // Hover state
+    const reducerState = {
+      hoveredNode: null,
+      hoveredNeighbors: new Set(),
+    };
+
+    // Direction state for clustered randomness
+    const clusterSideByNode = new Map();
+
+    const startInput         = document.getElementById("startArtist");
+    const targetInput        = document.getElementById("targetArtist");
+    const playlistNameInput  = document.getElementById("playlistName");
+    const depthInput         = document.getElementById("depth");
+    const resultsDiv         = document.getElementById("results");
+    const resultsMetaDiv     = document.getElementById("resultsMeta");
+    const timelineDiv        = document.getElementById("timeline");
+    const spinner            = document.getElementById("spinner");
+    const searchButton       = document.getElementById("searchButton");
+    const toggleNeighborsBtn = document.getElementById("toggleNeighborsBtn");
+    const collapseNeighborsBtn = document.getElementById("collapseNeighborsBtn");
+    const nodeSelect         = document.getElementById("nodeSelect");
+    const jumpToNodeBtn      = document.getElementById("jumpToNodeBtn");
+    const zoomInBtn          = document.getElementById("zoomInBtn");
+    const zoomOutBtn         = document.getElementById("zoomOutBtn");
+    const resetViewBtn       = document.getElementById("resetViewBtn");
+
+    const statHopsEl   = document.getElementById("statHops");
+    const statNodesEl  = document.getElementById("statNodes");
+    const statTracksEl = document.getElementById("statTracks");
+
+    const startAutocomplete = document.getElementById("startAutocomplete");
+    const targetAutocomplete = document.getElementById("targetAutocomplete");
+
+    // Suggestions for autocomplete (artist names from previous searches + paths)
+    const suggestionSet = new Set();
+    let suggestionList = [];
+    let fuse = null;
+
+    function rebuildFuse() {
+      suggestionList = Array.from(suggestionSet);
+      if (suggestionList.length) {
+        fuse = new Fuse(suggestionList, {
+          includeScore: true,
+          threshold: 0.38,
+        });
+      } else {
+        fuse = null;
+      }
+    }
+
+    function pushSuggestion(name) {
+      if (!name) return;
+      suggestionSet.add(name);
+    }
+
+    function populateSuggestionsFromPath(path) {
+      if (!Array.isArray(path)) return;
+      path.forEach(step => {
+        if (step.from) pushSuggestion(step.from);
+        if (step.to) pushSuggestion(step.to);
+      });
+      rebuildFuse();
+    }
+
+    /* ================================
+       SMALL HELPERS
+    ===================================*/
+
+    function safeTracksFromStep(step) {
+      if (!step) return [];
+
+      // Single-track API (backend: From, Track, To, TrackID, TrackURL)
+      if (step.track || step.Track) {
+        return [{
+          name: step.track || step.Track || "",
+          url: step.trackURL || step.TrackURL || "",
+          id: step.trackID || step.TrackID || "",
+          recordingID: step.recordingID || step.RecordingID || "",
+        }];
+      }
+
+      // Multi-track format: step.tracks[]
+      if (Array.isArray(step.tracks)) {
+        return step.tracks.map(t => ({
+          name: t.name || t.Name || "",
+          url: t.url || t.PhotoURL || "",
+          id: t.id || t.ID || "",
+          recordingID: t.recordingID || t.RecordingID || "",
+        }));
+      }
+
+      return [];
+    }
+
+    function computeArtistPositionsFromEdges(edges) {
+      const pos = new Map();
+      let i = 0;
+      edges.forEach(edge => {
+        if (edge.from && !pos.has(edge.from)) pos.set(edge.from, i++);
+        if (edge.to && !pos.has(edge.to)) pos.set(edge.to, i++);
+      });
+      return pos;
+    }
+
+    function edgeWidthFromCount(count, isPath) {
+      const safeCount = Math.max(1, count || 1);
+      if (isPath) {
+        // Make paths noticeably thicker for strong links
+        return Math.min(4 + safeCount * 4, 40);
+      }
+      return Math.min(NEIGHBOR_EDGE_WIDTH + safeCount * 1.3, 22);
+    }
+
+    /* ================================
+       NEIGHBOR LOOKUP
+    ===================================*/
+
+    async function loadNeighborLookup() {
+      if (neighborLookupIndex) return neighborLookupIndex;
+
+      try {
+        const res = await fetch("/NeighborLookup.json?ts=" + Date.now());
+        if (!res.ok) {
+          console.error("Failed to load NeighborLookup.json:", await res.text());
+          neighborLookupIndex = {};
+          return neighborLookupIndex;
+        }
+
+        const raw = await res.json();
+        const index = {};
+
+        if (Array.isArray(raw)) {
+          raw.forEach(entry => {
+            if (!entry || !entry.Name) return;
+            const key = entry.Name.toLowerCase();
+            index[key] = entry;
+            pushSuggestion(entry.Name);
+          });
+          rebuildFuse();
+        } else if (typeof raw === "object" && raw !== null) {
+          Object.keys(raw).forEach(k => {
+            const entry = raw[k];
+            if (!entry) return;
+            const name = entry.Name || k;
+            index[name.toLowerCase()] = entry;
+            pushSuggestion(name);
+          });
+          rebuildFuse();
+        }
+
+        neighborLookupIndex = index;
+        return neighborLookupIndex;
+      } catch (err) {
+        console.error("Error loading NeighborLookup.json:", err);
+        neighborLookupIndex = {};
+        return neighborLookupIndex;
+      }
+    }
+
+    function findNeighborsEntryByName(name) {
+      if (!neighborLookupIndex || !name) return null;
+      const lc = name.toLowerCase();
+      return neighborLookupIndex[lc] || null;
+    }
+
+    /* ================================
+       GRAPH HELPERS
+    ===================================*/
+
+    function ensureArtistNode(name, start, target, posMap) {
+      if (!name || !graph) return;
+
+      if (graph.hasNode(name)) {
+        graph.setNodeAttribute(name, "role", "path");
+        if (name === start) {
+          graph.setNodeAttribute(name, "color", START_COLOR);
+          graph.setNodeAttribute(name, "size", START_SIZE);
+        } else if (name === target) {
+          graph.setNodeAttribute(name, "color", TARGET_COLOR);
+          graph.setNodeAttribute(name, "size", TARGET_SIZE);
+        } else {
+          graph.setNodeAttribute(name, "color", PATH_NODE_COLOR);
+          graph.setNodeAttribute(name, "size", PATH_NODE_SIZE);
+        }
+        return;
+      }
+
+      let color = PATH_NODE_COLOR;
+      let size  = PATH_NODE_SIZE;
+      if (name === start) { color = START_COLOR; size = START_SIZE; }
+      else if (name === target) { color = TARGET_COLOR; size = TARGET_SIZE; }
+
+      let x = Math.random() * 6 - 3;
+      let y = Math.random() * 6 - 3;
+      if (posMap && posMap.has(name)) {
+        const idx = posMap.get(name);
+        x = idx * 10;
+        y = Math.sin(idx) * 0.6;
+      }
+
+      graph.addNode(name, {
+        label: name,
+        size,
+        color,
+        x,
+        y,
+        role: "path",
+      });
+    }
+
+    function randomClusterSideForNode(node) {
+      if (clusterSideByNode.has(node)) return clusterSideByNode.get(node);
+
+      const start = startInput.value.trim();
+      const target = targetInput.value.trim();
+
+      let side;
+      if (node === start) {
+        side = "left";
+      } else if (node === target) {
+        side = "right";
+      } else {
+        const ud = ["up", "down"];
+        side = ud[Math.floor(Math.random() * ud.length)];
+      }
+
+      clusterSideByNode.set(node, side);
+      return side;
+    }
+
+    function positionNeighborAroundAnchor(anchor, idx, total, side) {
+      const anchorAttrs = graph.getNodeAttributes(anchor);
+      const ax = anchorAttrs.x || 0;
+      const ay = anchorAttrs.y || 0;
+
+      const t = total <= 1 ? 0 : (idx / (total - 1)) - 0.5;
+      const baseRadius = 8 + Math.random() * 2 + Math.log(idx + 2);
+      const jitterR = (Math.random() - 0.5) * 2;
+      const jitterAngle = (Math.random() - 0.5) * 0.9;
+
+      let baseAngle;
+      switch (side) {
+        case "left":  baseAngle = Math.PI;         break;
+        case "right": baseAngle = 0;               break;
+        case "up":    baseAngle = -Math.PI / 2;    break;
+        case "down":  baseAngle =  Math.PI / 2;    break;
+        default:      baseAngle = Math.random() * Math.PI * 2;
+      }
+
+      const spread = 1.0 + Math.random() * 1.1;
+      const angle = baseAngle + t * spread + jitterAngle;
+      const radius = baseRadius + jitterR;
+
+      const x = ax + Math.cos(angle) * radius;
+      const y = ay + Math.sin(angle) * radius;
+
+      return { x, y };
+    }
+
+    /* ================================
+       AGGREGATION LOGIC
+       - collapse multiple tracks into a single edge
+    ===================================*/
+
+    function aggregatePathEdges(pathArray) {
+      const map = new Map();
+      if (!Array.isArray(pathArray)) return [];
+
+      pathArray.forEach(step => {
+        if (!step) return;
+        const from = step.from || step.From;
+        const to   = step.to   || step.To;
+        if (!from || !to) return;
+
+        const key = `${from}|||${to}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            from,
+            to,
+            tracks: [],
+          });
+        }
+
+        const edge = map.get(key);
+        const tracks = safeTracksFromStep(step);
+        tracks.forEach(t => edge.tracks.push(t));
+      });
+
+      return Array.from(map.values());
+    }
+
+    function aggregateNeighborEntries(neighborsArray) {
+      const map = new Map();
+      if (!Array.isArray(neighborsArray)) return [];
+
+      neighborsArray.forEach(nb => {
+        if (!nb) return;
+
+        const nbName = nb.Name || nb.ID;
+        if (!nbName) return;
+
+        const key = nbName;
+        if (!map.has(key)) {
+          map.set(key, {
+            id: nb.ID,
+            name: nbName,
+            tracks: [],
+            firstTrack: null,
+          });
+        }
+
+        const agg = map.get(key);
+
+        if (Array.isArray(nb.Tracks)) {
+          nb.Tracks.forEach(t => {
+            const trackObj = {
+              name: t.Name,
+              url: t.PhotoURL,
+              id: t.ID,
+              recordingID: t.RecordingID,
+            };
+            agg.tracks.push(trackObj);
+            if (!agg.firstTrack) agg.firstTrack = trackObj;
+          });
+        }
+      });
+
+      return Array.from(map.values());
+    }
+
+    /* ================================
+       NEIGHBOR EXPANSION / COLLAPSE
+    ===================================*/
+
+    async function expandNodeNeighbors(anchorName) {
+      if (!anchorName || !graph) return;
+
+      await loadNeighborLookup();
+
+      const entry = findNeighborsEntryByName(anchorName);
+      if (!entry || !Array.isArray(entry.Neighbors) || entry.Neighbors.length === 0) {
+        console.warn("No neighbors for", anchorName);
+        return;
+      }
+
+      if (!graph.hasNode(anchorName)) {
+        graph.addNode(anchorName, {
+          label: anchorName,
+          size: PATH_NODE_SIZE,
+          color: PATH_NODE_COLOR,
+          x: Math.random() * 6 - 3,
+          y: Math.random() * 6 - 3,
+          role: "path",
+        });
+      }
+
+      const aggregatedNeighbors = aggregateNeighborEntries(entry.Neighbors);
+      const createdNodes = [];
+      const createdEdges = [];
+
+      const side = randomClusterSideForNode(anchorName);
+      const total = aggregatedNeighbors.length;
+
+      aggregatedNeighbors.forEach((agg, idx) => {
+        const nbName = agg.name;
+        if (!nbName) return;
+
+        let isNewNode = false;
+        if (!graph.hasNode(nbName)) {
+          const pos = positionNeighborAroundAnchor(anchorName, idx, total, side);
+          graph.addNode(nbName, {
+            label: nbName,
+            size: NEIGHBOR_NODE_SIZE,
+            color: NEIGHBOR_NODE_COLOR,
+            x: pos.x,
+            y: pos.y,
+            role: "neighbor",
+          });
+          createdNodes.push(nbName);
+          isNewNode = true;
+        } else {
+          const role = graph.getNodeAttribute(nbName, "role");
+          if (!role || role === "neighbor") {
+            graph.setNodeAttribute(nbName, "role", "neighbor");
+            graph.setNodeAttribute(nbName, "color", NEIGHBOR_NODE_COLOR);
+            graph.setNodeAttribute(nbName, "size", NEIGHBOR_NODE_SIZE);
+          }
+        }
+
+        const trackCount = agg.tracks.length;
+        const edgeId = `${anchorName}->${nbName}`;
+
+        const label =
+          trackCount === 1
+            ? (agg.tracks[0].name || `${trackCount} track`)
+            : `${trackCount} tracks`;
+
+        const width = edgeWidthFromCount(trackCount, false);
+        const firstTrack = agg.tracks[0] || {};
+
+        if (!graph.hasEdge(edgeId)) {
+          graph.addEdgeWithKey(edgeId, anchorName, nbName, {
+            label: label,
+            color: NEIGHBOR_EDGE_COLOR,
+            size: width,
+            role: "neighbor",
+            tracks: agg.tracks,
+            trackCount: trackCount,
+            trackURL: firstTrack.url || "",
+          });
+          createdEdges.push(edgeId);
+        } else if (isNewNode) {
+          graph.setEdgeAttribute(edgeId, "role", "neighbor");
+        }
+      });
+
+      if (createdNodes.length || createdEdges.length) {
+        const existing = expandedByNode.get(anchorName) || { nodes: [], edges: [] };
+        expandedByNode.set(anchorName, {
+          nodes: existing.nodes.concat(createdNodes),
+          edges: existing.edges.concat(createdEdges),
+        });
+      }
+
+      if (renderer) {
+        refreshNodeDropdown();
+        renderer.refresh();
+      }
+    }
+
+    function collapseNodeNeighbors(anchorName) {
+      if (!graph) return;
+      const record = expandedByNode.get(anchorName);
+      if (!record) return;
+
+      record.edges.forEach(eId => {
+        if (graph.hasEdge(eId)) graph.dropEdge(eId);
+      });
+
+      record.nodes.forEach(nId => {
+        if (graph.hasNode(nId)) graph.dropNode(nId);
+      });
+
+      expandedByNode.delete(anchorName);
+
+      if (renderer) {
+        refreshNodeDropdown();
+        renderer.refresh();
+      }
+    }
+
+    function toggleNodeNeighbors(anchorName) {
+      if (expandedByNode.has(anchorName)) {
+        collapseNodeNeighbors(anchorName);
+      } else {
+        expandNodeNeighbors(anchorName);
+      }
+    }
+
+    async function expandNeighborsForPath(path) {
+      if (!Array.isArray(path)) return;
+      const nodeSet = new Set();
+      path.forEach(step => {
+        const from = step.from || step.From;
+        const to   = step.to   || step.To;
+        if (from) nodeSet.add(from);
+        if (to)   nodeSet.add(to);
+      });
+
+      for (const name of nodeSet) {
+        await expandNodeNeighbors(name);
+      }
+    }
+
+    function collapseAllNeighbors() {
+      if (!graph) return;
+
+      graph.forEachEdge((edge, attrs) => {
+        if (attrs.role === "neighbor") {
+          graph.dropEdge(edge);
+        }
+      });
+
+      graph.forEachNode((node, attrs) => {
+        if (attrs.role === "neighbor") {
+          graph.dropNode(node);
+        }
+      });
+
+      expandedByNode.clear();
+
+      if (renderer) {
+        refreshNodeDropdown();
+        renderer.refresh();
+      }
+    }
+
+    /* ================================
+       INIT GRAPH + RENDERER
+    ===================================*/
+
+    function initGraph(start, target) {
+      const container = document.getElementById("graph");
+
+      if (renderer) {
+        renderer.kill();
+        renderer = null;
+      }
+
+      graph = new Graph();
+      container.innerHTML = '<div id="graphOverlay"></div>';
+
+      const tooltip = document.createElement("div");
+      tooltip.id = "edge-tooltip";
+      container.appendChild(tooltip);
+
+      if (start) {
+        graph.addNode(start, {
+          label: start,
+          size: START_SIZE,
+          color: START_COLOR,
+          x: 0,
+          y: 0,
+          role: "path",
+          labelWeight: "bold",
+        });
+      }
+
+      renderer = new SigmaLib(graph, container, {
+        renderLabels: true,
+        renderEdgeLabels: false,
+        labelDensity: 0.7,
+        labelColor: { color: "#ffffffff" },
+      });
+
+      refreshNodeDropdown();
+
+      renderer.setSetting("nodeReducer", (node, data) => {
+        const res = { ...data };
+
+        if (!showNeighbors && data.role === "neighbor") {
+          res.hidden = true;
+          return res;
+        }
+
+        const isHovered = node === reducerState.hoveredNode;
+
+        if (isHovered) {
+          res.color = "#f9fafb";
+          res.size = data.size * 1.18;
+          return res;
+        }
+
+        if (reducerState.hoveredNode) {
+          if (pathNodeSet.has(reducerState.hoveredNode) && pathNodeSet.size > 0) {
+            // full-path highlighting
+            if (!pathNodeSet.has(node)) {
+              res.color = HOVER_DIM_COLOR;
+              res.size = data.size * 0.68;
+              res.label = "";
+            }
+          } else {
+            // local neighbors highlighting
+            const isNeighbor =
+              node === reducerState.hoveredNode ||
+              reducerState.hoveredNeighbors.has(node);
+
+            if (!isNeighbor) {
+              res.color = HOVER_DIM_COLOR;
+              res.size = data.size * 0.68;
+              res.label = "";
+            }
+          }
+        }
+
+        return res;
+      });
+
+      renderer.setSetting("edgeReducer", (edge, data) => {
+        const res = { ...data };
+
+        if (!showNeighbors && data.role === "neighbor") {
+          res.hidden = true;
+          return res;
+        }
+
+        if (reducerState.hoveredNode) {
+          if (pathNodeSet.has(reducerState.hoveredNode) && pathEdgeSet.size > 0) {
+            if (!pathEdgeSet.has(edge)) {
+              res.hidden = true;
+            }
+          } else {
+            const [src, dst] = graph.extremities(edge);
+            const connected =
+              src === reducerState.hoveredNode ||
+              dst === reducerState.hoveredNode ||
+              reducerState.hoveredNeighbors.has(src) ||
+              reducerState.hoveredNeighbors.has(dst);
+
+            if (!connected) {
+              res.hidden = true;
+            }
+          }
+        }
+
+        return res;
+      });
+
+      renderer.on("enterNode", ({ node }) => {
+        reducerState.hoveredNode = node;
+        reducerState.hoveredNeighbors = new Set(graph.neighbors(node));
+        renderer.refresh({ skipIndexation: true });
+      });
+
+      renderer.on("leaveNode", () => {
+        reducerState.hoveredNode = null;
+        reducerState.hoveredNeighbors.clear();
+        renderer.refresh({ skipIndexation: true });
+      });
+
+      renderer.on("clickNode", ({ node }) => {
+        const label = graph.getNodeAttribute(node, "label") || node;
+        toggleNodeNeighbors(label);
+      });
+
+      renderer.on("enterEdge", ({ edge }) => {
+        const attr = graph.getEdgeAttributes(edge);
+        const tracks = attr.tracks || [];
+
+        const tooltipEl = document.getElementById("edge-tooltip");
+        if (!tracks.length || !tooltipEl) {
+          if (tooltipEl) tooltipEl.style.display = "none";
+          return;
+        }
+
+        const firstWithImage = tracks.find(t => t.url) || {};
+        const displayTitle =
+          tracks.length === 1
+            ? (tracks[0].name || "Track")
+            : `${tracks.length} tracks`;
+
+        let html = "";
+        if (firstWithImage.url) {
+          html += `<img src="${firstWithImage.url}">`;
+        }
+        html += `<div class="title">${displayTitle}</div>`;
+
+        if (tracks.length > 1) {
+          const names = tracks
+            .map(t => t.name)
+            .filter(Boolean)
+            .slice(0, 6);
+          if (names.length) {
+            html += `<div class="subtitle">${names.join("<br>")}</div>`;
+          }
+        }
+
+        tooltipEl.innerHTML = html;
+        tooltipEl.style.display = "block";
+      });
+
+      renderer.on("leaveEdge", () => {
+        const tooltipEl = document.getElementById("edge-tooltip");
+        if (tooltipEl) tooltipEl.style.display = "none";
+      });
+
+      renderer.on("mousemove", e => {
+        const tooltipEl = document.getElementById("edge-tooltip");
+        if (!tooltipEl) return;
+        tooltipEl.style.left = (e.event.x + 16) + "px";
+        tooltipEl.style.top  = (e.event.y + 16) + "px";
+      });
+    }
+
+    /* ================================
+       PATH RENDERING
+    ===================================*/
+
+    function addPathToGraph(path, start, target) {
+      if (!graph || !renderer || !Array.isArray(path)) return;
+
+      const aggregatedEdges = aggregatePathEdges(path);
+      currentPath = aggregatedEdges;
+      pathNodeSet.clear();
+      pathEdgeSet.clear();
+
+      const posMap = computeArtistPositionsFromEdges(aggregatedEdges);
+
+      let totalTracks = 0;
+
+      aggregatedEdges.forEach(edge => {
+        const from = edge.from;
+        const to   = edge.to;
+        const tracks = edge.tracks || [];
+        if (!from || !to) return;
+
+        const trackCount = tracks.length || 1;
+        totalTracks += trackCount;
+        const width = edgeWidthFromCount(trackCount, true);
+
+        ensureArtistNode(from, start, target, posMap);
+        ensureArtistNode(to,   start, target, posMap);
+
+        const edgeId = `${from}->${to}`;
+
+        pathNodeSet.add(from);
+        pathNodeSet.add(to);
+        pathEdgeSet.add(edgeId);
+
+        const label =
+          trackCount === 1
+            ? (tracks[0].name || `${trackCount} track`)
+            : `${trackCount} tracks`;
+
+        const firstTrack = tracks[0] || {};
+
+        if (graph.hasEdge(edgeId)) {
+          graph.setEdgeAttribute(edgeId, "color", PATH_EDGE_COLOR);
+          graph.setEdgeAttribute(edgeId, "size", width);
+          graph.setEdgeAttribute(edgeId, "role", "path");
+          graph.setEdgeAttribute(edgeId, "label", label);
+          graph.setEdgeAttribute(edgeId, "tracks", tracks);
+          graph.setEdgeAttribute(edgeId, "trackCount", trackCount);
+          graph.setEdgeAttribute(edgeId, "trackURL", firstTrack.url || "");
+        } else {
+          graph.addEdgeWithKey(edgeId, from, to, {
+            label: label,
+            size: width,
+            color: PATH_EDGE_COLOR,
+            role: "path",
+            tracks: tracks,
+            trackCount: trackCount,
+            trackURL: firstTrack.url || "",
+          });
+        }
+      });
+
+      // update stats
+      statHopsEl.textContent = aggregatedEdges.length || "0";
+      statNodesEl.textContent = pathNodeSet.size || "0";
+      statTracksEl.textContent = totalTracks || "0";
+
+      refreshNodeDropdown();
+      renderer.refresh();
+    }
+
+    /* ================================
+       DROPDOWN / CAMERA
+    ===================================*/
+
+    function refreshNodeDropdown() {
+      if (!graph) return;
+      const nodes = [];
+      graph.forEachNode((node, attrs) => {
+        nodes.push(attrs.label || node);
+      });
+      nodes.sort((a, b) => a.localeCompare(b));
+
+      const current = nodeSelect.value;
+      let html = '<option value="">Jump to node…</option>';
+      for (const name of nodes) {
+        const selected = name === current ? ' selected' : '';
+        html += `<option value="${name}"${selected}>${name}</option>`;
+      }
+      nodeSelect.innerHTML = html;
+    }
+
+    function jumpToNode(name) {
+      if (!renderer || !graph || !name) return;
+      if (!graph.hasNode(name)) return;
+
+      const cam = renderer.getCamera();
+      const pos = renderer.getNodeDisplayData(name);
+      if (!pos) return;
+
+      cam.animate(
+        { x: pos.x, y: pos.y, ratio: 0.12 },
+        { duration: 600 }
+      );
+    }
+
+    function zoom(delta) {
+      if (!renderer) return;
+      const cam = renderer.getCamera();
+      const state = cam.getState();
+      const nextRatio = state.ratio * delta;
+      cam.animate(
+        { ratio: nextRatio },
+        { duration: 260 }
+      );
+    }
+
+    function resetView() {
+      if (!renderer || !graph) return;
+      const cam = renderer.getCamera();
+
+      let targetNode = null;
+      const startName = startInput.value.trim();
+      if (graph.hasNode(startName)) {
+        targetNode = startName;
+      } else {
+        const iterator = graph.nodeEntries();
+        const first = iterator.next();
+        if (!first.done) {
+          targetNode = first.value[0];
+        }
+      }
+
+      if (!targetNode) return;
+      const pos = renderer.getNodeDisplayData(targetNode);
+      if (!pos) return;
+
+      cam.animate(
+        { x: pos.x, y: pos.y, ratio: 1 },
+        { duration: 550 }
+      );
+    }
+
+    /* ================================
+       AUTOCOMPLETE
+    ===================================*/
+
+    function showAutocompleteFor(inputEl, panelEl) {
+      const query = inputEl.value.trim();
+      if (!query || !fuse) {
+        panelEl.style.display = "none";
+        panelEl.innerHTML = "";
+        return;
+      }
+
+      const results = fuse.search(query, { limit: 7 });
+      if (!results.length) {
+        panelEl.style.display = "none";
+        panelEl.innerHTML = "";
+        return;
+      }
+
+      let html = "";
+      results.forEach(r => {
+        const name = r.item;
+        html += `
+          <div class="autocomplete-item" data-name="${name.replace(/"/g, "&quot;")}">
+            <span class="key">${name}</span>
+            <span class="meta">Suggestion</span>
+          </div>
+        `;
+      });
+      panelEl.innerHTML = html;
+      panelEl.style.display = "block";
+    }
+
+    function attachAutocomplete(inputEl, panelEl) {
+      inputEl.addEventListener("input", () => {
+        showAutocompleteFor(inputEl, panelEl);
+      });
+
+      inputEl.addEventListener("focus", () => {
+        if (inputEl.value.trim()) {
+          showAutocompleteFor(inputEl, panelEl);
+        }
+      });
+
+      inputEl.addEventListener("blur", () => {
+        setTimeout(() => {
+          panelEl.style.display = "none";
+        }, 130);
+      });
+
+      panelEl.addEventListener("click", e => {
+        const item = e.target.closest(".autocomplete-item");
+        if (!item) return;
+        const name = item.getAttribute("data-name");
+        if (name) {
+          inputEl.value = name;
+          panelEl.style.display = "none";
+        }
+      });
+    }
+
+    /* ================================
+       SEARCH WORKFLOW
+    ===================================*/
+
+    async function runSearch() {
+      const start = startInput.value.trim();
+      const target = targetInput.value.trim();
+      const depth = Number(depthInput.value || -1);
+
+      if (!start || !target) {
+        resultsDiv.innerHTML = "<p class='error'>Start and Target are required.</p>";
+        return;
+      }
+
+      // track suggestions
+      pushSuggestion(start);
+      pushSuggestion(target);
+      rebuildFuse();
+
+      expandedByNode.clear();
+      pathNodeSet.clear();
+      pathEdgeSet.clear();
+      clusterSideByNode.clear();
+
+      initGraph(start, target);
+
+      resultsDiv.innerHTML = "";
+      resultsMetaDiv.innerHTML = "";
+      timelineDiv.innerHTML = "";
+
+      spinner.style.display = "inline-flex";
+      searchButton.disabled = true;
+      searchButton.style.opacity = "0.7";
+
+      const startedAt = Date.now();
+
+      try {
+        const res = await fetch("/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ start, target, depth }),
+        });
+
+        spinner.style.display = "none";
+        searchButton.disabled = false;
+        searchButton.style.opacity = "1";
+
+        if (!res.ok) {
+          const txt = await res.text();
+          resultsDiv.innerHTML = `<p class="error">Request failed: ${txt}</p>`;
+          statHopsEl.textContent = "–";
+          statNodesEl.textContent = "–";
+          statTracksEl.textContent = "–";
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data.message) {
+          resultsDiv.innerHTML = `<p class="muted">${data.message}</p>`;
+          statHopsEl.textContent = data.hops ?? "0";
+          return;
+        }
+
+        const elapsedSec = ((Date.now() - startedAt) / 1000).toFixed(1);
+
+        let pathHtml = `<p><strong>Start:</strong> ${data.start}<br>
+          <strong>Target:</strong> ${data.target}<br>
+          <strong>Hops:</strong> ${data.hops}</p>`;
+
+        if (data.path && data.path.length > 0) {
+          pathHtml += `<p><strong>Path (raw hops):</strong></p><ol>`;
+          data.path.forEach((step, i) => {
+            const from = step.from || step.From || "";
+            const to   = step.to   || step.To   || "";
+            const tracks = safeTracksFromStep(step);
+            let label;
+            if (tracks.length === 0) {
+              label = "No track data";
+            } else if (tracks.length === 1) {
+              label = tracks[0].name || "Unknown track";
+            } else {
+              label = `${tracks.length} tracks`;
+            }
+            pathHtml += `<li>${from} —[${label}]→ ${to}</li>`;
+          });
+          pathHtml += `</ol>`;
+        }
+
+        resultsDiv.innerHTML = pathHtml;
+
+        resultsMetaDiv.innerHTML = `
+          <span>Search depth: <strong>${depth}</strong></span>
+          <span>Elapsed: <strong>${elapsedSec}s</strong></span>
+        `;
+
+        // Build graph + stats
+        addPathToGraph(data.path || [], data.start, data.target);
+
+        // timeline panel
+        buildTimeline(data.path || []);
+
+        // suggestions from path
+        populateSuggestionsFromPath(data.path || []);
+
+        await expandNeighborsForPath(data.path || []);
+        collapseAllNeighbors();
+        renderer.refresh();
+
+      } catch (err) {
+        spinner.style.display = "none";
+        searchButton.disabled = false;
+        searchButton.style.opacity = "1";
+        resultsDiv.innerHTML = `<p class="error">Request failed: ${err}</p>`;
+      }
+    }
+
+    function buildTimeline(path) {
+      timelineDiv.innerHTML = "";
+      if (!Array.isArray(path) || !path.length) return;
+
+      path.forEach((step, i) => {
+        const from = step.from || step.From || "";
+        const to   = step.to   || step.To   || "";
+        const tracks = safeTracksFromStep(step);
+
+        let trackTitle;
+        if (!tracks.length) {
+          trackTitle = "No track data";
+        } else if (tracks.length === 1) {
+          trackTitle = tracks[0].name || "Unknown track";
+        } else {
+          trackTitle = tracks.map(t => t.name).filter(Boolean).slice(0, 3).join(" • ");
+          if (tracks.length > 3) {
+            trackTitle += ` (+${tracks.length - 3} more)`;
+          }
+        }
+
+        const hopIndex = i + 1;
+
+        const item = document.createElement("div");
+        item.className = "timeline-item";
+        item.dataset.from = from;
+        item.dataset.to = to;
+
+        item.innerHTML = `
+          <div class="timeline-main">
+            <span class="artist">${from}</span>
+            <span class="arrow">⇄</span>
+            <span class="artist">${to}</span>
+          </div>
+          <div class="timeline-track">${trackTitle}</div>
+          <div class="timeline-meta">
+            <span>Hop ${hopIndex}</span>
+          </div>
+        `;
+
+        item.addEventListener("click", () => {
+          // highlight that edge if exists
+          if (!graph || !renderer) return;
+          const edgeId = `${from}->${to}`;
+          const reverseEdgeId = `${to}->${from}`;
+          const cam = renderer.getCamera();
+
+          let targetFrom = from;
+          if (!graph.hasNode(from) && graph.hasNode(to)) {
+            targetFrom = to;
+          }
+
+          if (graph.hasNode(targetFrom)) {
+            const pos = renderer.getNodeDisplayData(targetFrom);
+            if (pos) {
+              cam.animate(
+                { x: pos.x, y: pos.y, ratio: 0.15 },
+                { duration: 500 }
+              );
+            }
+          }
+
+          if (graph.hasEdge(edgeId)) {
+            graph.setEdgeAttribute(edgeId, "color", "#f97316");
+            graph.setEdgeAttribute(edgeId, "size", 32);
+            setTimeout(() => {
+              if (graph.hasEdge(edgeId)) {
+                graph.setEdgeAttribute(edgeId, "color", PATH_EDGE_COLOR);
+                const attrs = graph.getEdgeAttributes(edgeId);
+                const c = attrs.trackCount || 1;
+                graph.setEdgeAttribute(edgeId, "size", edgeWidthFromCount(c, true));
+              }
+            }, 700);
+          } else if (graph.hasEdge(reverseEdgeId)) {
+            graph.setEdgeAttribute(reverseEdgeId, "color", "#f97316");
+            graph.setEdgeAttribute(reverseEdgeId, "size", 32);
+            setTimeout(() => {
+              if (graph.hasEdge(reverseEdgeId)) {
+                graph.setEdgeAttribute(reverseEdgeId, "color", PATH_EDGE_COLOR);
+                const attrs = graph.getEdgeAttributes(reverseEdgeId);
+                const c = attrs.trackCount || 1;
+                graph.setEdgeAttribute(reverseEdgeId, "size", edgeWidthFromCount(c, true));
+              }
+            }, 700);
+          }
+
+          if (renderer) renderer.refresh({ skipIndexation: true });
+        });
+
+        timelineDiv.appendChild(item);
+      });
+    }
+
+    /* ================================
+       Create Playlist Workflow
+    ===================================*/
+
+    function startAuthAndPlaylist() {
+      window.open('/auth', '_blank', 'width=600,height=800');
+
+      const customName = playlistNameInput.value.trim();
+      const payloadName = customName || "My Generated Playlist";
+
+      fetch('/createPlaylist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playlistName: payloadName })
+      })
+      .then(res => res.json())
+      .then(data => {
+          console.log("Playlist created:", data);
+          if (data && data.url) {
+            alert("Playlist created: " + data.url);
+          } else {
+            alert("Playlist created (no URL returned).");
+          }
+      })
+      .catch(err => {
+          console.error("Error creating playlist:", err);
+          alert("Error creating playlist");
+      });
+    }
+
+    // expose to global for inline onclick
+    window.startAuthAndPlaylist = startAuthAndPlaylist;
+
+    /* ================================
+       EVENT WIRING
+    ===================================*/
+
+    document.getElementById("searchForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      runSearch();
+    });
+
+    toggleNeighborsBtn.addEventListener("click", () => {
+      showNeighbors = !showNeighbors;
+      toggleNeighborsBtn.textContent = showNeighbors ? "Hide Neighbors" : "Show Neighbors";
+      if (renderer) renderer.refresh({ skipIndexation: true });
+    });
+
+    collapseNeighborsBtn.addEventListener("click", () => {
+      collapseAllNeighbors();
+    });
+
+    jumpToNodeBtn.addEventListener("click", () => {
+      const name = nodeSelect.value;
+      if (name) jumpToNode(name);
+    });
+
+    zoomInBtn.addEventListener("click", () => {
+      zoom(0.8);
+    });
+
+    zoomOutBtn.addEventListener("click", () => {
+      zoom(1.25);
+    });
+
+    resetViewBtn.addEventListener("click", () => {
+      resetView();
+    });
+
+    // keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+      if (e.key === "=" || e.key === "+") {
+        zoom(0.85);
+      } else if (e.key === "-" || e.key === "_") {
+        zoom(1.18);
+      } else if (e.key === " ") {
+        e.preventDefault();
+        showNeighbors = !showNeighbors;
+        toggleNeighborsBtn.textContent = showNeighbors ? "Hide Neighbors" : "Show Neighbors";
+        if (renderer) renderer.refresh({ skipIndexation: true });
+      }
+    });
+
+    // Autocomplete wiring
+    attachAutocomplete(startInput, startAutocomplete);
+    attachAutocomplete(targetInput, targetAutocomplete);
+
+    // Initial graph + subtle animations
+    document.addEventListener("DOMContentLoaded", () => {
+      initGraph("", "");
+
+      if (window.anime) {
+        anime({
+          targets: ".card",
+          opacity: [0, 1],
+          translateY: [12, 0],
+          duration: 650,
+          easing: "easeOutQuad",
+          delay: anime.stagger(80),
+        });
+
+        anime({
+          targets: ".logo-pill",
+          scale: [0.85, 1],
+          opacity: [0, 1],
+          duration: 620,
+          easing: "easeOutBack",
+        });
+      }
+
+      // Preload neighbor lookup in the background (for autocomplete + expansions)
+      loadNeighborLookup();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1543 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SixDegreeSpotify</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050510;
+      --bg-alt: #0c0c1a;
+      --panel: rgba(10, 10, 25, 0.9);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --text-muted: #9ca3af;
+      --accent: #4fdfff;
+      --accent-soft: rgba(79, 223, 255, 0.14);
+      --error: #f97373;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 1.5rem;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: #e5e7eb;
+      background:
+        radial-gradient(circle at top left, #1b1b31 0, transparent 55%),
+        radial-gradient(circle at bottom right, #020617 0, #020617 60%);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #f9fafb;
+    }
+
+    .logo-sub {
+      margin-top: 0.2rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--text-muted);
+    }
+
+    .actions {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: .45rem .85rem;
+      border-radius: 999px;
+      text-decoration: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #111827, #020617);
+      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      font-size: 0.8rem;
+      transition: background 150ms ease, transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      box-shadow: 0 0 0 rgba(148, 163, 184, 0.4);
+    }
+
+    .btn:hover {
+      background: radial-gradient(circle at top left, #1e293b, #020617);
+      transform: translateY(-1px);
+      box-shadow: 0 16px 35px rgba(15, 23, 42, 0.7);
+      border-color: rgba(148, 163, 184, 0.7);
+    }
+
+    .btn-primary {
+      background: radial-gradient(circle at top left, #22c1c3, #7f5af0);
+      border-color: rgba(56, 189, 248, 0.7);
+      color: #0b1120;
+      box-shadow: 0 15px 45px rgba(56, 189, 248, 0.45);
+    }
+
+    .btn-primary:hover {
+      background: radial-gradient(circle at top left, #38bdf8, #a855f7);
+      box-shadow: 0 22px 60px rgba(56, 189, 248, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border-subtle);
+    }
+
+    .badge {
+      padding: 0.05rem .55rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: #cbd5f5;
+      background: radial-gradient(circle at top left, rgba(79, 223, 255, 0.12), rgba(15, 23, 42, 0.9));
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #22c55e 0, rgba(34, 197, 94, 0) 35%);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      gap: 1.25rem;
+      align-items: stretch;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 1rem;
+      }
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.1), rgba(15, 23, 42, 0.96));
+      border-radius: 18px;
+      padding: 1rem 1.15rem;
+      border: 1px solid var(--border-subtle);
+      box-shadow:
+        0 18px 60px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.9) inset;
+    }
+
+    .card + .card {
+      margin-top: 0.75rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .card-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .card-subtitle {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    form {
+      margin-top: 0.4rem;
+    }
+
+    label {
+      display: block;
+      margin-top: .55rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    input[type=text],
+    input[type=number] {
+      width: 100%;
+      margin-top: 0.25rem;
+      padding: .55rem .7rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-radius: 999px;
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+      color: #e5e7eb;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+
+    input[type=text]::placeholder,
+    input[type=number]::placeholder {
+      color: rgba(148, 163, 184, 0.75);
+    }
+
+    input[type=text]:focus,
+    input[type=number]:focus {
+      border-color: rgba(56, 189, 248, 0.7);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.92));
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: .65rem;
+    }
+
+    @media (max-width: 640px) {
+      .row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-top: 0.35rem;
+    }
+
+    .muted-strong {
+      color: #e5e7eb;
+      font-size: 0.8rem;
+    }
+
+    .error {
+      color: var(--error);
+      font-size: 0.8rem;
+      margin-top: 0.35rem;
+    }
+
+    .spinner {
+      display: none;
+      margin-left: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--accent);
+    }
+
+    #graph-shell {
+      position: relative;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at center, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.98)),
+        #020617;
+      border: 1px solid var(--border-subtle);
+      box-shadow:
+        0 24px 80px rgba(15, 23, 42, 0.95),
+        0 0 0 1px rgba(15, 23, 42, 0.9) inset;
+      padding: 0.8rem;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      overflow: hidden;
+    }
+
+    #graph {
+      margin-top: 0.25rem;
+      border-radius: 14px;
+      height: 480px;
+      position: relative;
+      background: radial-gradient(circle at center, #111122 0%, #050510 80%);
+      overflow: hidden;
+      box-shadow:
+        0 0 45px rgba(56, 189, 248, 0.16),
+        0 0 0 1px rgba(15, 23, 42, 0.9) inset;
+    }
+
+    #graph-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.1rem;
+    }
+
+    .graph-controls-left,
+    .graph-controls-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    #edge-tooltip {
+      position: absolute;
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      padding: 7px 9px;
+      border-radius: 8px;
+      display: none;
+      pointer-events: none;
+      z-index: 9999;
+      max-width: 260px;
+      box-shadow: 0 12px 35px rgba(15, 23, 42, 0.95);
+      font-size: 0.75rem;
+    }
+    #edge-tooltip img {
+      width: 110px;
+      height: 110px;
+      border-radius: 5px;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 4px auto;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.6);
+    }
+    #edge-tooltip .title {
+      color: #e5e7eb;
+      font-size: 0.75rem;
+      margin-top: 2px;
+      text-align: center;
+      word-wrap: break-word;
+    }
+
+    #nodeSelect {
+      padding: .32rem .6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.92);
+      color: #e5e7eb;
+      max-width: 220px;
+      font-size: 0.78rem;
+      outline: none;
+    }
+
+    #nodeSelect:focus {
+      border-color: rgba(56, 189, 248, 0.7);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+    }
+
+    #hud {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      padding: 6px 10px;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 999px;
+      font-size: 0.7rem;
+      color: #9ca3af;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      backdrop-filter: blur(7px);
+    }
+
+    .hud-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #38bdf8 0, rgba(56, 189, 248, 0) 70%);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.95);
+    }
+
+    .status-line {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    #results {
+      margin-top: 0.4rem;
+      font-size: 0.8rem;
+      max-height: 200px;
+      overflow: auto;
+      padding-right: 0.2rem;
+    }
+
+    #results ol {
+      margin: 0.4rem 0 0 1rem;
+      padding-left: 0.7rem;
+      font-size: 0.78rem;
+      color: #e5e7eb;
+    }
+
+    #results li {
+      margin-bottom: 0.15rem;
+    }
+  </style>
+
+  <!-- Graphology + Sigma -->
+  <script src="https://unpkg.com/graphology@0.25.4/dist/graphology.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
+</head>
+
+<body>
+<header>
+  <div>
+    <h1>SixDegreeSpotify</h1>
+    <div class="logo-sub">Collaboration Galaxy Mapper</div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-ghost" type="button" onclick="window.location.href='/status'">
+      <span class="badge-dot"></span> Status
+    </button>
+    <a class="btn" href="https://jonnymurilloblog543591113.wordpress.com/" target="_blank">
+      Other Projects
+    </a>
+    <a class="btn btn-primary" href="https://buymeacoffee.com/jmurillo" target="_blank">
+      ☕ Buy Me a Coffee
+    </a>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- LEFT: Controls & Results -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Artist Path Search</div>
+          <div class="card-subtitle">
+            Find the shortest collaboration chain between two artists using MusicBrainz.
+          </div>
+        </div>
+        <div class="badge">
+          <span class="badge-dot"></span>
+          Galaxy Mode
+        </div>
+      </div>
+
+      <form id="searchForm">
+        <div class="row">
+          <div>
+            <label>
+              Start Artist
+              <input id="startArtist" type="text" placeholder="Eminem" required />
+            </label>
+          </div>
+          <div>
+            <label>
+              Target Artist
+              <input id="targetArtist" type="text" placeholder="Taylor Swift" required />
+            </label>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>
+              Max Depth (optional)
+              <input id="depth" type="number" min="-1" step="1" value="-1" />
+            </label>
+          </div>
+          <div>
+            <label>
+              Playlist Name (optional)
+              <input id="playlistName" type="text" placeholder="SixDegreeSpotify Playlist" />
+            </label>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.8rem;">
+          <button class="btn btn-primary" type="submit">Search Path</button>
+          <span id="spinner" class="spinner">Searching graph… this can take a while.</span>
+        </div>
+        <div class="muted">
+          Heavy queries can take minutes the first time for a pair. Results are cached and reused for neighbors.
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Path Details</div>
+          <div class="card-subtitle">
+            Each hop shows all tracks connecting the two artists (edge thickness = number of tracks).
+          </div>
+        </div>
+      </div>
+
+      <div id="results"></div>
+      <div class="status-line">
+        <span id="statusText" class="muted">Idle. Submit a search to begin.</span>
+        <button class="btn btn-ghost" type="button" onclick="startAuthAndPlaylist()">
+          Create Spotify Playlist
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Graph -->
+  <div id="graph-shell">
+    <div id="graph"></div>
+    <div id="graph-controls">
+      <div class="graph-controls-left">
+        <button class="btn btn-ghost" id="toggleNeighborsBtn">Hide Neighbors</button>
+        <button class="btn btn-ghost" id="collapseNeighborsBtn">Collapse All Neighbors</button>
+      </div>
+      <div class="graph-controls-right">
+        <select id="nodeSelect">
+          <option value="">Jump to node…</option>
+        </select>
+        <button class="btn btn-ghost" id="jumpToNodeBtn">Go</button>
+      </div>
+    </div>
+    <div id="hud">
+      <span class="hud-dot"></span>
+      Galaxy Mode Active · Nodes orbit, edges pulse, path glows
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ================================
+     GLOBALS / CONSTANTS
+  ===================================*/
+
+  const Graph = window.graphology.Graph;
+  const SigmaLib = window.Sigma;
+
+  let graph = null;
+  let renderer = null;
+
+  // Cosmic palette
+  const COSMIC_CYAN    = "#4FDFFF";
+  const COSMIC_PURPLE  = "#B56CFF";
+  const COSMIC_TEAL    = "#48FFE0";
+  const COSMIC_NEIGH   = "#777799";
+
+  const START_COLOR         = COSMIC_CYAN;
+  const TARGET_COLOR        = COSMIC_PURPLE;
+  const PATH_NODE_COLOR     = COSMIC_TEAL;
+  const NEIGHBOR_NODE_COLOR = COSMIC_NEIGH;
+
+  const START_SIZE          = 60;
+  const TARGET_SIZE         = 60;
+  const PATH_NODE_SIZE      = 35;
+  const NEIGHBOR_NODE_SIZE  = 15;
+
+  const NEIGHBOR_EDGE_COLOR = "#555577";
+  const NEIGHBOR_EDGE_WIDTH = 1.5;
+  const PATH_EDGE_COLOR     = COSMIC_TEAL;
+
+  const HOVER_DIM_COLOR     = "#4b5563";
+
+  // Neighbor lookup:
+  // { "eminem": { ID, Name, Neighbors: [...] }, ... }
+  let neighborLookupIndex = null;
+
+  // Show/hide neighbors
+  let showNeighbors = true;
+
+  // Track expansions per anchor node: name -> { nodes: [], edges: [] }
+  const expandedByNode = new Map();
+
+  // Path highlight sets
+  let currentPath = [];
+  const pathNodeSet = new Set();
+  const pathEdgeSet = new Set();
+
+  // Hover state
+  const reducerState = {
+    hoveredNode: null,
+    hoveredNeighbors: new Set(),
+  };
+
+  // Direction state for clustered randomness
+  const clusterSideByNode = new Map();
+
+  // DOM refs
+  const startInput         = document.getElementById("startArtist");
+  const targetInput        = document.getElementById("targetArtist");
+  const playlistNameInput  = document.getElementById("playlistName");
+  const depthInput         = document.getElementById("depth");
+  const resultsDiv         = document.getElementById("results");
+  const spinner            = document.getElementById("spinner");
+  const toggleNeighborsBtn = document.getElementById("toggleNeighborsBtn");
+  const collapseNeighborsBtn = document.getElementById("collapseNeighborsBtn");
+  const nodeSelect         = document.getElementById("nodeSelect");
+  const jumpToNodeBtn      = document.getElementById("jumpToNodeBtn");
+  const statusText         = document.getElementById("statusText");
+
+  /* ================================
+     SMALL HELPERS
+  ===================================*/
+
+  // Robust track extractor supporting:
+  // - { track, trackURL, trackID, recordingID }
+  // - { tracks: [{ name,url,id,recordingID }] }
+  // - { Tracks: [{ Name,PhotoURL,ID,RecordingID }] }
+  function safeTracksFromStep(step) {
+    if (!step) return [];
+
+    // Newer: single-track shape
+    if (step.track || step.Track) {
+      return [{
+        name: step.track || step.Track?.Name || "",
+        url: step.trackURL || step.PhotoURL || step.Track?.PhotoURL || "",
+        id: step.trackID || step.Track?.ID || "",
+        recordingID: step.recordingID || step.Track?.RecordingID || "",
+      }];
+    }
+
+    // Lowercase multi-track
+    if (Array.isArray(step.tracks)) {
+      return step.tracks.map(t => ({
+        name: t.name || "",
+        url: t.url || "",
+        id: t.id || "",
+        recordingID: t.recordingID || "",
+      }));
+    }
+
+    // Uppercase multi-track (Go default JSON)
+    if (Array.isArray(step.Tracks)) {
+      return step.Tracks.map(t => ({
+        name: t.Name || "",
+        url: t.PhotoURL || "",
+        id: t.ID || "",
+        recordingID: t.RecordingID || "",
+      }));
+    }
+
+    return [];
+  }
+
+  function computeArtistPositionsFromEdges(edges) {
+    const pos = new Map();
+    let i = 0;
+    edges.forEach(edge => {
+      if (edge.from && !pos.has(edge.from)) pos.set(edge.from, i++);
+      if (edge.to && !pos.has(edge.to)) pos.set(edge.to, i++);
+    });
+    return pos;
+  }
+
+  function edgeWidthFromCount(count, isPath) {
+    const c = Math.max(1, count || 1);
+    if (isPath) {
+      return Math.min(3 + c * 3, 40);
+    }
+    return Math.min(NEIGHBOR_EDGE_WIDTH + c * 1.2, 18);
+  }
+
+  /* ================================
+     NEIGHBOR LOOKUP
+  ===================================*/
+
+  async function loadNeighborLookup() {
+    if (neighborLookupIndex) return neighborLookupIndex;
+
+    try {
+      const res = await fetch("/NeighborLookup.json?ts=" + Date.now());
+      if (!res.ok) {
+        console.error("Failed to load NeighborLookup.json:", await res.text());
+        neighborLookupIndex = {};
+        return neighborLookupIndex;
+      }
+
+      const raw = await res.json();
+      const index = {};
+
+      if (Array.isArray(raw)) {
+        raw.forEach(entry => {
+          if (!entry || !entry.Name) return;
+          const key = entry.Name.toLowerCase();
+          index[key] = entry;
+        });
+      } else if (typeof raw === "object" && raw !== null) {
+        Object.keys(raw).forEach(k => {
+          const entry = raw[k];
+          if (!entry) return;
+          const name = entry.Name || k;
+          index[name.toLowerCase()] = entry;
+        });
+      }
+
+      neighborLookupIndex = index;
+      return neighborLookupIndex;
+    } catch (err) {
+      console.error("Error loading NeighborLookup.json:", err);
+      neighborLookupIndex = {};
+      return neighborLookupIndex;
+    }
+  }
+
+  function findNeighborsEntryByName(name) {
+    if (!neighborLookupIndex || !name) return null;
+    const lc = name.toLowerCase();
+    return neighborLookupIndex[lc] || null;
+  }
+
+  /* ================================
+     GRAPH HELPERS
+  ===================================*/
+
+  function ensureArtistNode(name, start, target, posMap) {
+    if (!name) return;
+
+    if (graph.hasNode(name)) {
+      graph.setNodeAttribute(name, "role", "path");
+      if (name === start) {
+        graph.setNodeAttribute(name, "color", START_COLOR);
+        graph.setNodeAttribute(name, "size", START_SIZE);
+      } else if (name === target) {
+        graph.setNodeAttribute(name, "color", TARGET_COLOR);
+        graph.setNodeAttribute(name, "size", TARGET_SIZE);
+      } else {
+        graph.setNodeAttribute(name, "color", PATH_NODE_COLOR);
+        graph.setNodeAttribute(name, "size", PATH_NODE_SIZE);
+      }
+      return;
+    }
+
+    let color = PATH_NODE_COLOR;
+    let size  = PATH_NODE_SIZE;
+    if (name === start) { color = START_COLOR; size = START_SIZE; }
+    else if (name === target) { color = TARGET_COLOR; size = TARGET_SIZE; }
+
+    let x = Math.random() * 6 - 3;
+    let y = Math.random() * 6 - 3;
+    if (posMap && posMap.has(name)) {
+      const idx = posMap.get(name);
+      const angle = idx * 0.7;
+      const radius = 20 + idx * 12;
+      x = Math.cos(angle) * radius;
+      y = Math.sin(angle) * radius;
+    }
+
+    graph.addNode(name, {
+      label: name,
+      size,
+      color,
+      x,
+      y,
+      role: "path",
+      opacity: 1,
+    });
+  }
+
+  function randomClusterSideForNode(node) {
+    if (clusterSideByNode.has(node)) return clusterSideByNode.get(node);
+
+    const start = startInput.value.trim();
+    const target = targetInput.value.trim();
+
+    let side;
+    if (node === start) {
+      side = "left";
+    } else if (node === target) {
+      side = "right";
+    } else {
+      const ud = ["up", "down"];
+      side = ud[Math.floor(Math.random() * ud.length)];
+    }
+
+    clusterSideByNode.set(node, side);
+    return side;
+  }
+
+  function positionNeighborAroundAnchor(anchor, idx, total, side) {
+    const anchorAttrs = graph.getNodeAttributes(anchor);
+    const ax = anchorAttrs.x || 0;
+    const ay = anchorAttrs.y || 0;
+
+    const t = total <= 1 ? 0 : (idx / (total - 1)) - 0.5;
+    const baseRadius = 20 + Math.log(idx + 2) * 8;
+    const jitterR = (Math.random() - 0.5) * 4;
+    const jitterAngle = (Math.random() - 0.5) * .7;
+
+    let baseAngle;
+    switch (side) {
+      case "left":  baseAngle = Math.PI;         break;
+      case "right": baseAngle = 0;               break;
+      case "up":    baseAngle = -Math.PI / 2;    break;
+      case "down":  baseAngle =  Math.PI / 2;    break;
+      default:      baseAngle = Math.random() * Math.PI * 2;
+    }
+
+    const spread = 1.0 + Math.random() * 1.0;
+    const angle = baseAngle + t * spread + jitterAngle;
+    const radius = baseRadius + jitterR;
+
+    const x = ax + Math.cos(angle) * radius;
+    const y = ay + Math.sin(angle) * radius;
+
+    return { x, y };
+  }
+
+  /* ================================
+     AGGREGATION LOGIC
+     - collapse multiple tracks into a single edge
+  ===================================*/
+
+  function aggregatePathEdges(pathArray) {
+    const map = new Map();
+    if (!Array.isArray(pathArray)) return [];
+
+    pathArray.forEach(step => {
+      if (!step || !step.from || !step.to) return;
+      const key = `${step.from}|||${step.to}`;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          from: step.from,
+          to: step.to,
+          tracks: [],
+        });
+      }
+
+      const edge = map.get(key);
+      const tracks = safeTracksFromStep(step);
+      tracks.forEach(t => edge.tracks.push(t));
+    });
+
+    return Array.from(map.values());
+  }
+
+  function aggregateNeighborEntries(neighborsArray) {
+    const map = new Map();
+    if (!Array.isArray(neighborsArray)) return [];
+
+    neighborsArray.forEach(nb => {
+      if (!nb) return;
+
+      const nbName = nb.Name || nb.ID;
+      if (!nbName) return;
+
+      const key = nbName;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          id: nb.ID,
+          name: nbName,
+          tracks: [],
+          firstTrack: null,
+        });
+      }
+
+      const agg = map.get(key);
+
+      if (Array.isArray(nb.Tracks)) {
+        nb.Tracks.forEach(t => {
+          const trackObj = {
+            name: t.Name,
+            url: t.PhotoURL,
+            id: t.ID,
+            recordingID: t.RecordingID,
+          };
+          agg.tracks.push(trackObj);
+          if (!agg.firstTrack) agg.firstTrack = trackObj;
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }
+
+  /* ================================
+     NEIGHBOR EXPANSION / COLLAPSE
+  ===================================*/
+
+  async function expandNodeNeighbors(anchorName) {
+    if (!anchorName) return;
+
+    await loadNeighborLookup();
+
+    const entry = findNeighborsEntryByName(anchorName);
+    if (!entry || !Array.isArray(entry.Neighbors) || entry.Neighbors.length === 0) {
+      console.warn("No neighbors for", anchorName);
+      return;
+    }
+
+    if (!graph.hasNode(anchorName)) {
+      graph.addNode(anchorName, {
+        label: anchorName,
+        size: PATH_NODE_SIZE,
+        color: PATH_NODE_COLOR,
+        x: Math.random() * 6 - 3,
+        y: Math.random() * 6 - 3,
+        role: "path",
+        opacity: 1,
+      });
+    }
+
+    const aggregatedNeighbors = aggregateNeighborEntries(entry.Neighbors);
+    const createdNodes = [];
+    const createdEdges = [];
+
+    const side = randomClusterSideForNode(anchorName);
+    const total = aggregatedNeighbors.length;
+
+    aggregatedNeighbors.forEach((agg, idx) => {
+      const nbName = agg.name;
+      if (!nbName) return;
+
+      let isNewNode = false;
+      if (!graph.hasNode(nbName)) {
+        const pos = positionNeighborAroundAnchor(anchorName, idx, total, side);
+        graph.addNode(nbName, {
+          label: nbName,
+          size: NEIGHBOR_NODE_SIZE,
+          color: NEIGHBOR_NODE_COLOR,
+          x: pos.x,
+          y: pos.y,
+          role: "neighbor",
+          opacity: 0.85,
+        });
+        createdNodes.push(nbName);
+        isNewNode = true;
+      } else {
+        const role = graph.getNodeAttribute(nbName, "role");
+        if (!role || role === "neighbor") {
+          graph.setNodeAttribute(nbName, "role", "neighbor");
+          graph.setNodeAttribute(nbName, "color", NEIGHBOR_NODE_COLOR);
+          graph.setNodeAttribute(nbName, "size", NEIGHBOR_NODE_SIZE);
+        }
+      }
+
+      const trackCount = agg.tracks.length || 1;
+      const edgeId = `${anchorName}->${nbName}`;
+
+      const label =
+        trackCount === 1
+          ? (agg.tracks[0].name || `${trackCount} track`)
+          : `${trackCount} tracks`;
+
+      const width = edgeWidthFromCount(trackCount, false);
+      const firstTrack = agg.tracks[0] || {};
+
+      if (!graph.hasEdge(edgeId)) {
+        graph.addEdgeWithKey(edgeId, anchorName, nbName, {
+          label: label,
+          color: NEIGHBOR_EDGE_COLOR,
+          size: width,
+          role: "neighbor",
+          tracks: agg.tracks,
+          trackCount: trackCount,
+          trackURL: firstTrack.url || "",
+        });
+        createdEdges.push(edgeId);
+      } else if (isNewNode) {
+        graph.setEdgeAttribute(edgeId, "role", "neighbor");
+      }
+    });
+
+    if (createdNodes.length || createdEdges.length) {
+      const existing = expandedByNode.get(anchorName) || { nodes: [], edges: [] };
+      expandedByNode.set(anchorName, {
+        nodes: existing.nodes.concat(createdNodes),
+        edges: existing.edges.concat(createdEdges),
+      });
+    }
+
+    if (renderer) {
+      refreshNodeDropdown();
+      renderer.refresh();
+    }
+  }
+
+  function collapseNodeNeighbors(anchorName) {
+    const record = expandedByNode.get(anchorName);
+    if (!record) return;
+
+    record.edges.forEach(eId => {
+      if (graph.hasEdge(eId)) graph.dropEdge(eId);
+    });
+
+    record.nodes.forEach(nId => {
+      if (graph.hasNode(nId)) graph.dropNode(nId);
+    });
+
+    expandedByNode.delete(anchorName);
+
+    if (renderer) {
+      refreshNodeDropdown();
+      renderer.refresh();
+    }
+  }
+
+  function toggleNodeNeighbors(anchorName) {
+    if (expandedByNode.has(anchorName)) {
+      collapseNodeNeighbors(anchorName);
+    } else {
+      expandNodeNeighbors(anchorName);
+    }
+  }
+
+  async function expandNeighborsForPath(path) {
+    if (!Array.isArray(path)) return;
+    const nodeSet = new Set();
+    path.forEach(step => {
+      if (step.from) nodeSet.add(step.from);
+      if (step.to)   nodeSet.add(step.to);
+    });
+
+    for (const name of nodeSet) {
+      await expandNodeNeighbors(name);
+    }
+  }
+
+  function collapseAllNeighbors() {
+    if (!graph) return;
+
+    graph.forEachEdge((edge, attrs) => {
+      if (attrs.role === "neighbor") {
+        graph.dropEdge(edge);
+      }
+    });
+
+    graph.forEachNode((node, attrs) => {
+      if (attrs.role === "neighbor") {
+        graph.dropNode(node);
+      }
+    });
+
+    expandedByNode.clear();
+
+    if (renderer) {
+      refreshNodeDropdown();
+      renderer.refresh();
+    }
+  }
+
+  /* ================================
+     INIT GRAPH + RENDERER
+  ===================================*/
+
+  function initGraph(start, target) {
+    const container = document.getElementById("graph");
+
+    if (renderer) {
+      renderer.kill();
+      renderer = null;
+    }
+
+    graph = new Graph();
+    container.innerHTML = "";
+
+    const tooltip = document.createElement("div");
+    tooltip.id = "edge-tooltip";
+    container.appendChild(tooltip);
+
+    if (start) {
+      graph.addNode(start, {
+        label: start,
+        size: START_SIZE,
+        color: START_COLOR,
+        x: 0,
+        y: 0,
+        role: "path",
+        opacity: 0,
+      });
+
+      // fade-in
+      setTimeout(() => {
+        if (!graph.hasNode(start)) return;
+        graph.setNodeAttribute(start, "opacity", 1);
+        if (renderer) renderer.refresh();
+      }, 200);
+    }
+
+    renderer = new SigmaLib(graph, container, {
+      renderLabels: true,
+      renderEdgeLabels: false,
+      labelDensity: 0.7,
+      labelColor: { color: "#ffffff" },
+      enableEdgeHoverEvents: true,
+      zIndex: true,
+    });
+
+    refreshNodeDropdown();
+
+    renderer.setSetting("nodeReducer", (node, data) => {
+      const res = { ...data };
+
+      res.opacity = data.opacity ?? 1;
+
+      if (!showNeighbors && data.role === "neighbor") {
+        res.hidden = true;
+        return res;
+      }
+
+      const isHovered = node === reducerState.hoveredNode;
+
+      // hovered node highlight
+      if (isHovered) {
+        res.color = "#ffffff";
+        res.size = data.size * 1.28;
+        res.borderColor = "#ffffff";
+        res.borderSize = 3;
+        return res;
+      }
+
+      // subtle glow for path nodes
+      if (data.role === "path") {
+        res.borderColor = PATH_EDGE_COLOR;
+        res.borderSize = 2;
+      }
+
+      if (reducerState.hoveredNode) {
+        if (pathNodeSet.has(reducerState.hoveredNode) && pathNodeSet.size > 0) {
+          // full-path highlighting
+          if (!pathNodeSet.has(node)) {
+            res.color = HOVER_DIM_COLOR;
+            res.size = data.size * 0.7;
+            res.label = "";
+            res.opacity = 0.45;
+          }
+        } else {
+          // local neighbors highlighting
+          const isNeighbor =
+            node === reducerState.hoveredNode ||
+            reducerState.hoveredNeighbors.has(node);
+
+          if (!isNeighbor) {
+            res.color = HOVER_DIM_COLOR;
+            res.size = data.size * 0.7;
+            res.label = "";
+            res.opacity = 0.4;
+          }
+        }
+      }
+
+      return res;
+    });
+
+    renderer.setSetting("edgeReducer", (edge, data) => {
+      const res = { ...data };
+
+      if (!showNeighbors && data.role === "neighbor") {
+        res.hidden = true;
+        return res;
+      }
+
+      res.opacity = 0.9;
+      res.color = data.role === "path" ? PATH_EDGE_COLOR : NEIGHBOR_EDGE_COLOR;
+
+      if (reducerState.hoveredNode) {
+        if (pathNodeSet.has(reducerState.hoveredNode) && pathEdgeSet.size > 0) {
+          if (!pathEdgeSet.has(edge)) {
+            res.hidden = true;
+          }
+        } else {
+          const [src, dst] = graph.extremities(edge);
+          const connected =
+            src === reducerState.hoveredNode ||
+            dst === reducerState.hoveredNode ||
+            reducerState.hoveredNeighbors.has(src) ||
+            reducerState.hoveredNeighbors.has(dst);
+
+          if (!connected) {
+            res.hidden = true;
+          }
+        }
+      }
+
+      return res;
+    });
+
+    renderer.on("enterNode", ({ node }) => {
+      reducerState.hoveredNode = node;
+      reducerState.hoveredNeighbors = new Set(graph.neighbors(node));
+      renderer.refresh({ skipIndexation: true });
+    });
+
+    renderer.on("leaveNode", () => {
+      reducerState.hoveredNode = null;
+      reducerState.hoveredNeighbors.clear();
+      renderer.refresh({ skipIndexation: true });
+    });
+
+    renderer.on("clickNode", ({ node }) => {
+      const label = graph.getNodeAttribute(node, "label") || node;
+      toggleNodeNeighbors(label);
+    });
+
+    renderer.on("enterEdge", ({ edge }) => {
+      const attr = graph.getEdgeAttributes(edge);
+      const tracks = attr.tracks || [];
+
+      if (!tracks.length) {
+        tooltip.style.display = "none";
+        return;
+      }
+
+      const firstWithImage = tracks.find(t => t.url) || {};
+      const displayTitle =
+        tracks.length === 1
+          ? (tracks[0].name || "Track")
+          : `${tracks.length} tracks`;
+
+      let html = "";
+      if (firstWithImage.url) {
+        html += `<img src="${firstWithImage.url}">`;
+      }
+      html += `<div class="title">${displayTitle}</div>`;
+
+      if (tracks.length > 1) {
+        const names = tracks
+          .map(t => t.name)
+          .filter(Boolean)
+          .slice(0, 7);
+        if (names.length) {
+          html += `<div class="title">${names.join("<br>")}</div>`;
+        }
+      }
+
+      tooltip.innerHTML = html;
+      tooltip.style.display = "block";
+    });
+
+    renderer.on("leaveEdge", () => {
+      tooltip.style.display = "none";
+    });
+
+    renderer.on("mousemove", e => {
+      const tooltip = document.getElementById("edge-tooltip");
+      if (!tooltip) return;
+      tooltip.style.left = (e.event.x + 15) + "px";
+      tooltip.style.top  = (e.event.y + 15) + "px";
+    });
+  }
+
+  /* ================================
+     ANIMATIONS: ORBIT + PATH PULSE
+  ===================================*/
+
+  function animateOrbit() {
+    if (!graph || !renderer) {
+      requestAnimationFrame(animateOrbit);
+      return;
+    }
+
+    const t = Date.now() / 7000; // slow orbit
+
+    graph.forEachNode((node, attrs) => {
+      if (attrs.role === "neighbor") {
+        const neighbors = graph.neighbors(node);
+        if (!neighbors || !neighbors.length) return;
+        const anchor = neighbors[0];
+        if (!anchor || !graph.hasNode(anchor)) return;
+
+        const a = graph.getNodeAttributes(anchor);
+        const radius = 18 + (node.length % 4) * 4;
+        const angle = t + (node.length % 10);
+
+        graph.setNodeAttribute(node, "x", a.x + Math.cos(angle) * radius);
+        graph.setNodeAttribute(node, "y", a.y + Math.sin(angle) * radius);
+      }
+    });
+
+    renderer.refresh();
+    requestAnimationFrame(animateOrbit);
+  }
+  requestAnimationFrame(animateOrbit);
+
+  function animatePathEdges() {
+    if (!graph || !renderer) {
+      requestAnimationFrame(animatePathEdges);
+      return;
+    }
+
+    const pulse = (Math.sin(Date.now() / 450) + 1) / 2; // 0→1
+
+    graph.forEachEdge((edge, attrs) => {
+      if (attrs.role === "path") {
+        const base = edgeWidthFromCount(attrs.trackCount || 1, true);
+        const width = base + pulse * 2;
+        graph.setEdgeAttribute(edge, "size", width);
+      }
+    });
+
+    renderer.refresh();
+    requestAnimationFrame(animatePathEdges);
+  }
+  requestAnimationFrame(animatePathEdges);
+
+  /* ================================
+     PATH RENDERING
+  ===================================*/
+
+  function addPathToGraph(path, start, target) {
+    if (!graph || !renderer || !Array.isArray(path)) return;
+
+    const aggregatedEdges = aggregatePathEdges(path);
+    currentPath = aggregatedEdges;
+    pathNodeSet.clear();
+    pathEdgeSet.clear();
+
+    const posMap = computeArtistPositionsFromEdges(aggregatedEdges);
+
+    aggregatedEdges.forEach(edge => {
+      const from = edge.from;
+      const to   = edge.to;
+      const tracks = edge.tracks || [];
+      if (!from || !to) return;
+
+      const trackCount = tracks.length || 1;
+      const width = edgeWidthFromCount(trackCount, true);
+
+      ensureArtistNode(from, start, target, posMap);
+      ensureArtistNode(to,   start, target, posMap);
+
+      const edgeId = `${from}->${to}`;
+
+      pathNodeSet.add(from);
+      pathNodeSet.add(to);
+      pathEdgeSet.add(edgeId);
+
+      const label =
+        trackCount === 1
+          ? (tracks[0].name || `${trackCount} track`)
+          : `${trackCount} tracks`;
+
+      const firstTrack = tracks[0] || {};
+
+      if (graph.hasEdge(edgeId)) {
+        graph.setEdgeAttribute(edgeId, "color", PATH_EDGE_COLOR);
+        graph.setEdgeAttribute(edgeId, "size", width);
+        graph.setEdgeAttribute(edgeId, "role", "path");
+        graph.setEdgeAttribute(edgeId, "label", label);
+        graph.setEdgeAttribute(edgeId, "tracks", tracks);
+        graph.setEdgeAttribute(edgeId, "trackCount", trackCount);
+        graph.setEdgeAttribute(edgeId, "trackURL", firstTrack.url || "");
+      } else {
+        graph.addEdgeWithKey(edgeId, from, to, {
+          label: label,
+          size: width,
+          color: PATH_EDGE_COLOR,
+          role: "path",
+          tracks: tracks,
+          trackCount: trackCount,
+          trackURL: firstTrack.url || "",
+        });
+      }
+    });
+
+    refreshNodeDropdown();
+    renderer.refresh();
+  }
+
+  /* ================================
+     DROPDOWN / CAMERA
+  ===================================*/
+
+  function refreshNodeDropdown() {
+    if (!graph) return;
+    const nodes = [];
+    graph.forEachNode((node, attrs) => {
+      nodes.push(attrs.label || node);
+    });
+    nodes.sort((a, b) => a.localeCompare(b));
+
+    const current = nodeSelect.value;
+    let html = '<option value="">Jump to node…</option>';
+    for (const name of nodes) {
+      const selected = name === current ? ' selected' : '';
+      html += `<option value="${name}"${selected}>${name}</option>`;
+    }
+    nodeSelect.innerHTML = html;
+  }
+
+  function jumpToNode(name) {
+    if (!renderer || !graph || !name) return;
+    if (!graph.hasNode(name)) return;
+
+    const cam = renderer.getCamera();
+    const pos = renderer.getNodeDisplayData(name);
+    if (!pos) return;
+
+    cam.animate(
+      { x: pos.x, y: pos.y, ratio: 0.25 },
+      { duration: 650 }
+    );
+  }
+
+  /* ================================
+     SEARCH WORKFLOW
+  ===================================*/
+
+  async function runSearch() {
+    const start = startInput.value.trim();
+    const target = targetInput.value.trim();
+    const depth = Number(depthInput.value || -1);
+
+    if (!start || !target) {
+      resultsDiv.innerHTML = "<p class='error'>Start and Target are required.</p>";
+      return;
+    }
+
+    expandedByNode.clear();
+    pathNodeSet.clear();
+    pathEdgeSet.clear();
+    clusterSideByNode.clear();
+
+    initGraph(start, target);
+
+    resultsDiv.innerHTML = "";
+    spinner.style.display = "inline";
+    statusText.textContent = "Searching collaboration space…";
+
+    try {
+      const res = await fetch("/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ start, target, depth }),
+      });
+
+      spinner.style.display = "none";
+
+      if (!res.ok) {
+        const txt = await res.text();
+        resultsDiv.innerHTML = `<p class="error">Request failed: ${txt}</p>`;
+        statusText.textContent = "Search failed.";
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.message) {
+        resultsDiv.innerHTML = `<p class="muted">${data.message}</p>`;
+        statusText.textContent = data.message;
+        return;
+      }
+
+      let pathHtml = `<p class="muted-strong"><strong>Start:</strong> ${data.start}<br>
+        <strong>Target:</strong> ${data.target}<br>
+        <strong>Hops:</strong> ${data.hops}</p>`;
+
+      if (data.path && data.path.length > 0) {
+        pathHtml += `<p class="muted-strong"><strong>Path:</strong></p><ol>`;
+        data.path.forEach((step, i) => {
+          const from = step.from || "";
+          const to   = step.to || "";
+
+          const tracks = safeTracksFromStep(step);
+          let trackList = "";
+          if (tracks.length > 0) {
+            trackList = tracks.map(t => t.name || "Unknown track").join(", ");
+          } else {
+            trackList = "No track metadata";
+          }
+
+          pathHtml += `<li>${from} —[${trackList}]→ ${to}</li>`;
+        });
+        pathHtml += `</ol>`;
+      }
+
+      resultsDiv.innerHTML = pathHtml;
+      statusText.textContent = `Path found: ${data.hops} hops`;
+
+      addPathToGraph(data.path, data.start, data.target);
+      await expandNeighborsForPath(data.path);
+      collapseAllNeighbors();
+
+      // auto-fit camera roughly to path
+      const cam = renderer.getCamera();
+      cam.animate(
+        { x: 0, y: 0, ratio: 0.35 },
+        { duration: 800 }
+      );
+
+      renderer.refresh();
+    } catch (err) {
+      spinner.style.display = "none";
+      resultsDiv.innerHTML = `<p class="error">Request failed: ${err}</p>`;
+      statusText.textContent = "Search failed.";
+    }
+  }
+
+  /* ================================
+     Create Playlist Workflow
+  ===================================*/
+
+  function startAuthAndPlaylist() {
+    // open auth window
+    window.open('/auth', '_blank', 'width=600,height=800');
+
+    const name = playlistNameInput.value.trim()
+      || `SixDegreeSpotify: ${startInput.value.trim()} → ${targetInput.value.trim()}`;
+
+    fetch('/createPlaylist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playlistName: name })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Playlist creation failed");
+      return res.json();
+    })
+    .then(data => {
+      console.log("Playlist created:", data);
+      alert("Playlist created: " + data.url);
+    })
+    .catch(err => {
+      console.error("Error creating playlist:", err);
+      alert("Error creating playlist");
+    });
+  }
+
+  /* ================================
+     Event bindings
+  ===================================*/
+
+  document.getElementById("searchForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    runSearch();
+  });
+
+  toggleNeighborsBtn.addEventListener("click", () => {
+    showNeighbors = !showNeighbors;
+    toggleNeighborsBtn.textContent = showNeighbors ? "Hide Neighbors" : "Show Neighbors";
+    if (renderer) renderer.refresh({ skipIndexation: true });
+  });
+
+  collapseNeighborsBtn.addEventListener("click", () => {
+    collapseAllNeighbors();
+  });
+
+  jumpToNodeBtn.addEventListener("click", () => {
+    const name = nodeSelect.value;
+    if (name) jumpToNode(name);
+  });
+
+  // Init empty graph on load
+  initGraph("", "");
+</script>
+
+</body>
+</html>

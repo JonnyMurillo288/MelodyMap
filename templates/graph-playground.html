@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Sigma Test</title>
+
+  <!-- LOCAL FILES ONLY -->
+  <script src="./graphology.umd.min.js"></script>
+  <script src="./sigma.min.js"></script>
+</head>
+<body>
+<script>
+console.log("graphology:", window.graphology);
+console.log("sigma global:", window.sigma);
+
+if (window.sigma && window.sigma.Sigma) {
+  alert("LOCAL SIGMA LOADED SUCCESSFULLY");
+} else {
+  alert("LOCAL SIGMA STILL FAILED TO LOAD");
+}
+</script>
+</body>
+</html>
