@@ -23,9 +23,6 @@ type Store struct {
 func Open(dsn string) (*Store, error) {
 	if dsn == "" {
 		dsn = os.Getenv("PG_DSN")
-		if dsn == "" {
-			dsn = "postgres://postgres:baseball162162@localhost:5432/musicbrainz_db?sslmode=disable"
-		}
 	}
 
 	db, err := sql.Open("pgx", dsn)
