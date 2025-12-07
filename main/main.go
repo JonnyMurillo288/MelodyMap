@@ -154,7 +154,6 @@ func createPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	// 0. Spotify auth pre-check via auth package
 	if err := auth.HasSpotifyToken(); err != nil {
 		if errors.Is(err, auth.ErrNoSpotifyToken) {
-			// Frontend should open /auth (or whatever route you wired to auth.HomePage)
 			json.NewEncoder(w).Encode(map[string]any{
 				"auth_required": true,
 				"auth_url":      "/auth/start",

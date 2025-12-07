@@ -1347,21 +1347,61 @@ function renderFinalResult(result) {
 
 // Called when user clicks "Create Playlist"
 function startAuthAndPlaylist() {
-  // Open Spotify OAuth window
-  const win = window.open("/auth", "_blank", "width=600,height=800");
+  // Open Spotify OAuth window in a popup
+  const win = window.open("/auth", "spotify_auth", "width=600,height=800");
 
-  function handleAuth(event) {
+  if (!win) {
+    alert("Popup blocked. Please allow popups for this website.");
+    return;
+  }
+
+  // Handle the signal from /auth/callback once OAuth is done
+  function handleAuthMessage(event) {
     if (!event.data || event.data.auth !== "done") return;
 
-    window.removeEventListener("message", handleAuth);
+    // Stop listening
+    window.removeEventListener("message", handleAuthMessage);
 
+    // Close the popup
     if (win && !win.closed) win.close();
 
+    // Now continue playlist creation safely in the MAIN window
     const playlistName =
       playlistNameInput.value.trim() ||
       `SixDegreeSpotify: ${startInput.value.trim()} → ${targetInput.value.trim()}`;
 
-    createPlaylist(playlistName);
+    createPlaylistAfterAuth(playlistName);
+  }
+
+  window.addEventListener("message", handleAuthMessage);
+}
+
+/* ============================================================
+   AUTH & PLAYLIST LOGIC
+============================================================ */
+
+// Opens Spotify OAuth in a popup, then retries playlist creation
+function startAuthAndPlaylist(authURL) {
+  const url = authURL || "/auth/start";
+
+  const win = window.open(url, "spotify_auth", "width=600,height=800");
+  if (!win) {
+    alert("Popup blocked. Please allow popups for this site.");
+    return;
+  }
+
+  function handleAuth(event) {
+    if (!event.data || event.data.auth !== "done") return;
+
+    // Stop listening once we get the signal
+    window.removeEventListener("message", handleAuth);
+
+    if (win && !win.closed) {
+      win.close();
+    }
+
+    // Now that auth is done, retry playlist creation
+    createPlaylist();
   }
 
   window.addEventListener("message", handleAuth);
@@ -1397,9 +1437,10 @@ async function createPlaylist() {
 
     const data = await res.json();
 
-    // 🔥 If Spotify login is required
+    // 🔥 If Spotify login is required, do NOT redirect this window.
+    //     Instead, open the popup and let it complete OAuth.
     if (data.auth_required) {
-      window.location = data.auth_url;  // redirect user to Spotify fOAuth
+      startAuthAndPlaylist(data.auth_url || "/auth/start");
       return;
     }
 
@@ -1416,7 +1457,6 @@ async function createPlaylist() {
     } else {
       alert("Playlist created, but no playlist URL returned.");
     }
-
   } catch (err) {
     alert("Playlist creation error:\n" + err.message);
   }

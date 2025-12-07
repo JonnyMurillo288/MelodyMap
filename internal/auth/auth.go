@@ -65,14 +65,14 @@ func HasSpotifyToken() error {
 // ---------------------------------------------
 // Start OAuth
 // ---------------------------------------------
+var expectedState = "sds-oauth-state" // static, survives OAuth cycle
+
 func HomePage(w http.ResponseWriter, r *http.Request) {
-	config = createConfig()
-	fmt.Printf("SPOTIFY CONFIG: client_id=%s redirect=%s\n",
-		config.ClientID, config.RedirectURL)
+	if config == nil {
+		config = createConfig()
+	}
 
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Println("Generated URL:", authURL)
-
+	authURL := config.AuthCodeURL(expectedState, oauth2.AccessTypeOffline)
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
@@ -85,38 +85,49 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 1. Validate state
+	state := r.Form.Get("state")
+	if state != expectedState {
+		http.Error(w, "invalid oauth state", 400)
+		return
+	}
+
+	// 2. Get code
 	code := r.Form.Get("code")
 	if code == "" {
 		http.Error(w, "missing code", 400)
 		return
 	}
 
+	// 3. Load config
 	if config == nil {
 		config = createConfig()
 	}
 
+	// 4. Exchange code → token
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
 		http.Error(w, "cannot exchange token: "+err.Error(), 500)
 		return
 	}
 
+	// 5. Save token
 	saveToken(token)
 
-	// popup closes itself
+	// 6. Popup sends event to opener
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(`
-	<html><body>
-	<script>
-	  if (window.opener) {
-	      window.opener.postMessage({ auth: "done" }, "*");
-	      window.close();
-	  } else {
-	      window.location.href = "/";
-	  }
-	</script>
-	Auth success
-	</body></html>
+<html><body>
+<script>
+  if (window.opener) {
+      window.opener.postMessage({ auth: "done" }, "*");
+      window.close();
+  } else {
+      window.location.href = "/";
+  }
+</script>
+Auth success
+</body></html>
 	`))
 }
 
