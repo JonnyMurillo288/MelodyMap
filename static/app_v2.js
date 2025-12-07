@@ -65,9 +65,11 @@ const jumpToNodeBtn = document.getElementById("jumpToNodeBtn");
 const neighborLimitSlider = document.getElementById("neighborLimit");
 const neighborLimitValue = document.getElementById("neighborLimitValue");
 const mobileTapBtn = document.getElementById("mobileTapBtn");
-const ticker = document.getElementById("searchTicker").classList.add("visible");;
-const searchWarning = document.getElementById("searchWarning").classList.add("visible");
+const ticker = document.getElementById("searchTicker");
+const searchWarning = document.getElementById("searchWarning");
 
+if (ticker) ticker.classList.add("visible");
+if (searchWarning) searchWarning.classList.add("visible");
 /* ============================================================
    UTILITIES
 ============================================================ */
