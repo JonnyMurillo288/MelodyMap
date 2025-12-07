@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
@@ -115,27 +114,31 @@ func ResolveArtistOnce(dsn, name string) (*sixdegrees.Artists, error) {
 	}
 	defer db.Close()
 
-	// Ensure search_path or use full schema
+	// set schema
+	_, _ = db.Exec("SET search_path TO musicbrainz;")
+
+	// IMPORTANT: order by id ASC so the canonical artist is chosen
 	const q = `
-        SELECT id, gid::text, name
-        FROM musicbrainz.artist
+        SELECT id, gid, name
+        FROM artist
         WHERE lower(name) = lower($1)
+        ORDER BY id ASC
         LIMIT 1;
     `
 
 	var (
-		intID int
-		mbid  string
-		cname string
+		internalID int
+		mbid       string
+		cname      string
 	)
 
-	err = db.QueryRow(q, name).Scan(&intID, &mbid, &cname)
+	err = db.QueryRow(q, name).Scan(&internalID, &mbid, &cname)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("artist not found: %w", err)
 	}
 
 	return &sixdegrees.Artists{
-		ID:   strconv.Itoa(intID), // BFS uses string IDs but expects *integer values*
+		ID:   mbid, // UUID (gid)
 		Name: cname,
 	}, nil
 }
