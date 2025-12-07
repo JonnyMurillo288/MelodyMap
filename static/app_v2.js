@@ -179,9 +179,6 @@ async function updateSearchTicker() {
 
     const data = await res.json();
 
-    const ticker = document.getElementById("searchTicker");
-    const searchWarning = document.getElementById("searchWarning");
-
     const newTickerText = `Searching - ${data.artist}: ${data.count}/${data.max}`;
     const newWarningText = `Depth: ${data.depth} levels`;
 
@@ -1269,6 +1266,7 @@ async function pollJob(jobID) {
     // -------------------------------
     if (job.status === "running") {
       showTicker();                            // ensure ticker stays visible
+      startTicker();
       return;
     }
 
@@ -1290,6 +1288,7 @@ async function pollJob(jobID) {
       clearInterval(interval);
       spinner.classList.remove("visible");
       hideTicker();
+      stopTicker();
 
       const result = job.result;
       window.currentPath = result.path;

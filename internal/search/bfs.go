@@ -81,6 +81,7 @@ func RunSearchOptsBFS(
 	)
 	var expandedCount = 0
 
+	log.Println()
 	for len(queue) > 0 {
 		// pop
 		item := queue[0]
