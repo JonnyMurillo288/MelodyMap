@@ -4,7 +4,7 @@ package search
 // 	"fmt"
 // 	"time"
 
-// 	sixdegrees "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+// 	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 // )
 
 // // SearchArtists runs the BFS path search between two artists.

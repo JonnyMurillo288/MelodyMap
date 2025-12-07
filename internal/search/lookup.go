@@ -1,7 +1,7 @@
 package search
 
 import (
-	sixdegrees "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
 
 // Returned to the frontend:

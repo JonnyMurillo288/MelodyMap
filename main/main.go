@@ -13,11 +13,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/auth"
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/jobs"
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/search"
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/secret"
-	"github.com/Jonnymurillo288/SixDegreesSpotify/spotify"
+	"github.com/Jonnymurillo288/MelodyMap/internal/auth"
+	"github.com/Jonnymurillo288/MelodyMap/internal/jobs"
+	"github.com/Jonnymurillo288/MelodyMap/internal/search"
+	"github.com/Jonnymurillo288/MelodyMap/internal/secret"
+	"github.com/Jonnymurillo288/MelodyMap/spotify"
 )
 
 var lookupMu sync.RWMutex

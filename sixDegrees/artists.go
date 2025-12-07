@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/Jonnymurillo288/SixDegreesSpotify/spotify"
+	"github.com/Jonnymurillo288/MelodyMap/spotify"
 )
 
 // MusicBrainz New Neighbor results

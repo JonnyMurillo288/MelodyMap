@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	sixdegrees "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
 
 type MusicBrainzSearcher interface {

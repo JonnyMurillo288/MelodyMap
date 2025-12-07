@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	sixdegrees "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
 
 // Fake album JSON, simulating Spotify /albums/{id}/tracks output.

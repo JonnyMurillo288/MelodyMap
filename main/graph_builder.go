@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	sixdegrees "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
 
 // Graph is a minimal, in-memory artist collaboration graph.

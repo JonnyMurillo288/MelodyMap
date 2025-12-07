@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/auth"
+	"github.com/Jonnymurillo288/MelodyMap/internal/auth"
 )
 
 // ========================================================== //

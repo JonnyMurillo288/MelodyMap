@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/jobs"
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/search"
+	"github.com/Jonnymurillo288/MelodyMap/internal/jobs"
+	"github.com/Jonnymurillo288/MelodyMap/internal/search"
 )
 
 var GlobalNeighborLookup = make(map[string]frontendStep)

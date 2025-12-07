@@ -1,7 +1,7 @@
 package search
 
 import (
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/jobs"
+	"github.com/Jonnymurillo288/MelodyMap/internal/jobs"
 )
 
 // RunBackgroundBFS executes a search in the background and updates a Job.

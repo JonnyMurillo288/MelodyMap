@@ -1,0 +1,50 @@
+# ------------------------------------------------------------------------------
+# Secrets / credentials / tokens
+# ------------------------------------------------------------------------------
+
+# Raw auth config / tokens
+authconfig.json
+authConfig.json
+authConfig.txt
+auth_token.txt
+authToken.txt
+spotify_token.json
+callback_url.txt
+
+# Everything under etc that looks secret
+etc/**/*.txt
+
+# Musicbrainz DB creds
+config/*.json
+config/*.txt
+
+# any authConfig anywhere
+**/authConfig.txt
+**/authToken.txt
+**/callback_url.txt
+
+# login info
+docs/login_2_database.txt
+
+# local environment notes
+*.env
+*.local
+*.secret
+*.secrets
+
+# Render/production env notes
+main/Environment_Render.txt
+
+# Tokens stored in app directory
+var/data/*.json
+
+# ------------------------------------------------------------------------------
+# editor junk
+# ------------------------------------------------------------------------------
+*~lock*
+.~*
+
+# ODT lock files
+*.odt#
+.#*
+

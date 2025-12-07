@@ -3,7 +3,7 @@ package sixdegrees_test
 import (
 	"testing"
 
-	sd "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+	sd "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
 
 // track helper

@@ -6,16 +6,16 @@ package sixdegrees
 import (
 	"testing"
 
-	"github.com/Jonnymurillo288/SixDegreesSpotify/spotify"
+	"github.com/Jonnymurillo288/MelodyMap/spotify"
 )
 
 func TestAppendArtistTracks(t *testing.T) {
 	art := InputArtist("Eminem")
-	albums,_ := spotify.ArtistAlbums(art.ID,1)
+	albums, _ := spotify.ArtistAlbums(art.ID, 1)
 	h := NewHelper()
-	for _,al := range art.ParseAlbums(albums) {
+	for _, al := range art.ParseAlbums(albums) {
 		tr, _ := spotify.GetAlbumTracks(al)
-		T,_ := art.CreateTracks(tr,h)
-		art.Tracks = append(art.Tracks,T...)
+		T, _ := art.CreateTracks(tr, h)
+		art.Tracks = append(art.Tracks, T...)
 	}
 }

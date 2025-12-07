@@ -10,7 +10,7 @@ package main
 // 	"strings"
 // 	"time"
 
-// 	sixdegrees "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+// 	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 // )
 
 // // Store wraps a sql.DB and exposes helpers for reading/writing artists, albums, and tracks.

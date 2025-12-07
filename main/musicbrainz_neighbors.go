@@ -1,11 +1,10 @@
 package main
 
 import (
-	"github.com/Jonnymurillo288/SixDegreesSpotify/musicbrainz"
+	"github.com/Jonnymurillo288/MelodyMap/musicbrainz"
 
-	sixdegrees "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
-
 
 // NeighborProviderMB fetches related artists from MusicBrainz.
 func NeighborProviderMB(
@@ -27,7 +26,6 @@ func NeighborProviderMB(
 	relations := musicbrainz.ExtractCollaborators(lookup)
 
 	out := make([]sixdegrees.NeighborResult, 0, len(relations))
-	
 
 	for _, r := range relations {
 		nbArtist := &sixdegrees.Artists{

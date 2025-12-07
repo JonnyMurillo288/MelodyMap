@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Jonnymurillo288/SixDegreesSpotify/internal/secret"
+	"github.com/Jonnymurillo288/MelodyMap/internal/secret"
 	"golang.org/x/oauth2"
 )
 

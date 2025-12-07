@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	sixdegrees "github.com/Jonnymurillo288/SixDegreesSpotify/sixDegrees"
+	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
 
 // This version matches your handlers & background BFS.
