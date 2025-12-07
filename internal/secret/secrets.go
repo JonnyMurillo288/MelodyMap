@@ -23,7 +23,7 @@ func LoadSecrets(_ string) error {
 	// ----- 1. Load from environment -----
 	id := os.Getenv("SPOTIFY_CLIENT_ID")
 	secret := os.Getenv("SPOTIFY_CLIENT_SECRET")
-	redirect := os.Getenv("SPOTIFY_REDIRECT_URL")
+	redirect := os.Getenv("SPOTIFY_REDIRECT_URI")
 
 	if id != "" && secret != "" && redirect != "" {
 		AuthConfig = AuthConfigStruct{
