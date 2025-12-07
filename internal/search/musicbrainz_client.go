@@ -113,7 +113,7 @@ func ResolveArtistOnce(dsn, name string) (*sixdegrees.Artists, error) {
 		return nil, err
 	}
 	defer db.Close()
-
+	_, _ = db.Exec("SET search_path TO musicbrainz;")
 	const q = `
         SELECT gid, name
         FROM artist
