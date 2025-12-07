@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -25,11 +26,16 @@ func Open(dsn string) (*Store, error) {
 		dsn = os.Getenv("PG_DSN")
 	}
 
+	log.Println("[DB] Opening DB with DSN:", dsn)
+
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
 	}
 
+	log.Println("[DB] DB opened, pinging...")
+
+	// Ping with timeout
 	err = withTimeout(func(ctx context.Context) error {
 		return db.PingContext(ctx)
 	}, 5*time.Second)
@@ -38,7 +44,25 @@ func Open(dsn string) (*Store, error) {
 		return nil, fmt.Errorf("db ping: %w", err)
 	}
 
-	_, _ = db.Exec("SET search_path TO musicbrainz;")
+	log.Println("[DB] Ping OK")
+
+	// Set search path
+	if _, err := db.Exec("SET search_path TO musicbrainz;"); err != nil {
+		log.Printf("[DB] FAILED to set search_path: %v", err)
+	} else {
+		log.Println("[DB] search_path set to musicbrainz")
+	}
+
+	// TEST: count rows in artist_collab
+	var cnt int
+	err = db.QueryRow(`SELECT count(*) FROM artist_collab`).Scan(&cnt)
+	if err != nil {
+		log.Printf("[DB] artist_collab count FAILED: %v", err)
+	} else {
+		log.Printf("[DB] artist_collab rows detected: %d", cnt)
+	}
+
+	log.Println("[DB] Open() complete")
 
 	return &Store{DB: db}, nil
 }
