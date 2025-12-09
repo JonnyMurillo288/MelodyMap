@@ -1263,7 +1263,6 @@ async function pollJob(jobID) {
       if (!res.ok) return;
 
       job = await res.json();
-      console.log("JOB RESPONSE:", job);
 
     } catch (err) {
       console.error("Polling error:", err);
