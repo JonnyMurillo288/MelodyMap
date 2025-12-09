@@ -1,57 +1,91 @@
-# SixDegreesSpotify
 
-SixDegreesSpotify discovers relationships between two musical artists using Spotify data, inspired by the "six degrees" concept. Given a start artist and a target artist, it builds a collaboration graph and finds a path via BFS (unweighted) or a weighted search.
+# SixDegreesSpotify – How the Site Works
+### [Link to Site](https://melody-map.com/)
 
----
+![use image](https://github.com/JonnyMurillo288/MelodyMap/blob/main/ezgif-140c2ab38565cd93.gif)
 
-## Prerequisites
-- Go 1.21+ (recommended)
-- Spotify Developer account and app
-- Network access to Spotify Web API
+SixDegreesSpotify (Melody‑Map) is an interactive web application that reveals how any two musical artists are connected across the global collaboration graph.  
+Instead of relying on simple metadata, the site builds a structured network of artists, recordings, and shared collaborations—then traces the shortest path between two artists in real time.
 
 ---
 
-## Authentication Setup
-The app uses Spotify OAuth to obtain an access token, stored locally. Do not commit secrets or tokens.
+## Overview
 
-1) Create a Spotify application
-- Redirect URL: `http://localhost:8392/auth`
+When you enter a **start artist** and a **target artist**, the site performs three high‑level steps:
 
-2) Create auth config file
-```bash
-cp main/authConfig.sample.json main/authConfig.txt
-# Edit main/authConfig.txt and fill in client_id and client_secret
-```
+### 1. Artist Identification
+The system searches its indexed MusicBrainz/Spotify–linked database to:
+- Normalize artist names  
+- Handle ambiguous or duplicate matches  
+- Retrieve canonical artist IDs used for graph traversal  
 
-3) Run the auth server and complete login
-```bash
-go run ./main/auth.go
-# Open http://localhost:8392 in your browser and approve access
-# The token will be written to main/authToken.txt
-```
+This ensures that the search runs on verified entities, not fuzzy text matches.
 
 ---
 
-## CLI Usage
-Run an unweighted shortest path search:
-```bash
-go run main.go -start "Artist A" -find "Artist B"
-```
+### 2. Collaboration Graph Expansion
+Once both artists are identified, the backend begins expanding outward from the start artist using a **Breadth‑First Search (BFS)** across collaboration data.
 
-If required flags are missing, the program prints usage and exits with code 1.
+Each “neighbor” relationship is formed through:
+- Shared recordings  
+- Featured appearances  
+- Joint albums or EPs  
+- Remix credits  
+- Any track‑level collaboration stored in the dataset  
 
-Optional flags (planned):
-- `-depth` (limit BFS depth)
-- `-weighted` (use weighted search)
-- `-verbose` (more detailed logs)
+The BFS continues across layers until the target artist is reached or all reachable connections are exhausted.
+
+A live ticker on the site shows:
+- Current depth  
+- Artist currently being expanded  
+- Number of neighbors scanned  
+
+This provides transparency into the real‑time search complexity.
 
 ---
 
-## Notes
-- Secrets (`main/authConfig.txt`, `main/authToken.txt`) are ignored via .gitignore.
-- API rate limiting and pagination enhancements are planned; current behavior may be limited.
+### 3. Path Reconstruction & Visualization
+When a link is found, the system backtracks through the BFS tree to reconstruct the shortest path.
+
+Each hop includes:
+- `From` and `To` artist  
+- All tracks that connect them  
+- Track previews or album art when available  
+
+The front‑end renders the path visually and displays hover panels listing collaboration details.
+
+You may optionally:
+- **Generate a Spotify playlist** containing all songs used in the discovered path  
+- Click into each track’s Spotify link  
+- View the artist/track cards with imagery and metadata  
 
 ---
 
-## License
-MIT (or project default).
+## What the App Does *Not* Require
+This site is **not** a tool you must install or run locally.  
+There is:
+- No local OAuth setup  
+- No CLI required  
+- No need for API keys  
+
+All authentication, data processing, and graph search logic happens on the hosted backend.
+
+---
+
+## Key Features
+- Fast, database‑driven artist lookup  
+- Real‑time BFS expansion across millions of collaboration edges  
+- Full track‑level connection metadata  
+- Visual, interactive UI  
+- Optional playlist creation via your Spotify account  
+- Accurate handling of features, remixes, joint albums, and multi‑artist credits  
+
+---
+
+## Additional Notes
+- All track/artist images and previews originate from the Spotify Web API.  
+- Collaboration edges originate from MusicBrainz → Spotify linkage.  
+- The app handles rate‑limited APIs, caching, DB indexing, and batching internally.  
+
+---
+

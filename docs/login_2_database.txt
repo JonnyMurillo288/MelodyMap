@@ -1,7 +1,0 @@
-mysql -u sixuser -p sixdegrees
-
-sixpass
-
-
-export MYSQL_DSN="sixuser:sixpass@tcp(127.0.0.1:3306)/sixdegrees?parseTime=true&charset=utf8mb4"
-
