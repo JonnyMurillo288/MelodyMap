@@ -11,6 +11,7 @@ func RunBackgroundBFS(job *jobs.Job, req SearchRequest) {
 	})
 
 	hops, stepsList, msg, status, err := SearchArtists(
+		nil,
 		req.Start,
 		req.Target,
 		req.Depth,

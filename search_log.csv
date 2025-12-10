@@ -1,0 +1,18 @@
+start,target,hops,status,seconds
+Adele,Joey + Rory,4,200,39.3932
+Adele,Justin Bieber,3,200,1.4039
+Adele,Chris Janson,2,200,1.1969
+Adele,One Direction,4,200,40.7350
+Adele,Drake,3,200,1.3364
+Adele,Carrie Underwood,3,200,1.5950
+Adele,Ed Sheeran,2,200,1.1621
+Joey + Rory,Adele,4,200,5.5849
+Joey + Rory,Justin Bieber,4,200,1.9262
+Joey + Rory,Chris Janson,3,200,1.1956
+Joey + Rory,One Direction,6,200,377.1298
+Joey + Rory,Drake,4,200,11.8739
+Joey + Rory,Carrie Underwood,3,200,1.2314
+Joey + Rory,Ed Sheeran,4,200,3.4265
+Justin Bieber,Adele,4,200,64.7691
+Justin Bieber,Joey + Rory,4,200,31.9535
+Justin Bieber,Chris Janson,3,200,3.1089

@@ -1,11 +1,11 @@
 package search
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
@@ -107,38 +107,94 @@ func (c *MBClient) LookupArtist(id string) (*mbArtistLookup, error) {
 
 // NOT A CLIENT BY DB, GOING TO FIX IN THE FUTURE
 
-func ResolveArtistOnce(dsn, name string) (*sixdegrees.Artists, error) {
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("open db: %w", err)
-	}
-	defer db.Close()
+func ResolveArtistOnce(s *Store, name string) (*sixdegrees.Artists, error) {
+	name = strings.TrimSpace(name)
 
-	// set schema
-	_, _ = db.Exec("SET search_path TO musicbrainz;")
-
-	// IMPORTANT: order by id ASC so the canonical artist is chosen
-	const q = `
-        SELECT id, gid, name
-        FROM artist
-        WHERE lower(name) = lower($1)
-        ORDER BY id ASC
-        LIMIT 1;
+	// ============================================================
+	// Popularity scoring used in all queries:
+	// credit_score    = appearances in artist_credit_name
+	// recording_score = appearances in l_artist_recording
+	// release_score   = appearances in artist_release
+	// ============================================================
+	const popularityCols = `
+        COALESCE(acn.cnt, 0) AS credit_score
     `
 
-	var (
-		internalID int
-		mbid       string
-		cname      string
-	)
+	const popularityJoins = `
+        LEFT JOIN (
+            SELECT artist, COUNT(*) AS cnt
+            FROM artist_credit_name
+            GROUP BY artist
+        ) acn ON acn.artist = a.id
+    `
 
-	err = db.QueryRow(q, name).Scan(&internalID, &mbid, &cname)
-	if err != nil {
-		return nil, fmt.Errorf("artist not found: %w", err)
+	// ============================================================
+	// 1. EXACT MATCH
+	// ============================================================
+	exact := fmt.Sprintf(`
+        SELECT a.id, a.gid, a.name, %s
+        FROM artist a
+        %s
+        WHERE lower(a.name) = lower($1)
+        ORDER BY credit_score DESC,
+                 a.id ASC
+        LIMIT 1;
+    `, popularityCols, popularityJoins)
+
+	var internalID int
+	var gid, cname string
+	var credit int
+	// fmt.Printf("QUERY:\n%s\nARGS: %v", exact, []any{name})
+	err := s.DB.QueryRow(exact, name).Scan(
+		&internalID, &gid, &cname,
+		&credit,
+	)
+	if err == nil {
+		return &sixdegrees.Artists{ID: gid, Name: cname}, nil
 	}
 
-	return &sixdegrees.Artists{
-		ID:   mbid, // UUID (gid)
-		Name: cname,
-	}, nil
+	// ============================================================
+	// 2. ALIAS MATCH
+	// ============================================================
+	alias := fmt.Sprintf(`
+        SELECT a.id, a.gid, a.name, %s
+        FROM artist a
+        JOIN artist_alias aa ON aa.artist = a.id
+        %s
+        WHERE lower(aa.name) = lower($1)
+        ORDER BY credit_score DESC,
+                 a.id ASC
+        LIMIT 1;
+    `, popularityCols, popularityJoins)
+
+	err = s.DB.QueryRow(alias, name).Scan(
+		&internalID, &gid, &cname,
+		&credit,
+	)
+	if err == nil {
+		return &sixdegrees.Artists{ID: gid, Name: cname}, nil
+	}
+
+	// ============================================================
+	// 3. FUZZY MATCH
+	// ============================================================
+	fuzzy := fmt.Sprintf(`
+        SELECT a.id, a.gid, a.name, %s
+        FROM artist a
+        %s
+        WHERE a.name ILIKE '%%' || $1 || '%%'
+        ORDER BY credit_score DESC,
+                 a.id ASC
+        LIMIT 1;
+    `, popularityCols, popularityJoins)
+
+	err = s.DB.QueryRow(fuzzy, name).Scan(
+		&internalID, &gid, &cname,
+		&credit,
+	)
+	if err == nil {
+		return &sixdegrees.Artists{ID: gid, Name: cname}, nil
+	}
+
+	return nil, fmt.Errorf("artist not found: %q", name)
 }

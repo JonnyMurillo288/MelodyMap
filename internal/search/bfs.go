@@ -16,6 +16,7 @@ import (
 //
 
 func RunSearchOptsBFS(
+	s *Store,
 	start, target *sixdegrees.Artists,
 	maxDepth int,
 	verbose bool,
@@ -23,14 +24,38 @@ func RunSearchOptsBFS(
 	offline bool,
 ) (*sixdegrees.Helper, []string, []string, [][]sixdegrees.Track, int, bool) {
 
-	s, err := Open("")
-	if err != nil {
-		log.Printf("RunSearchOptsBFS: failed to open DB: %v", err)
-		return nil, nil, nil, nil, 500, false
+	// =========================================================
+	// Use provided store OR open a new one
+	// =========================================================
+	openedHere := false
+	if s == nil {
+		var err error
+		s, err = Open("")
+		if err != nil {
+			fmt.Printf("RunSearchOptsBFS: failed to open DB: %v\n", err)
+			return nil, nil, nil, nil, 500, false
+		}
+		openedHere = true
 	}
-	defer s.Close()
+
+	if openedHere {
+		defer s.Close()
+	}
+
+	// =========================================================
+	// Validate inputs
+	// =========================================================
 
 	if start == nil || start.ID == "" || target == nil || target.ID == "" {
+		msg := fmt.Sprintf(
+			"DEBUG: start == nil: %v, start.ID == \"\": %v, target == nil: %v, target.ID == \"\": %v",
+			start == nil,
+			start != nil && start.ID == "",
+			target == nil,
+			target != nil && target.ID == "",
+		)
+		fmt.Println(msg)
+
 		return nil, nil, nil, nil, 400, false
 	}
 
@@ -106,7 +131,6 @@ func RunSearchOptsBFS(
 		if verbose {
 			log.Printf("[BFS] Expanding %s at depth %d", item.A.Name, item.Depth)
 		}
-
 		neighbors, status, err := s.MusicBrainzNeighborProvider(
 			item.A,
 			perArtistLimit,

@@ -2,7 +2,6 @@ package search
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 )
@@ -10,6 +9,7 @@ import (
 // This version matches your handlers & background BFS.
 // No provider or MB client required from caller.
 func SearchArtists(
+	s *Store,
 	start, target string,
 	depth, limit int,
 	offline bool,
@@ -28,15 +28,16 @@ func SearchArtists(
 
 	// ------------------------
 	// Resolve START
-	startArtist, err := ResolveArtistOnce(os.Getenv("PG_DSN"), start)
+	startArtist, err := ResolveArtistOnce(s, start)
 	if err != nil {
-		return 0, nil, "start artist not found", 404, nil
+		fmt.Println(err)
+		return 0, nil, "start artist not found", 404, err
 	}
 
 	// ------------------------
 	// Resolve TARGET
 
-	targetArtist, err := ResolveArtistOnce(os.Getenv("PG_DSN"), target)
+	targetArtist, err := ResolveArtistOnce(s, target)
 	if err != nil {
 		return 0, nil, "target artist not found", 404, nil
 	}
@@ -44,10 +45,11 @@ func SearchArtists(
 	// ------------------------
 	// BFS call
 	helper, _, pathIDs, tracksPerHop, status, ok := RunSearchOptsBFS(
+		s,
 		startArtist,
 		targetArtist,
 		depth,
-		true, // verbose
+		false, // verbose
 		&limit,
 		offline,
 	)
@@ -72,8 +74,10 @@ func SearchArtists(
 		to := helper.ArtistByID[pathIDs[i]]
 
 		step := Step{
-			From: from.Name,
-			To:   to.Name,
+			From:   from.Name,
+			To:     to.Name,
+			FromID: from.ID,
+			ToID:   to.ID,
 		}
 
 		if i-1 < len(tracksPerHop) {

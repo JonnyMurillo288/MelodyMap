@@ -107,6 +107,7 @@ func (s *Store) MusicBrainzNeighborProvider(
 			visitedByNeighbor[nbID][trackID] = true
 		}
 	}
+
 	// convert map → slice
 	out := make([]*NeighborEdge, 0, len(grouped))
 	for _, v := range grouped {

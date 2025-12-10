@@ -14,16 +14,20 @@ type Step struct {
 	From   string      `json:"from"`
 	To     string      `json:"to"`
 	Tracks []TrackInfo `json:"tracks"`
+	FromID string      `json:"fromID"`
+	ToID   string      `json:"toID"`
 }
 
 // SearchResponse returned by background BFS and HTTP layer
 type SearchResponse struct {
-	Start   string `json:"start"`
-	Target  string `json:"target"`
-	Hops    int    `json:"hops"`
-	Path    []Step `json:"path"`
-	Message string `json:"message,omitempty"`
-	Status  int    `json:"status"`
+	Start    string `json:"start"`
+	Target   string `json:"target"`
+	StartID  string `json:"startID"`
+	TargetID string `json:"targetID"`
+	Hops     int    `json:"hops"`
+	Path     []Step `json:"path"`
+	Message  string `json:"message,omitempty"`
+	Status   int    `json:"status"`
 }
 
 // Ticker for frontend live-updates
@@ -56,9 +60,11 @@ type NeighborEdge struct {
 }
 
 type SearchRequest struct {
-	Start  string `json:"start"`
-	Target string `json:"target"`
-	Depth  int    `json:"depth"`
+	Start    string `json:"start"`
+	Target   string `json:"target"`
+	StartID  string `json:"startID"`
+	TargetID string `json:"targetID"`
+	Depth    int    `json:"depth"`
 }
 
 // Minimal local wrappers to avoid sixdegrees import hell
