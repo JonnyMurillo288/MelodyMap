@@ -1,0 +1,27 @@
+{
+  "git.enabled": false,
+  "git.autorefresh": false,
+  "git.decorations.enabled": false,
+
+  "files.watcherExclude": {
+    "**/.git/**": true,
+    "**/*.csv": true,
+    "**/*.json": true,
+    "**/*.log": true,
+    "**/.venv/**": true,
+    "**/__pycache__/**": true,
+    "**/data/**": true,
+    "**/logs/**": true
+  },
+
+  "search.exclude": {
+    "**/.git/**": true,
+    "**/*.csv": true,
+    "**/*.json": true,
+    "**/*.log": true,
+    "**/.venv/**": true,
+    "**/__pycache__/**": true,
+    "**/data/**": true,
+    "**/logs/**": true
+  }
+}

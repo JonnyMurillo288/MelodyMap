@@ -1,18 +1,81 @@
 start,target,hops,status,seconds
-Adele,Joey + Rory,4,200,39.3932
-Adele,Justin Bieber,3,200,1.4039
-Adele,Chris Janson,2,200,1.1969
-Adele,One Direction,4,200,40.7350
-Adele,Drake,3,200,1.3364
-Adele,Carrie Underwood,3,200,1.5950
-Adele,Ed Sheeran,2,200,1.1621
-Joey + Rory,Adele,4,200,5.5849
-Joey + Rory,Justin Bieber,4,200,1.9262
-Joey + Rory,Chris Janson,3,200,1.1956
-Joey + Rory,One Direction,6,200,377.1298
-Joey + Rory,Drake,4,200,11.8739
-Joey + Rory,Carrie Underwood,3,200,1.2314
-Joey + Rory,Ed Sheeran,4,200,3.4265
-Justin Bieber,Adele,4,200,64.7691
-Justin Bieber,Joey + Rory,4,200,31.9535
-Justin Bieber,Chris Janson,3,200,3.1089
+RPG-Unit,Bob Marley,0,404,9.3236
+Crazy Frog,The Runaways,0,404,9.4750
+Marilyn Manson,Tech N9ne,2,200,11.0582
+Anthony Hamilton,Monica,2,200,11.7229
+Def Leppard,Michael Bolton,3,200,12.3401
+Thompson Square,Johnny Gill,4,200,16.1615
+Dean Brody,OMI,4,200,27.8527
+Rodney Atkins,Sugarland,3,200,12.0317
+John Mayer,Ronnie Dunn,2,200,6.2062
+Anthony Hamilton,Flavor Flav,3,200,10.0016
+Trisha Yearwood,Ronnie Dunn,2,200,6.4462
+Josh Abbott Band,YG,3,200,5.7809
+Kid Ink,Montgomery Gentry,3,200,72.6350
+Chris Isaak,Billy Ray Cyrus,3,200,7.6748
+Hal Ketchum,Pandora,5,200,98.4305
+Billy Ray Cyrus,Raury,3,200,25.9335
+Mary Chapin Carpenter,Mary J. Blige,2,200,7.4555
+The Spill Canvas,Erykah Badu,5,200,15.6626
+Marianas Trench,Bob Marley,4,200,9.0477
+Fleetwood Mac,Maxwell,4,200,124.1210
+Dire Straits,David Archuleta,4,200,92.8195
+Marianas Trench,Chris Tomlin,5,200,30.2827
+Foreigner,Blackberry Smoke,4,200,46.3211
+Jason Michael Carroll,Bon Jovi,0,404,5.2733
+*NSYNC,Foreigner,4,200,181.2937
+AC/DC,T‐Pain,3,200,6.1221
+Lorrie Morgan,LL Cool J,3,200,22.3309
+Jacquie Lee,Eli Young Band,3,200,7.8234
+Kelly Price,Busta Rhymes,2,200,6.8694
+Daddy Yankee,Uncle Kracker,4,200,249.6679
+Kid Ink,Tool,4,200,248.1664
+New Kids on the Block,PnB Rock,3,200,13.6838
+Steel Panther,Tyrese,5,200,24.5406
+Lindsay Ell,B.o.B,3,200,12.2012
+John Newman,Jennifer Hudson,3,200,8.3801
+Fabolous,David Bowie,3,200,28.1853
+Travis Scott,Dean Brody,4,200,307.5611
+Sugarland,Ludacris,3,200,6.0937
+3T,Billie Holiday,4,200,15.6791
+Creedence Clearwater Revival,Big & Rich,3,200,8.6337
+3T,T‐Pain,4,200,8.0245
+Lee Ann Womack,Asking Alexandria,4,200,56.9309
+Eros Ramazzotti,Uncle Kracker,3,200,9.2503
+Green Day,Jo Dee Messina,3,200,16.3302
+Bill Keith,Luther Vandross,3,200,20.4666
+David Archuleta,Carly Rae Jepsen,3,200,17.5400
+Vanessa Paradis,Ronnie Dunn,4,200,55.2084
+T‐Pain,Queen,3,200,14.2727
+Lee Ann Womack,Erykah Badu,3,200,21.5662
+Lynyrd Skynyrd,Macklemore,3,200,13.3711
+Jamie Foxx,Harry Stinson,4,200,583.2814
+Jon Pardi,Jodeci,5,200,126.8372
+Vanessa Paradis,Ice Cube,3,200,26.1911
+The Lacs,AC/DC,5,200,371.5855
+Fleetwood Mac,Lynyrd Skynyrd,3,200,24.1958
+Meat Loaf,Foreigner,3,200,30.5739
+Maxwell,Lil Jon,3,200,19.8869
+Craig Morgan,Mo Pitney,3,200,9.9559
+Hannah Montana,Los Tigres del Norte,3,200,10.7354
+Kid Cudi,Miguel,2,200,5.1170
+Fabolous,Tove Lo,2,200,11.5265
+Trisha Yearwood,Don Omar,4,200,112.2577
+Sammy Arriaga,Johnny Gill,5,200,50.5214
+Post Malone,Kem,3,200,63.3592
+Jacquie Lee,YG,3,200,8.4952
+Bob Marley,Clint Black,3,200,4.8350
+Tom Jones,Monica,3,200,53.2409
+Jennifer Hudson,Miguel,2,200,6.5241
+Crazy Frog,Jodeci,0,404,2.4223
+U2,Mario,2,200,8.7145
+GWAR,Pistol Annies,5,200,25.1038
+Lindsay Ell,Thompson Square,4,200,33.4132
+Kumar Sanu,Tove Lo,4,200,38.2264
+Big Sean,Gavin DeGraw,4,200,200.1513
+Bob Marley,John Mayer,3,200,10.2362
+Fugees,Afrojack,3,200,13.6541
+Asking Alexandria,Big & Rich,4,200,33.1363
+Collective Soul,Steel Panther,6,200,1370.6978
+Migos,Major Lazer,2,200,6.5746
+Hal Ketchum,Monica,3,200,8.0535

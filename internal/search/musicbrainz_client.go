@@ -144,7 +144,7 @@ func ResolveArtistOnce(s *Store, name string) (*sixdegrees.Artists, error) {
 	var internalID int
 	var gid, cname string
 	var credit int
-	// fmt.Printf("QUERY:\n%s\nARGS: %v", exact, []any{name})
+
 	err := s.DB.QueryRow(exact, name).Scan(
 		&internalID, &gid, &cname,
 		&credit,

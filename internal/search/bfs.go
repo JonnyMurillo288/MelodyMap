@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	sixdegrees "github.com/Jonnymurillo288/MelodyMap/sixDegrees"
 )
+
+var GlobalNeighborCache = make(map[string][]*NeighborEdge)
+var globalCacheMu sync.RWMutex
 
 //
 // ============================================================
@@ -23,7 +27,22 @@ func RunSearchOptsBFS(
 	limit *int,
 	offline bool,
 ) (*sixdegrees.Helper, []string, []string, [][]sixdegrees.Track, int, bool) {
+	globalCacheMu.RLock()
+	cacheSize := len(GlobalNeighborCache)
+	if cacheSize > 7000 {
+		quarterLength := cacheSize / 2
+		deletedCount := 0
+		for key := range GlobalNeighborCache {
+			if deletedCount >= quarterLength {
+				break // Stop after deleting quarter of the items
+			}
+			delete(GlobalNeighborCache, key)
+			deletedCount++
+		}
 
+	}
+	globalCacheMu.RUnlock()
+	fmt.Println("Number of items in the cache rn:", cacheSize)
 	// =========================================================
 	// Use provided store OR open a new one
 	// =========================================================
@@ -131,11 +150,57 @@ func RunSearchOptsBFS(
 		if verbose {
 			log.Printf("[BFS] Expanding %s at depth %d", item.A.Name, item.Depth)
 		}
-		neighbors, status, err := s.MusicBrainzNeighborProvider(
-			item.A,
-			perArtistLimit,
-			offline,
-		)
+
+		cacheKey := item.A.ID
+
+		var neighbors []*NeighborEdge
+		var status int
+		var err error
+
+		// Check cache with read lock
+		globalCacheMu.RLock()
+		cached, ok := GlobalNeighborCache[cacheKey]
+		globalCacheMu.RUnlock()
+
+		if ok {
+			// Use cached neighbor edges
+			neighbors = cached
+			status = 200
+			err = nil
+
+			if verbose {
+				log.Printf("[CACHE] Using %d cached neighbors for %s", len(neighbors), item.A.Name)
+			}
+
+		} else {
+
+			// Call provider (DB or offline mode)
+			neighbors, status, err = s.MusicBrainzNeighborProvider(
+				item.A,
+				perArtistLimit,
+				offline,
+			)
+
+			if status == 429 {
+				return h, nil, nil, nil, 429, false
+			}
+
+			if err != nil {
+				if verbose {
+					log.Printf("[BFS] Provider error for %s: %v", item.A.Name, err)
+				}
+				continue
+			}
+
+			// Store in global cache with write lock
+			globalCacheMu.Lock()
+			GlobalNeighborCache[cacheKey] = neighbors
+			globalCacheMu.Unlock()
+
+			if verbose {
+				log.Printf("[CACHE] Stored %d neighbors for %s", len(neighbors), item.A.Name)
+			}
+		}
 		if status == 429 {
 			return h, nil, nil, nil, 429, false
 		}
@@ -265,7 +330,9 @@ func RunSearchOptsBFS(
 		// store the neighbors for this artist into the global lookup
 		if len(step.Neighbors) > 0 {
 			key := strings.ToLower(item.A.Name)
+			globalLookupMu.Lock()
 			GlobalNeighborLookup[key] = step
+			globalLookupMu.Unlock()
 		}
 
 		if foundTarget {

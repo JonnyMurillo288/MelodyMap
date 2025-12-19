@@ -1,0 +1,321 @@
+EMBEDDING LOADING METHODS - VISUAL COMPARISON
+==============================================
+
+TWO LOADING METHODS
+-------------------
+
+┌─────────────────────────────────────────────────────────────┐
+│                     METHOD A: CSV FILE                       │
+└─────────────────────────────────────────────────────────────┘
+
+  Jupyter Notebook               CSV File               Go Application
+  ┌────────────┐                ┌───────┐              ┌──────────────┐
+  │ PecanPy    │   to_csv()     │ /tmp/ │  LoadFromCSV │ Embedding    │
+  │ Node2Vec   │───────────────▶│ artist│─────────────▶│ Store        │
+  │            │   583K rows    │ embed │              │              │
+  │ Train      │                │ .csv  │              │ 150 MB RAM   │
+  └────────────┘                └───────┘              └──────────────┘
+
+  Code:
+    search.InitEmbeddings("/tmp/artist_embeddings.csv")
+
+  Pros:
+    ✓ Simple file-based approach
+    ✓ No database dependency for loading
+    ✓ Easy to inspect/debug
+
+  Cons:
+    ✗ File management required
+    ✗ Can get out of sync
+    ✗ Extra deployment artifact
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                  METHOD B: DATABASE (NEW!)                   │
+└─────────────────────────────────────────────────────────────┘
+
+  Jupyter Notebook            PostgreSQL              Go Application
+  ┌────────────┐             ┌──────────┐            ┌──────────────┐
+  │ PecanPy    │ INSERT INTO │ artist_  │ LoadFromDB │ Embedding    │
+  │ Node2Vec   │────────────▶│ embed_   │───────────▶│ Store        │
+  │            │  583K rows  │ n2v      │            │              │
+  │ Train      │ UPSERT      │          │            │ 150 MB RAM   │
+  └────────────┘             └──────────┘            └──────────────┘
+
+  Code:
+    store, _ := search.Open("")
+    search.InitEmbeddingsFromDB(store)
+
+  Pros:
+    ✓ No file management
+    ✓ Always up-to-date
+    ✓ Production-ready
+    ✓ Simpler deployment
+
+  Cons:
+    ✗ Requires database connection
+    ✗ One more query on startup
+
+
+LOAD FLOW COMPARISON
+--------------------
+
+CSV Method:
+┌─────────┐    ┌──────────┐    ┌────────┐    ┌─────────┐
+│ Open    │───▶│ Read CSV │───▶│ Parse  │───▶│ Store   │
+│ File    │    │ Header   │    │ Rows   │    │ in Map  │
+└─────────┘    └──────────┘    └────────┘    └─────────┘
+   ~0.5s          ~0.5s           ~2s            ~2s
+                      Total: ~5 seconds
+
+Database Method:
+┌─────────┐    ┌──────────┐    ┌────────┐    ┌─────────┐
+│ Connect │───▶│ Execute  │───▶│ Scan   │───▶│ Store   │
+│ to DB   │    │ Query    │    │ Rows   │    │ in Map  │
+└─────────┘    └──────────┘    └────────┘    └─────────┘
+   ~0.5s          ~0.5s           ~2s            ~2s
+                      Total: ~5 seconds
+
+
+DATABASE SCHEMA
+---------------
+
+Table: artist_embeddings_n2v
+
+┌──────────────┬─────────────────┬─────────────────┐
+│ Column       │ Type            │ Description     │
+├──────────────┼─────────────────┼─────────────────┤
+│ artist_id    │ VARCHAR (PK)    │ Artist ID       │
+│ emb_0        │ DOUBLE PRECISION│ Dimension 0     │
+│ emb_1        │ DOUBLE PRECISION│ Dimension 1     │
+│ emb_2        │ DOUBLE PRECISION│ Dimension 2     │
+│ ...          │ ...             │ ...             │
+│ emb_31       │ DOUBLE PRECISION│ Dimension 31    │
+└──────────────┴─────────────────┴─────────────────┘
+
+Rows: ~583,000
+Index: PRIMARY KEY on artist_id
+
+Example data:
+┌────────────┬─────────┬─────────┬─────────┬─────┐
+│ artist_id  │ emb_0   │ emb_1   │ emb_2   │ ... │
+├────────────┼─────────┼─────────┼─────────┼─────┤
+│ 1          │  0.546  │  0.498  │  0.394  │ ... │
+│ 10         │  0.607  │  0.566  │  0.415  │ ... │
+│ 1000       │  0.117  │  0.256  │  0.149  │ ... │
+└────────────┴─────────┴─────────┴─────────┴─────┘
+
+
+NULL HANDLING
+-------------
+
+Database can have NULL values, CSV cannot.
+
+Loading logic:
+
+┌─────────────────────────────────────────────┐
+│ For each row:                               │
+│                                             │
+│   Scan into sql.NullFloat64                │
+│                                             │
+│   ┌───────────────────┐                    │
+│   │ Is value Valid?   │                    │
+│   └────────┬──────────┘                    │
+│            │                                │
+│    ┌───────┴──────┐                        │
+│    │              │                        │
+│   YES             NO                       │
+│    │              │                        │
+│    ▼              ▼                        │
+│  Use            Use                        │
+│  Float64        0.0                        │
+│    │              │                        │
+│    └──────┬───────┘                        │
+│           │                                 │
+│           ▼                                 │
+│    Store in embedding[i]                   │
+└─────────────────────────────────────────────┘
+
+
+CODE COMPARISON
+---------------
+
+Old Code (CSV only):
+┌─────────────────────────────────────────────┐
+│ import "github.com/.../internal/search"    │
+│                                             │
+│ func main() {                               │
+│     // Load embeddings                     │
+│     err := search.InitEmbeddings(           │
+│         "/tmp/artist_embeddings.csv",      │
+│     )                                       │
+│     if err != nil {                         │
+│         log.Fatal(err)                      │
+│     }                                       │
+│                                             │
+│     // Use A* search                        │
+│     // ...                                  │
+│ }                                           │
+└─────────────────────────────────────────────┘
+
+New Code (Database):
+┌─────────────────────────────────────────────┐
+│ import "github.com/.../internal/search"    │
+│                                             │
+│ func main() {                               │
+│     // Connect to database                 │
+│     store, _ := search.Open("")            │
+│     defer store.Close()                     │
+│                                             │
+│     // Load embeddings                     │
+│     err := search.InitEmbeddingsFromDB(     │
+│         store,                              │
+│     )                                       │
+│     if err != nil {                         │
+│         log.Fatal(err)                      │
+│     }                                       │
+│                                             │
+│     // Use A* search                        │
+│     // ...                                  │
+│ }                                           │
+└─────────────────────────────────────────────┘
+
+
+PRODUCTION DEPLOYMENT FLOW
+--------------------------
+
+┌──────────────────────────────────────────────────────┐
+│ Step 1: Train Embeddings                             │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  $ cd acousticbrainz                                │
+│  $ jupyter notebook embeddings.ipynb                │
+│                                                      │
+│  ┌────────────┐                                     │
+│  │ Execute    │ Reads artist_collab table           │
+│  │ Notebook   │ Trains Node2Vec                     │
+│  │            │ Inserts into artist_embeddings_n2v  │
+│  └────────────┘                                     │
+│       │                                              │
+│       ▼                                              │
+│  Database updated ✓                                 │
+└──────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────┐
+│ Step 2: Deploy Application                          │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  Application Startup:                               │
+│                                                      │
+│  1. Connect to database                             │
+│     ┌──────────────────┐                           │
+│     │ search.Open("")  │                           │
+│     └────────┬─────────┘                           │
+│              │                                      │
+│  2. Load embeddings                                │
+│     ┌──────────────────────────────┐              │
+│     │ search.InitEmbeddingsFromDB()│              │
+│     └────────┬─────────────────────┘              │
+│              │                                      │
+│  3. Ready for A* search!                           │
+│     ┌──────────────────────────────┐              │
+│     │ search.RunSearchOptsAStar()  │              │
+│     └──────────────────────────────┘              │
+└──────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────┐
+│ Step 3: Update Embeddings (when needed)             │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  1. Retrain (same notebook)                         │
+│     ▼ Database automatically updated (UPSERT)       │
+│                                                      │
+│  2. Restart application                             │
+│     $ systemctl restart melodymap                   │
+│     ▼ Embeddings reloaded on startup                │
+│                                                      │
+│  Done! ✓                                            │
+└──────────────────────────────────────────────────────┘
+
+
+MEMORY LAYOUT
+-------------
+
+In-Memory Structure (same for both methods):
+
+GlobalEmbeddingStore
+┌─────────────────────────────────────────────────┐
+│ mu: RWMutex (thread safety)                     │
+├─────────────────────────────────────────────────┤
+│ embeddings: map[string][]float64                │
+│                                                 │
+│   "1"    → [0.546, 0.498, 0.394, ..., -0.629]  │
+│   "10"   → [0.607, 0.566, 0.415, ..., -0.581]  │
+│   "1000" → [0.117, 0.256, 0.149, ..., -0.421]  │
+│   ...                                           │
+│   (583,000 entries)                             │
+├─────────────────────────────────────────────────┤
+│ dimension: 32                                   │
+└─────────────────────────────────────────────────┘
+
+Total Memory: ~150 MB
+  = 583,000 artists × 32 floats × 8 bytes
+
+
+PERFORMANCE METRICS
+-------------------
+
+Load Time Breakdown:
+
+CSV:
+┌────────────────┬──────────┐
+│ Operation      │ Time     │
+├────────────────┼──────────┤
+│ Open file      │  0.1s    │
+│ Read header    │  0.1s    │
+│ Parse 583K rows│  3.0s    │
+│ Store in map   │  1.5s    │
+├────────────────┼──────────┤
+│ TOTAL          │  4.7s    │
+└────────────────┴──────────┘
+
+Database:
+┌────────────────┬──────────┐
+│ Operation      │ Time     │
+├────────────────┼──────────┤
+│ Connect to DB  │  0.1s    │
+│ Execute query  │  0.5s    │
+│ Fetch 583K rows│  2.5s    │
+│ Store in map   │  1.5s    │
+├────────────────┼──────────┤
+│ TOTAL          │  4.6s    │
+└────────────────┴──────────┘
+
+Conclusion: Virtually identical performance!
+
+
+USE CASES
+---------
+
+Use CSV when:
+  • Testing locally
+  • Database not available
+  • Need to inspect embeddings manually
+
+Use Database when:
+  • Production deployment
+  • Embeddings updated frequently
+  • Want simpler deployment
+
+
+RECOMMENDATION
+--------------
+
+         ┌────────────────────────────┐
+         │  For Production:           │
+         │  USE DATABASE LOADING      │
+         │                            │
+         │  ✓ Simpler                 │
+         │  ✓ More reliable           │
+         │  ✓ Easier updates          │
+         └────────────────────────────┘

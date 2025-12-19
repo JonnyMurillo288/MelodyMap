@@ -18,6 +18,7 @@ import (
 	"github.com/Jonnymurillo288/MelodyMap/internal/search"
 	"github.com/Jonnymurillo288/MelodyMap/internal/secret"
 	"github.com/Jonnymurillo288/MelodyMap/spotify"
+	"github.com/joho/godotenv"
 )
 
 var lookupMu sync.RWMutex
@@ -64,6 +65,11 @@ func tokenAuth(next http.Handler) http.Handler {
 }
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: .env file not found or could not be loaded: %v", err)
+	}
+
 	root := findProjectRoot()
 	if err := secret.LoadSecrets(""); err != nil {
 		log.Fatal(err)
@@ -79,7 +85,11 @@ func main() {
 
 	// HTML template + token inject
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		tok, _ := auth.CreateToken()
+		tok, err := auth.CreateToken()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("token generation failed %s", err), 500)
+			return
+		}
 		data := struct{ Token string }{Token: tok}
 		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "graph_test.html")))
 		t.Execute(w, data)

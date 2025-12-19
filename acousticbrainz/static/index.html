@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MelodyMap – Artist Galaxy</title>
+
+  <!-- Graphology + Sigma v2 -->
+  <script src="https://unpkg.com/graphology@0.25.4/dist/graphology.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="page">
+    <header>
+      <h1><span class="logo-dot"></span>MelodyMap</h1>
+      <div class="header-subtitle">
+        Hover to preview · Click to lock · Esc to reset
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- LEFT PANEL -->
+      <section class="card">
+        <h2 class="card-title">Explore Artists</h2>
+        <div class="card-subtitle">
+          Highlight direct collaborators and cluster neighbors.
+        </div>
+
+        <div class="autocomplete-container">
+          <input id="searchInput" type="text" placeholder="Search artist…" autocomplete="off" />
+          <div id="autocomplete" class="autocomplete-list"></div>
+        </div>
+
+        <div id="sidepanel">
+          <div class="muted">No artist selected</div>
+        </div>
+      </section>
+
+      <!-- GRAPH -->
+      <section class="card" id="graph-card">
+        <div id="graph"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

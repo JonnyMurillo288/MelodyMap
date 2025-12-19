@@ -1,5 +1,7 @@
 package search
 
+import "sync"
+
 // TrackInfo used in path steps
 type TrackInfo struct {
 	ID            string `json:"id"`
@@ -40,6 +42,7 @@ var SearchTicker = struct {
 
 // Cached neighbors per artist for autocomplete expansion
 var GlobalNeighborLookup = make(map[string]FrontendStep)
+var globalLookupMu sync.RWMutex
 
 // What the UI expects when requesting neighbor lists
 type FrontendStep struct {

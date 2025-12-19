@@ -1,0 +1,131 @@
+# Makefile for A* Search with Node2Vec Embeddings
+# Usage: make -f Makefile.astar <target>
+
+.PHONY: help test test-embeddings test-astar example clean check-embeddings
+
+# Default target
+help:
+	@echo "A* Search with Node2Vec - Available Commands:"
+	@echo ""
+	@echo "  make -f Makefile.astar check-embeddings  - Verify embeddings file exists"
+	@echo "  make -f Makefile.astar test              - Run all tests"
+	@echo "  make -f Makefile.astar test-embeddings   - Test embedding functions only"
+	@echo "  make -f Makefile.astar test-astar        - Test A* implementation"
+	@echo "  make -f Makefile.astar example           - Run example program"
+	@echo "  make -f Makefile.astar clean             - Clean build artifacts"
+	@echo "  make -f Makefile.astar docs              - Open documentation"
+	@echo ""
+	@echo "Quick Start:"
+	@echo "  1. make -f Makefile.astar check-embeddings"
+	@echo "  2. make -f Makefile.astar test"
+	@echo "  3. make -f Makefile.astar example"
+
+# Check if embeddings file exists
+check-embeddings:
+	@echo "Checking for embeddings file..."
+	@if [ -f /tmp/artist_embeddings.csv ]; then \
+		echo "✓ Found: /tmp/artist_embeddings.csv"; \
+		ls -lh /tmp/artist_embeddings.csv; \
+		echo ""; \
+		echo "Preview:"; \
+		head -n 2 /tmp/artist_embeddings.csv; \
+	else \
+		echo "✗ Not found: /tmp/artist_embeddings.csv"; \
+		echo ""; \
+		echo "Generate embeddings by running:"; \
+		echo "  cd acousticbrainz"; \
+		echo "  jupyter notebook embeddings.ipynb"; \
+		exit 1; \
+	fi
+
+# Run all tests
+test:
+	@echo "Running all A* search tests..."
+	go test ./internal/search -v -run "TestCosine|TestEuclidean|TestEmbedding|TestAStar"
+
+# Test embedding functions only
+test-embeddings:
+	@echo "Testing embedding store and similarity functions..."
+	go test ./internal/search -v -run "TestCosine|TestEuclidean|TestEmbeddingStore"
+
+# Test A* implementation
+test-astar:
+	@echo "Testing A* heuristic and search..."
+	go test ./internal/search -v -run "TestAStarHeuristic|TestHeuristicAdmissibility"
+
+# Run the example program
+example: check-embeddings
+	@echo "Running A* search example..."
+	@echo ""
+	@echo "NOTE: This requires valid artist IDs in your database."
+	@echo "Edit cmd/astar-example/main.go to set real IDs."
+	@echo ""
+	go run cmd/astar-example/main.go
+
+# Clean build artifacts
+clean:
+	@echo "Cleaning build artifacts..."
+	go clean
+	rm -f cmd/astar-example/astar-example
+	@echo "✓ Clean complete"
+
+# Open documentation
+docs:
+	@echo "Documentation files:"
+	@echo ""
+	@echo "Quick Start Guide:"
+	@echo "  docs/ASTAR_QUICKSTART.md"
+	@echo ""
+	@echo "Detailed Setup:"
+	@echo "  docs/ASTAR_SETUP.md"
+	@echo ""
+	@echo "Integration Guide:"
+	@echo "  docs/INTEGRATION_GUIDE.md"
+	@echo ""
+	@echo "Architecture:"
+	@echo "  docs/architecture_diagram.txt"
+	@echo ""
+	@if command -v bat > /dev/null 2>&1; then \
+		echo "Opening QUICKSTART with bat..."; \
+		bat docs/ASTAR_QUICKSTART.md; \
+	elif command -v less > /dev/null 2>&1; then \
+		echo "Opening QUICKSTART with less..."; \
+		less docs/ASTAR_QUICKSTART.md; \
+	else \
+		cat docs/ASTAR_QUICKSTART.md; \
+	fi
+
+# Build example binary
+build-example:
+	@echo "Building example binary..."
+	go build -o cmd/astar-example/astar-example cmd/astar-example/main.go
+	@echo "✓ Built: cmd/astar-example/astar-example"
+
+# Run benchmarks
+bench:
+	@echo "Running benchmarks..."
+	go test ./internal/search -bench=. -benchmem
+
+# Verify embedding file format
+verify-embeddings: check-embeddings
+	@echo ""
+	@echo "Verifying embedding format..."
+	@echo ""
+	@echo "Expected format: artist_id,emb_0,emb_1,...,emb_31"
+	@echo ""
+	@echo "Header:"
+	@head -n 1 /tmp/artist_embeddings.csv
+	@echo ""
+	@echo "First data row:"
+	@head -n 2 /tmp/artist_embeddings.csv | tail -n 1
+	@echo ""
+	@echo "Line count:"
+	@wc -l /tmp/artist_embeddings.csv
+	@echo ""
+	@echo "✓ Format looks good"
+
+# Show embedding statistics
+stats: check-embeddings
+	@echo "Embedding Statistics:"
+	@echo ""
+	@python3 -c "import pandas as pd; df = pd.read_csv('/tmp/artist_embeddings.csv'); print(f'Artists: {len(df):,}'); print(f'Dimensions: {len([c for c in df.columns if c.startswith(\"emb_\")])}'); print(f'File size: {df.memory_usage(deep=True).sum() / 1024 / 1024:.1f} MB'); print(f'Sample artist IDs: {list(df[\"artist_id\"].head(5))}');"

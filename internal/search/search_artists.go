@@ -2,6 +2,7 @@ package search
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 )
@@ -19,6 +20,21 @@ func SearchArtists(
 	int,
 	error,
 ) {
+
+	var err error
+	openedHere := false
+	if s == nil {
+		s, err = Open(os.Getenv("PG_DSN"))
+		if err != nil {
+			return 0, nil, "database connection failed", 500, fmt.Errorf("failed to open database: %w", err)
+		}
+		openedHere = true
+	}
+
+	// Ensure we close the store if we opened it here
+	if openedHere {
+		defer s.Close()
+	}
 
 	if start == "" || target == "" {
 		return 0, nil, "start or target empty", 400, nil
@@ -40,6 +56,10 @@ func SearchArtists(
 	targetArtist, err := ResolveArtistOnce(s, target)
 	if err != nil {
 		return 0, nil, "target artist not found", 404, nil
+	}
+	// err = InitEmbeddingsFromDB(s)
+	if err != nil {
+		return 0, nil, "", 501, fmt.Errorf("error initializing embedings from db")
 	}
 
 	// ------------------------

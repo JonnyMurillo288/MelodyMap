@@ -6,8 +6,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Jonnymurillo288/MelodyMap/internal/search"
@@ -47,7 +49,14 @@ type searchRequest struct {
 	Depth    int    `json:"depth"`
 }
 
-func RunBatch() {
+type searchResult struct {
+	request  searchRequest
+	response SearchResponse
+	duration float64
+	err      error
+}
+
+func RunBatch(start int, N int, workerCount int) {
 	// ==============================================
 	// Load secrets/env
 	// ==============================================
@@ -75,96 +84,39 @@ func RunBatch() {
 
 	// ==============================================
 	// 1. Get N random artists
-	// ==============================================
-	const N = 10
 
-	// ids, artists, err := s.GetRandomArtistIDs(context.Background(), N)
 	artists, err := ReadLines("/home/jonnym/Desktop/MelodyMap/static/top_artists.txt")
 	if err != nil {
 		log.Fatal("failed to get random artists:", err)
 	}
 
 	// ==============================================
-	// 2. Generate all combinations N × N except same
+	// 2. Resolve artists concurrently
 	// ==============================================
-	var reqs []searchRequest
-	var named_reqs []searchRequest
-
-	// 1. Normalize & resolve all artists once
-	resolved := make(map[string]*sixdegrees.Artists)
-
-	for i, raw := range artists {
-		clean := strings.TrimSpace(raw)
-
-		if clean == "" {
-			continue
-		}
-
-		if _, ok := resolved[clean]; ok {
-			continue // already resolved
-		}
-
-		art, err := search.ResolveArtistOnce(mbStore, clean)
-
-		if err != nil {
-			fmt.Println("Could not resolve:", clean, err)
-			continue
-		}
-
-		resolved[clean] = art
-		fmt.Println("Added to resolved:", len(resolved))
-		if i > N {
-			break
-		}
-	}
+	resolved := resolveArtistsConcurrently(artists, mbStore, N, workerCount, start)
 
 	// Must have enough resolved artists to proceed
 	if len(resolved) == 0 {
 		log.Fatal("No artists could be resolved!")
 	}
 
-	// 2. Generate combinations using resolved map
-	for i := 0; i < N; i++ {
-		startName := strings.TrimSpace(artists[i])
-		startArt, ok := resolved[startName]
-		if !ok {
-			fmt.Println("Skipping unresolved start artist:", startName)
-			continue
-		}
-
-		for j := 0; j < N; j++ {
-			if i == j {
-				continue
-			}
-
-			targetName := strings.TrimSpace(artists[j])
-			targetArt, ok := resolved[targetName]
-			if !ok {
-				fmt.Println("Skipping unresolved target artist:", startName, "→", targetName)
-				continue
-			}
-
-			// BFS uses IDs
-			reqs = append(reqs, searchRequest{
-				Start:  startArt.ID,
-				Target: targetArt.ID,
-				Depth:  -1,
-			})
-
-			// Logging uses names
-			named_reqs = append(named_reqs, searchRequest{
-				Start:    startArt.Name,
-				Target:   targetArt.Name,
-				StartID:  startArt.ID,
-				TargetID: targetArt.ID,
-				Depth:    -1,
-			})
-		}
-	}
-	fmt.Printf("Generated %d search requests\n", len(named_reqs)) // Should be (N — non resolved)!
+	// ==============================================
+	// 3. Generate all combinations N × N except same
+	// ==============================================
+	named_reqs := generateSearchRequests(artists, resolved, start, N)
+	fmt.Printf("Generated %d search requests\n", len(named_reqs))
 
 	// ==============================================
-	// 3. Open CSV log file
+	// 3.5. Randomly shuffle the requests
+	// ==============================================
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rng.Shuffle(len(named_reqs), func(i, j int) {
+		named_reqs[i], named_reqs[j] = named_reqs[j], named_reqs[i]
+	})
+	fmt.Println("Shuffled requests for random order processing")
+
+	// ==============================================
+	// 4. Open CSV log file
 	// ==============================================
 	logFile, err := os.Create("search_log.csv")
 	if err != nil {
@@ -179,65 +131,183 @@ func RunBatch() {
 	csvWriter.Write([]string{"start", "target", "hops", "status", "seconds"})
 
 	// ==============================================
-	// 4. Run BFS for each request, time it, log it, insert result
+	// 5. Run BFS concurrently with worker pool
 	// ==============================================
-	for idx, req := range named_reqs {
-		fmt.Printf("[%d/%d] Searching %s → %s\n", idx+1, len(reqs), req.Start, req.Target)
-		fmt.Println("IDs are:", req.StartID, req.TargetID)
-
-		startTime := time.Now()
-
-		// Run BFS
-		response, err := main_run(req, mbStore)
-		if response.Status >= 400 {
-			fmt.Println("Message from response:", response.Message)
-		}
-		duration := time.Since(startTime).Seconds()
-
-		if err != nil {
-			fmt.Printf("Search failed (%.4f sec): %v\n", duration, err)
-
-			csvWriter.Write([]string{
-				req.Start,
-				req.Target,
-				"-1",
-				"search_error",
-				fmt.Sprintf("%.4f", duration),
-			})
-			csvWriter.Flush()
-			continue
-		}
-
-		fmt.Printf("Completed in %.4f seconds with %d hops\n", duration, response.Hops)
-		// b, _ := json.MarshalIndent(response, "", "  ")
-		// fmt.Println("FULL RESPONSE:\n", string(b))
-
-		// Insert into ML database
-		_, err = mlStore.InsertSearchResponse(context.Background(), response)
-		if err != nil {
-			fmt.Println("Insert into ML DB failed:", err)
-
-			csvWriter.Write([]string{
-				named_reqs[idx].Start,
-				named_reqs[idx].Target,
-				fmt.Sprintf("%d", response.Hops),
-				"insert_error",
-				fmt.Sprintf("%.4f", duration),
-			})
-			csvWriter.Flush()
-			continue
-		}
-
-		// Log success to CSV
-		csvWriter.Write([]string{
-			named_reqs[idx].Start,
-			named_reqs[idx].Target,
-			fmt.Sprintf("%d", response.Hops),
-			fmt.Sprintf("%d", response.Status),
-			fmt.Sprintf("%.4f", duration),
-		})
-		csvWriter.Flush()
-	}
+	processSearchesConcurrently(named_reqs, mbStore, mlStore, csvWriter, workerCount)
 
 	fmt.Println("All searches completed.")
+}
+
+// resolveArtistsConcurrently resolves artist names to IDs using concurrent workers
+func resolveArtistsConcurrently(artists []string, mbStore *search.Store, limit int, workers int, start int) map[string]*sixdegrees.Artists {
+	resolved := make(map[string]*sixdegrees.Artists)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	// Channel for artist names to resolve
+	artistChan := make(chan string, workers)
+
+	// Start worker goroutines
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for clean := range artistChan {
+				art, err := search.ResolveArtistOnce(mbStore, clean)
+				if err != nil {
+					fmt.Println("Could not resolve:", clean, err)
+					continue
+				}
+
+				mu.Lock()
+				resolved[clean] = art
+				count := len(resolved)
+				mu.Unlock()
+
+				if count%10 == 0 {
+					fmt.Printf("Resolved %d artists\n", count)
+				}
+			}
+		}()
+	}
+
+	// Feed artists to workers
+	seen := make(map[string]bool)
+	for i := start; i < limit; i++ {
+		clean := strings.TrimSpace(artists[i])
+		if clean == "" || seen[clean] {
+			continue
+		}
+		seen[clean] = true
+		artistChan <- clean
+
+		if i >= limit {
+			break
+		}
+	}
+
+	close(artistChan)
+	wg.Wait()
+
+	fmt.Printf("Total resolved: %d artists\n", len(resolved))
+	return resolved
+}
+
+// generateSearchRequests creates all artist pair combinations
+func generateSearchRequests(artists []string, resolved map[string]*sixdegrees.Artists, start int, N int) []searchRequest {
+	var named_reqs []searchRequest
+
+	for i := start; i < N && i < len(artists); i++ {
+		startName := strings.TrimSpace(artists[i])
+		startArt, ok := resolved[startName]
+		if !ok {
+			continue
+		}
+
+		for j := 0; j < N && j < len(artists); j++ {
+			if i == j {
+				continue
+			}
+
+			targetName := strings.TrimSpace(artists[j])
+			targetArt, ok := resolved[targetName]
+			if !ok {
+				continue
+			}
+
+			named_reqs = append(named_reqs, searchRequest{
+				Start:    startArt.Name,
+				Target:   targetArt.Name,
+				StartID:  startArt.ID,
+				TargetID: targetArt.ID,
+				Depth:    -1,
+			})
+		}
+	}
+
+	return named_reqs
+}
+
+// processSearchesConcurrently runs searches with a worker pool pattern
+func processSearchesConcurrently(requests []searchRequest, mbStore *search.Store, mlStore *Store, csvWriter *csv.Writer, workers int) {
+	var wg sync.WaitGroup
+	var csvMu sync.Mutex
+
+	// Channel for requests
+	requestChan := make(chan struct {
+		idx int
+		req searchRequest
+	}, workers)
+
+	// Start worker goroutines
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+
+			for item := range requestChan {
+				idx := item.idx
+				req := item.req
+
+				fmt.Printf("[Worker %d] [%d/%d] Searching %s → %s\n",
+					workerID, idx+1, len(requests), req.Start, req.Target)
+
+				// Check if path already exists
+				if pathid, err := mlStore.PathExistsAlready(context.Background(), req.StartID, req.TargetID); err == nil && pathid > 0 {
+					fmt.Printf("[Worker %d] Already have path for %s → %s (path_id=%d)\n",
+						workerID, req.Start, req.Target, pathid)
+					continue
+				}
+
+				startTime := time.Now()
+				response, err := main_run(req, mbStore)
+				duration := time.Since(startTime).Seconds()
+
+				// Handle errors
+				if err != nil {
+					fmt.Printf("[Worker %d] Search failed (%.4f sec): %v\n", workerID, duration, err)
+					csvMu.Lock()
+					csvWriter.Write([]string{req.Start, req.Target, "-1", "search_error", fmt.Sprintf("%.4f", duration)})
+					csvWriter.Flush()
+					csvMu.Unlock()
+					continue
+				}
+
+				if response.Status >= 400 {
+					fmt.Printf("[Worker %d] Error response: %s\n", workerID, response.Message)
+				}
+
+				fmt.Printf("[Worker %d] Completed in %.4f seconds with %d hops\n",
+					workerID, duration, response.Hops)
+
+				// Insert into database
+				_, err = mlStore.InsertSearchResponse(context.Background(), response)
+				if err != nil {
+					fmt.Printf("[Worker %d] Insert failed: %v\n", workerID, err)
+					csvMu.Lock()
+					csvWriter.Write([]string{req.Start, req.Target, fmt.Sprintf("%d", response.Hops), "insert_error", fmt.Sprintf("%.4f", duration)})
+					csvWriter.Flush()
+					csvMu.Unlock()
+					continue
+				}
+
+				// Log success
+				csvMu.Lock()
+				csvWriter.Write([]string{req.Start, req.Target, fmt.Sprintf("%d", response.Hops), fmt.Sprintf("%d", response.Status), fmt.Sprintf("%.4f", duration)})
+				csvWriter.Flush()
+				csvMu.Unlock()
+			}
+		}(i)
+	}
+
+	// Feed requests to workers
+	for idx, req := range requests {
+		requestChan <- struct {
+			idx int
+			req searchRequest
+		}{idx, req}
+	}
+
+	close(requestChan)
+	wg.Wait()
 }

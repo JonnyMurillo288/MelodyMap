@@ -27,7 +27,8 @@ func startSearchHandler(w http.ResponseWriter, r *http.Request) {
 	job := jobs.Manager.CreateJob(req.Start, req.Target)
 
 	// Launch background BFS with the correct request type
-	go search.RunBackgroundBFS(job, search.SearchRequest{
+	// THIS IS WHERE YOU UPDATE IF RETURNING TO A NEW SEARCH FUNCTION
+	go search.RunBackgroundAStar(job, search.SearchRequest{
 		Start:  req.Start,
 		Target: req.Target,
 		Depth:  req.Depth,
