@@ -65,6 +65,8 @@ services:
     dockerContext: internal/interlude_service/machinelearning
     healthCheckPath: /api/v1/health
     envVars:
+      - key: PORT
+        value: "10000"
       - key: RUN_ENV
         value: production
       - key: PG_DSN

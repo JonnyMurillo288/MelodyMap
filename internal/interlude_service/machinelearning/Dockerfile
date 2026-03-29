@@ -17,10 +17,11 @@ COPY . .
 
 EXPOSE 8000
 
-# RUN_ENV=production disables --reload and adds workers
-# Default: development mode with hot-reload
+# PORT env var: Render sets this to 10000, Railway sets it dynamically.
+# Default to 8000 for local dev / docker-compose.
+# RUN_ENV=production disables --reload and adds workers.
 CMD if [ "$RUN_ENV" = "production" ]; then \
-      uvicorn app:app --host 0.0.0.0 --port 8000 --workers 2 --timeout-keep-alive 120; \
+      uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2 --timeout-keep-alive 120; \
     else \
-      uvicorn app:app --host 0.0.0.0 --port 8000 --reload; \
+      uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000} --reload; \
     fi
