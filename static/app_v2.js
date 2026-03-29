@@ -1520,7 +1520,15 @@ document
   .getElementById("searchForm")
   .addEventListener("submit", (e) => {
     e.preventDefault();
-    runSearch();
+    const mode = document.getElementById("searchMode")?.value || "full";
+    if (mode === "full" || mode === "graph") {
+      runSearch();
+    }
+    if (mode === "full" || mode === "ml") {
+      if (typeof window.runMLAnalysis === "function") {
+        window.runMLAnalysis();
+      }
+    }
   });
 
 toggleNeighborsBtn.addEventListener("click", () => {

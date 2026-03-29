@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interlude API Demo</title>
+  <link rel="stylesheet" href="static/style.css" type="text/css" />
+  <link rel="stylesheet" href="static/demo.css" type="text/css" />
+</head>
+
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1><span class="logo-dot"></span> Interlude</h1>
+        <p class="tagline">Artist Collaboration Prediction API</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="/ml">ML Explorer</a>
+        <a class="btn btn-primary" href="/docs" target="_blank">API Docs</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- API Key Bar -->
+      <div class="card card-compact">
+        <div class="api-key-bar">
+          <label for="apiKeyInput">API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="Enter your API key..." />
+          <button class="btn btn-sm" id="toggleKeyBtn" title="Show/hide key">Show</button>
+          <span id="keyStatus" class="status-dot"></span>
+        </div>
+      </div>
+
+      <!-- Search Section -->
+      <div class="card">
+        <h2 class="card-title">Predict a Collaboration</h2>
+        <p class="card-subtitle">Enter two artists to predict their collaboration probability and generate synthetic tracks</p>
+        <div class="search-section">
+          <div class="search-group">
+            <label for="srcInput">Source Artist</label>
+            <input type="text" id="srcInput" placeholder="Artist name or MBID..." />
+          </div>
+          <div class="search-group">
+            <label for="dstInput">Destination Artist</label>
+            <input type="text" id="dstInput" placeholder="Artist name or MBID..." />
+          </div>
+          <button class="btn btn-primary" id="predictBtn">Predict</button>
+        </div>
+      </div>
+
+      <!-- Connection Result -->
+      <div class="card" id="connectionCard" style="display:none;">
+        <h3 class="card-title">Connection Prediction</h3>
+        <div class="connection-result">
+          <div class="artist-pair">
+            <div class="artist-badge src" id="srcBadge">?</div>
+            <div class="connection-line">
+              <div class="prob-ring" id="probRing">
+                <span class="prob-value" id="probValue">--</span>
+              </div>
+            </div>
+            <div class="artist-badge dst" id="dstBadge">?</div>
+          </div>
+          <div class="meta-row" id="connectionMeta"></div>
+        </div>
+      </div>
+
+      <!-- Model Comparison (A/B) -->
+      <div class="card" id="compareCard" style="display:none;">
+        <h3 class="card-title">Model Version Comparison</h3>
+        <p class="card-subtitle">Same artist pair scored by different model versions</p>
+        <div class="compare-bars" id="compareBars"></div>
+      </div>
+
+      <!-- Synthetic Tracks -->
+      <div class="card" id="tracksCard" style="display:none;">
+        <h3 class="card-title">Synthetic Tracks Generated</h3>
+        <p class="card-subtitle">CVAE-generated track features for this hypothetical collaboration</p>
+        <div class="tracks-grid" id="tracksGrid"></div>
+      </div>
+
+      <!-- Similar Real Tracks -->
+      <div class="card" id="playlistCard" style="display:none;">
+        <h3 class="card-title">Similar Real Tracks</h3>
+        <p class="card-subtitle">Real recordings matching the synthetic predictions via Aitchison distance</p>
+        <div class="playlist-list" id="playlistList"></div>
+      </div>
+
+      <!-- Neighbor Discovery -->
+      <div class="card">
+        <h2 class="card-title">Discover Neighbors</h2>
+        <p class="card-subtitle">Find the top predicted collaborators for any artist</p>
+        <div class="search-section">
+          <div class="search-group">
+            <label for="neighborInput">Artist</label>
+            <input type="text" id="neighborInput" placeholder="Artist name or MBID..." />
+          </div>
+          <div class="search-group">
+            <label for="neighborLimit">Limit</label>
+            <input type="number" id="neighborLimit" value="10" min="1" max="50" />
+          </div>
+          <button class="btn btn-primary" id="neighborBtn">Discover</button>
+        </div>
+      </div>
+
+      <!-- Neighbors Table -->
+      <div class="card" id="neighborsCard" style="display:none;">
+        <h3 class="card-title" id="neighborsTitle">Predicted Collaborators</h3>
+        <div class="table-container">
+          <table class="demo-table" id="neighborsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Artist</th>
+                <th>Probability</th>
+                <th>Tracks</th>
+              </tr>
+            </thead>
+            <tbody id="neighborsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Artist Profile -->
+      <div class="card">
+        <h2 class="card-title">Artist Profile</h2>
+        <p class="card-subtitle">Complete profile with genre distribution, popularity, and collaboration data</p>
+        <div class="search-section">
+          <div class="search-group" style="flex:1;">
+            <label for="profileInput">Artist</label>
+            <input type="text" id="profileInput" placeholder="Artist name or MBID..." />
+          </div>
+          <button class="btn btn-primary" id="profileBtn">Load Profile</button>
+        </div>
+      </div>
+
+      <!-- Profile Display -->
+      <div class="card" id="profileCard" style="display:none;">
+        <div class="profile-layout">
+          <div class="profile-header">
+            <h3 id="profileName">--</h3>
+            <div class="profile-badges" id="profileBadges"></div>
+          </div>
+          <div class="profile-grid">
+            <div class="profile-section">
+              <h4>Genre Distribution</h4>
+              <div class="genre-bars" id="genreBars"></div>
+            </div>
+            <div class="profile-section">
+              <h4>Top Collaborators</h4>
+              <div class="collab-list" id="collabList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Status -->
+      <div class="card card-compact">
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-label">Models</span>
+            <span class="status-value" id="statusModels">--</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">DB</span>
+            <span class="status-dot" id="statusDb"></span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Service</span>
+            <span class="status-value" id="statusVersion">--</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="static/demo.js"></script>
+</body>
+</html>

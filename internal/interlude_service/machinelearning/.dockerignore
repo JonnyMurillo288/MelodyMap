@@ -1,0 +1,31 @@
+# Python bytecode / cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Notebooks (DO NOT ship)
+notebooks/
+
+# Tests
+tests/
+
+# Outputs & artifacts
+outputs/
+*.csv
+*.tsv
+
+# Local data / secrets
+*.json
+*.env
+
+# Git & editor noise
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Docs
+*.md
+
+# OS junk
+.DS_Store

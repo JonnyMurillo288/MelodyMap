@@ -1,0 +1,93 @@
+# Render Blueprint — deploy both services + database in one click
+# https://docs.render.com/infrastructure-as-code
+#
+# Usage:
+#   1. Push this repo to GitHub
+#   2. Go to render.com → New → Blueprint → point to this repo
+#   3. Fill in the env var values when prompted
+#   4. Render provisions everything automatically
+
+databases:
+  - name: melodymap-db
+    plan: starter  # 1 GB, $7/mo — upgrade to standard for production
+    databaseName: musicbrainz_db
+    user: postgres
+    postgresMajorVersion: "16"  # Render max is 16; PG18 features we use are backward-compatible
+
+services:
+  # -----------------------------------------------------------
+  # Go Frontend — serves /, /demo, /ml, /daily, proxies to ML
+  # -----------------------------------------------------------
+  - type: web
+    name: melodymap-api
+    runtime: docker
+    plan: starter  # 512 MB RAM, $7/mo
+    dockerfilePath: main/Dockerfile
+    dockerContext: .
+    healthCheckPath: /status
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: RUN_ENV
+        value: production
+      - key: ML_SERVICE_URL
+        fromService:
+          name: melodymap-ml
+          type: web
+          property: hostport
+          # Render internal networking: http://melodymap-ml:8000
+      - key: PG_DSN
+        fromDatabase:
+          name: melodymap-db
+          property: connectionString
+      - key: INTERNAL_SERVICE_SECRET
+        generateValue: true
+      - key: SDS_TOKEN_SECRET
+        generateValue: true
+      - key: SPOTIFY_CLIENT_ID
+        sync: false  # you fill this in manually
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      - key: SPOTIFY_REDIRECT_URI
+        sync: false  # set to https://YOUR_DOMAIN/auth/callback
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+  # -----------------------------------------------------------
+  # Python ML Service — FastAPI, models, /api/v1/* endpoints
+  # -----------------------------------------------------------
+  - type: web
+    name: melodymap-ml
+    runtime: docker
+    plan: standard  # 2 GB RAM needed for PyTorch — $25/mo
+    dockerfilePath: internal/interlude_service/machinelearning/Dockerfile
+    dockerContext: internal/interlude_service/machinelearning
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: RUN_ENV
+        value: production
+      - key: PG_DSN
+        fromDatabase:
+          name: melodymap-db
+          property: connectionString
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: INTERNAL_SERVICE_SECRET
+        fromService:
+          name: melodymap-api
+          type: web
+          envVarKey: INTERNAL_SERVICE_SECRET
+      - key: LASTFM_API_KEY
+        sync: false
+      - key: LASTFM_API_SECRET
+        sync: false
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      - key: DEFAULT_LOGIT_VERSION
+        value: v5
+      - key: DEFAULT_CVAE_VERSION
+        value: v1

@@ -1,0 +1,51 @@
+# Railway deployment config
+# https://docs.railway.app/reference/config-as-code
+#
+# Railway Setup (monorepo with 2 services + database):
+#   1. Create a new Railway project
+#   2. Add a PostgreSQL service (Railway dashboard → + New → Database → PostgreSQL)
+#   3. Add service "melodymap-api":
+#      - Root directory: / (repo root)
+#      - Builder: Dockerfile
+#      - Dockerfile path: main/Dockerfile
+#      - Set env vars below
+#   4. Add service "melodymap-ml":
+#      - Root directory: internal/interlude_service/machinelearning
+#      - Builder: Dockerfile
+#      - Set env vars below
+#   5. Link the PostgreSQL service to both via ${{Postgres.DATABASE_URL}}
+#
+# Environment variables to set for melodymap-api:
+#   PORT=8080
+#   RUN_ENV=production
+#   ML_SERVICE_URL=http://melodymap-ml.railway.internal:8000
+#   PG_DSN=${{Postgres.DATABASE_URL}}
+#   INTERNAL_SERVICE_SECRET=<generate with: python3 -c "import secrets; print(secrets.token_hex(32))">
+#   SDS_TOKEN_SECRET=<generate>
+#   SPOTIFY_CLIENT_ID=<your value>
+#   SPOTIFY_CLIENT_SECRET=<your value>
+#   SPOTIFY_REDIRECT_URI=https://<your-railway-domain>/auth/callback
+#   STRIPE_SECRET_KEY=<your value>
+#   STRIPE_WEBHOOK_SECRET=<your value>
+#
+# Environment variables to set for melodymap-ml:
+#   RUN_ENV=production
+#   PG_DSN=${{Postgres.DATABASE_URL}}
+#   PYTHONUNBUFFERED=1
+#   INTERNAL_SERVICE_SECRET=<same as api service>
+#   LASTFM_API_KEY=<your value>
+#   LASTFM_API_SECRET=<your value>
+#   SPOTIFY_CLIENT_ID=<your value>
+#   SPOTIFY_CLIENT_SECRET=<your value>
+#   DEFAULT_LOGIT_VERSION=v5
+#   DEFAULT_CVAE_VERSION=v1
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "main/Dockerfile"
+
+[deploy]
+healthcheckPath = "/status"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(go test:*)"
+      "Bash(go test:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(python3:*)",
+      "Bash(xargs ls:*)",
+      "Bash(xargs cat:*)",
+      "Bash(git -C /home/jonnym/Desktop/MelodyMap log --oneline -10)",
+      "Bash(docker compose:*)",
+      "Bash(go build:*)",
+      "Bash(go vet:*)",
+      "Bash(2)",
+      "Bash(chmod +x /home/jonnym/Desktop/MelodyMap/scripts/preseed_demo.sh)"
     ]
   }
 }

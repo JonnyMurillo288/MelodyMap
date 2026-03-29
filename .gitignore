@@ -10,6 +10,8 @@ auth_token.txt
 authToken.txt
 spotify_token.json
 callback_url.txt
+last_fm_keys.json
+billing_data.json
 
 # Everything under etc that looks secret
 etc/**/*.txt
@@ -39,12 +41,97 @@ main/Environment_Render.txt
 var/data/*.json
 
 # ------------------------------------------------------------------------------
-# editor junk
+# Editor / IDE
 # ------------------------------------------------------------------------------
 *~lock*
 .~*
-
-# ODT lock files
 *.odt#
 .#*
+.vscode/
+.qodo/
+.claude/settings.local.json
 
+# ------------------------------------------------------------------------------
+# Python
+# ------------------------------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+
+# Virtual environments
+**/venv/
+**/.venv/
+**/env/
+acousticbrainz/sklearn-env/
+
+# Test cache
+**/.pytest_cache/
+**/.mypy_cache/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter
+**/.ipynb_checkpoints/
+
+# ------------------------------------------------------------------------------
+# Go
+# ------------------------------------------------------------------------------
+# Compiled binaries
+melodymap_server
+mlrunner
+search-test
+astar-example
+init-metrics
+
+# Test binaries
+*.test
+
+# ------------------------------------------------------------------------------
+# ML / Data science artifacts
+# ------------------------------------------------------------------------------
+# Trained model files
+*.pt
+*.pth
+*.pkl
+*.h5
+*.onnx
+*.joblib
+
+# Training data (large CSVs)
+**/training_data/
+**/lowlevel_data/
+acousticbrainz/data/
+
+# ML run outputs and logs
+**/runs/
+**/outputs/
+**/models/
+
+# Performance / search logs
+dedupe_perf_log.csv
+search_log.csv
+*.log
+
+# ------------------------------------------------------------------------------
+# Large generated / media files
+# ------------------------------------------------------------------------------
+interactive_plot.html
+*.gif
+
+# ------------------------------------------------------------------------------
+# Docker
+# ------------------------------------------------------------------------------
+.env.docker
+.env.local
+
+# ------------------------------------------------------------------------------
+# OS
+# ------------------------------------------------------------------------------
+.DS_Store
+Thumbs.db

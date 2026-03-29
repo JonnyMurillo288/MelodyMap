@@ -1,0 +1,42 @@
+{
+  "model_info": {
+    "best_params": {
+      "pu_logit__estimator__l1_ratio": 0.8,
+      "pu_logit__estimator__C": 0.1
+    },
+    "best_score": 0.8445152429140618,
+    "pu_method": "elkanoto"
+  },
+  "threshold": 0.5,
+  "n_features": 18,
+  "features": [
+    "similarity_prop_genre_rosamerica_spe",
+    "cos_sim_src_dst",
+    "max_cos_srcnbr_dst",
+    "mean_topk_cos_dstnbr_src",
+    "preferential_attachment",
+    "similarity_prop_genre_rosamerica_rhy",
+    "similarity_prop_genre_rosamerica_dan",
+    "dot_src_dst",
+    "adamic_adar",
+    "similarity_prop_genre_rosamerica_hip",
+    "similarity_prop_genre_rosamerica_pop",
+    "jaccard_neighbors",
+    "similarity_prop_genre_rosamerica_roc",
+    "popularity_dst",
+    "l2_dist_src_dst",
+    "num_dst_neighbors",
+    "popularity_src",
+    "similarity_prop_genre_rosamerica_jaz"
+  ],
+  "test_metrics": {
+    "ROC AUC": 0.9164872556875,
+    "PR AUC": 0.9027610103260029,
+    "Log Loss": 0.4185335640258285,
+    "Brier Score": 0.12136411203503239,
+    "Accuracy": 0.8356975,
+    "Precision": 0.8039072790726096,
+    "Recall": 0.888,
+    "F1 Score": 0.8438638129245155
+  }
+}

@@ -11,11 +11,13 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Jonnymurillo288/MelodyMap/internal/auth"
+	"golang.org/x/text/unicode/norm"
 )
 
 // ========================================================== //
@@ -144,74 +146,228 @@ func SearchArtist(ctx context.Context, artist string) ([]byte, error) {
 // ========================================================== //
 // Spotify API: search Tracks
 
-type SpotifyTrackSearch struct {
+var (
+	reParens    = regexp.MustCompile(`\(.+?\)`)
+	reRemixTags = regexp.MustCompile(`(?i)\s*[-–—]\s*(remix|live|version|edit|mix|remaster(ed)?|re-?edit|radio edit|acoustic|instrumental|demo|bonus track).*$`)
+)
+
+// normalizeUnicode applies NFC normalization and straightens curly quotes.
+func normalizeUnicode(s string) string {
+	s = norm.NFC.String(s)
+	s = strings.ReplaceAll(s, "\u2019", "'")
+	s = strings.ReplaceAll(s, "\u2018", "'")
+	s = strings.ReplaceAll(s, "\u201C", "\"")
+	s = strings.ReplaceAll(s, "\u201D", "\"")
+	s = strings.ReplaceAll(s, ",", "")
+	s = strings.ReplaceAll(s, ";", "")
+	s = strings.ReplaceAll(s, ":", "")
+	return s
+}
+
+// cleanTrack normalizes unicode and lowercases. Does NOT strip parentheses.
+func cleanTrack(t string) string {
+	t = normalizeUnicode(t)
+	return strings.TrimSpace(strings.ToLower(t))
+}
+
+// stripParens removes parenthetical content from a string.
+func stripParens(t string) string {
+	return strings.TrimSpace(reParens.ReplaceAllString(t, ""))
+}
+
+// stripRemixTags removes " - Remix", " - Live", etc. from track names.
+func stripRemixTags(t string) string {
+	return strings.TrimSpace(reRemixTags.ReplaceAllString(t, ""))
+}
+
+// cleanArtist strips feature markers, normalizes unicode, and lowercases.
+func cleanArtist(a string) string {
+	a = normalizeUnicode(a)
+	a = strings.ToLower(a)
+	a = strings.Split(a, " feat")[0]
+	a = strings.Split(a, " featuring")[0]
+	a = strings.Split(a, " & ")[0]
+	return strings.TrimSpace(a)
+}
+
+// swapAmpersand replaces "&" with "and" or vice versa in a string.
+func swapAmpersand(s string) string {
+	if strings.Contains(s, " & ") {
+		return strings.ReplaceAll(s, " & ", " and ")
+	}
+	if strings.Contains(s, " and ") {
+		return strings.ReplaceAll(s, " and ", " & ")
+	}
+	return s
+}
+
+// SpotifyTrackItem represents a single track from Spotify search results.
+type SpotifyTrackItem struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Artists []struct {
+		Name string `json:"name"`
+	} `json:"artists"`
+}
+
+type spotifyTrackSearch struct {
 	Tracks struct {
-		Items []struct {
-			ID      string `json:"id"`
-			Name    string `json:"name"`
-			Artists []struct {
-				Name string `json:"name"`
-			} `json:"artists"`
-		} `json:"items"`
+		Items []SpotifyTrackItem `json:"items"`
 	} `json:"tracks"`
 }
 
-// SearchTrackID returns the FIRST matching Spotify track ID.
-func SearchTrackID(ctx context.Context, trackName, artist1, artist2 string) (string, error) {
-	q := fmt.Sprintf(`track:"%s" artist:"%s"`, trackName, artist1)
-
+// searchSpotify executes a Spotify search query and returns the result items.
+func searchSpotify(ctx context.Context, query string) ([]SpotifyTrackItem, error) {
 	params := map[string]string{
-		"q":     q,
+		"q":     query,
 		"type":  "track",
-		"limit": "8",
+		"limit": "10",
 	}
 
 	body, status, err := doSpotifyRequest(ctx, "GET",
 		"https://api.spotify.com/v1/search", params, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if status != 200 {
-		return "", fmt.Errorf("spotify search returned status %d", status)
+		return nil, fmt.Errorf("spotify search returned status %d", status)
 	}
 
-	var out SpotifyTrackSearch
+	var out spotifyTrackSearch
 	if err := json.Unmarshal(body, &out); err != nil {
+		return nil, err
+	}
+	return out.Tracks.Items, nil
+}
+
+// matchResults returns the ID of the first item where all mustArtists appear.
+func matchResults(items []SpotifyTrackItem, mustArtists []string) (string, bool) {
+	for _, tr := range items {
+		var spotArtists []string
+		for _, a := range tr.Artists {
+			spotArtists = append(spotArtists, cleanArtist(a.Name))
+		}
+
+		matched := true
+		for _, need := range mustArtists {
+			if !contains(spotArtists, need) {
+				matched = false
+				break
+			}
+		}
+		if matched {
+			return tr.ID, true
+		}
+	}
+	return "", false
+}
+
+// searchStrategy defines a single attempt at finding a Spotify track.
+type searchStrategy struct {
+	name  string
+	query string
+	must  []string // artist names that must appear in results
+}
+
+// SearchResult contains the Spotify track ID and which strategy found it.
+type SearchResult struct {
+	ID       string
+	Strategy string
+}
+
+// SearchTrackIDResult tries multiple search strategies and returns the first hit
+// along with which strategy succeeded.
+func SearchTrackIDResult(ctx context.Context, trackName, artist1, artist2 string) (SearchResult, error) {
+	ct := cleanTrack(trackName)
+	stripped := stripRemixTags(stripParens(ct))
+	ca1 := cleanArtist(artist1)
+	ca2 := cleanArtist(artist2)
+
+	log.Printf("[spotify] searching: track=%q artist1=%q artist2=%q", trackName, artist1, artist2)
+
+	hasTwoArtists := ca2 != "" && ca2 != ca1
+
+	// Build strategy list in priority order.
+	var strategies []searchStrategy
+
+	// 1. Primary: both artists in query + validation (only when two distinct artists)
+	if hasTwoArtists {
+		strategies = append(strategies, searchStrategy{
+			name:  "primary",
+			query: fmt.Sprintf(`track:"%s" artist:"%s" artist:"%s"`, ct, ca1, ca2),
+			must:  []string{ca1, ca2},
+		})
+	}
+
+	// 2. Artist1-only: single artist query, validate artist1
+	strategies = append(strategies, searchStrategy{
+		name:  "artist1-only",
+		query: fmt.Sprintf(`track:"%s" artist:"%s"`, ct, ca1),
+		must:  []string{ca1},
+	})
+
+	// 3. Strip-parens: remove parens/remix tags from track, query with artist1
+	if stripped != ct {
+		strategies = append(strategies, searchStrategy{
+			name:  "strip-parens",
+			query: fmt.Sprintf(`track:"%s" artist:"%s"`, stripped, ca1),
+			must:  []string{ca1},
+		})
+	}
+
+	// 4. Track-only: no artist in query, validate artist1 from results
+	strategies = append(strategies, searchStrategy{
+		name:  "track-only",
+		query: fmt.Sprintf(`track:"%s"`, stripped),
+		must:  []string{ca1},
+	})
+
+	// 5. Ampersand-swap: try &↔and in artist names
+	sca1 := swapAmpersand(ca1)
+	sca2 := swapAmpersand(ca2)
+	if sca1 != ca1 || (hasTwoArtists && sca2 != ca2) {
+		must := []string{sca1}
+		q := fmt.Sprintf(`track:"%s" artist:"%s"`, ct, sca1)
+		if hasTwoArtists {
+			q = fmt.Sprintf(`track:"%s" artist:"%s" artist:"%s"`, ct, sca1, sca2)
+			must = []string{sca1, sca2}
+		}
+		strategies = append(strategies, searchStrategy{
+			name:  "ampersand-swap",
+			query: q,
+			must:  must,
+		})
+	}
+
+	// Try each strategy in order.
+	for _, s := range strategies {
+		log.Printf("[spotify] trying strategy=%s query=%s", s.name, s.query)
+
+		items, err := searchSpotify(ctx, s.query)
+		if err != nil {
+			log.Printf("[spotify] strategy=%s error: %v", s.name, err)
+			return SearchResult{}, err
+		}
+
+		if id, ok := matchResults(items, s.must); ok {
+			log.Printf("[spotify] HIT strategy=%s id=%s", s.name, id)
+			return SearchResult{ID: id, Strategy: s.name}, nil
+		}
+		log.Printf("[spotify] MISS strategy=%s", s.name)
+	}
+
+	return SearchResult{}, fmt.Errorf("no spotify match for track=%q artist1=%q artist2=%q after %d strategies",
+		trackName, artist1, artist2, len(strategies))
+}
+
+// SearchTrackID returns the first matching Spotify track ID using iterative
+// fallback strategies. Existing callers are unaffected.
+func SearchTrackID(ctx context.Context, trackName, artist1, artist2 string) (string, error) {
+	res, err := SearchTrackIDResult(ctx, trackName, artist1, artist2)
+	if err != nil {
 		return "", err
 	}
-
-	if len(out.Tracks.Items) == 0 {
-		return "", fmt.Errorf("no track found for '%s' by '%s'", trackName, artist1)
-	}
-
-	matches := []struct {
-		ID      string `json:"id"`
-		Name    string `json:"name"`
-		Artists []struct {
-			Name string `json:"name"`
-		} `json:"artists"`
-	}{}
-
-	// Filter by both artists
-	for _, tr := range out.Tracks.Items {
-		var artists []string
-		for _, a := range tr.Artists {
-			artists = append(artists, strings.ToLower(a.Name))
-		}
-
-		a1 := strings.ToLower(artist1)
-		a2 := strings.ToLower(artist2)
-
-		if contains(artists, a1) && contains(artists, a2) {
-			matches = append(matches, tr)
-		}
-	}
-
-	if len(matches) == 0 {
-		return "", fmt.Errorf("no track matched both artists '%s' and '%s'", artist1, artist2)
-	}
-
-	return matches[0].ID, nil
+	return res.ID, nil
 }
 
 func contains(list []string, x string) bool {
@@ -381,7 +537,6 @@ func CreatePlaylist(ctx context.Context, name string, trackIDs []string) (string
 
 // ========================================================== //
 // Playback utilities
-
 // ============================================================
 // Playback utilities - rewritten for new Spotify client
 // ============================================================

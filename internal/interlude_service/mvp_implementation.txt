@@ -1,0 +1,17 @@
+Ok I like what you did. Now this next part is phase 2.1. 
+
+This is going to be pushing the current product which is an MVP type of demo. This will be used in conjunction with the information in marketing-emails.md. 
+
+I want you to create the specific steps that go into moving this online and will be able to scale up. Specifically the following:
+
+Task output:
+Create a .md file with phase 2.1 MVP implementation
+[] where and how to save databases in the cloud
+[] where and how to host the endpoints
+[] where and how to host the localhost:8000/demo page
+[] other migrations and hosting
+
+Task strategy:
+[] go through the marketing-emails.md
+[] identify what is needed in the MVP to turn leads into users, into customers
+[] create the backend hosting plan above

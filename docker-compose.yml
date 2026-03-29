@@ -1,0 +1,61 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: main/Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./static:/app/static
+      - ./templates:/app/templates
+      - ./internal:/app/internal
+      - ./config:/app/config
+    environment:
+      PG_DSN: ${PG_DSN:-postgresql://postgres:baseball162162@host.docker.internal:5432/musicbrainz_db?sslmode=disable}
+      RUN_ENV: docker
+      ML_SERVICE_URL: http://ml:8000
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env.docker
+    depends_on:
+      - ml
+
+  ml:
+    build:
+      context: ./internal/interlude_service/machinelearning
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./internal/interlude_service/machinelearning:/app
+    environment:
+      PG_DSN: ${PG_DSN:-postgres://postgres:baseball162162@host.docker.internal:5432/musicbrainz_db?sslmode=disable}
+      PYTHONUNBUFFERED: "1"
+      RUN_ENV: ${RUN_ENV:-docker}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      LASTFM_API_KEY: ${LASTFM_API_KEY}
+      LASTFM_API_SECRET: ${LASTFM_API_SECRET}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+      DEFAULT_LOGIT_VERSION: ${DEFAULT_LOGIT_VERSION:-v5}
+      DEFAULT_CVAE_VERSION: ${DEFAULT_CVAE_VERSION:-v1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - ml
+
+volumes:
+  caddy_data:
+  caddy_config:

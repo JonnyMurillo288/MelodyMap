@@ -1,0 +1,30 @@
+Interlude-service. Synthetic music connections data
+
+Project overview:
+A machine learning and CVAE AI model that creates synthetic connections between artists. These connections are creatted by training a logistic regression model on existing artist connections. A connection is two artists on the same song together. Using a graph, Node2Vec, and locaiton embeddings within teh graph, and each artists neighbors and musical types ((genre, danability, etc.). Then the model first predicts synthetic connections and their probabity. Then it tries to predict the type of song that will be created. 
+
+Task purpose:
+You job is to create the output service. The endpoints I want you to create will be a query with an artist, or list of artists, types of song, and whatever else you might want to add that will acheive the projects goal. From that get all potential connections. 
+
+
+Task strategy:
+I want you to go folder by folder, file by file, and functioon by function to get a wholistic view of how the backend creates these songs and create the output of this task. 
+
+Items to remember when doing task. When you go into a folder, file, or function, go one at a time to understand how they work
+
+[] Start with all the .md files documentation to get a scope of how this all works. 
+[] understand the backend architecture that has been built. 
+[] How the models create synthetic connectioons, their outputs. 
+[] How the models creawte synthetic tracks, their outputs.
+[] future outputs that are yet to be created
+[]
+
+
+
+Target users:
+This data is ultimately going to result in a service that allows two primary types of users. 1) main-target-customer. This set of customers will be AI, analyytics, and othe rhighly technical music researchers and developers. They will be interested in those synthetic connectioons, the possible tracks that make up the synthetic connections, and changes in input parameters to crewate types and versions of synthetic connections by trying to get certain types of songs they want made. The product will be this data for this user.
+
+The other is 2) secondary-target-customer. This will be less technical music analytics firms, music distributers, producers. Record labels and marketers who might want to see what songs might be popular given the synthetic connection probability, the type of songs, etc.
+
+Task output:
+A detailed write up of this path forward, the endpoints you want to create, the architecture, the database tables and caching mechanisms for storing outputs. The user display and UX. Models, and metrics that should be used, tinkered, and created. Security, both for the user and their accounts, and internally not to leake data, api attacks and limits, stealing of data, and scraping of data. I want also a strategy for pricing and how this project will bill or will it be licensed datasets that are accecible

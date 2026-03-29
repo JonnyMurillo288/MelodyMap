@@ -1,0 +1,34 @@
+# Git
+.git/
+.gitignore
+
+# Python environments & cache
+acousticbrainz/sklearn-env/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Notebooks & large data
+*.ipynb
+acousticbrainz/data/
+
+# Secrets
+.env
+.env.local
+.env.docker
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Docs (not needed in Go container)
+*.md
+
+# Claude / AI config
+.claude/

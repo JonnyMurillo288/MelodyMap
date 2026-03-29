@@ -3,34 +3,94 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Advanced Machine Learning Analyses – Coming Soon</title>
+  <title>Advanced Machine Learning Analyses</title>
 
   <link rel="stylesheet" href="static/style.css" type="text/css" />
+  <link rel="stylesheet" href="static/ml_page.css" type="text/css" />
+  <link rel="stylesheet" href="//cdn.datatables.net/2.3.6/css/dataTables.dataTables.min.css" type="text/css" />
 </head>
 
 <body>
-  <header>
-    <h1>Advanced Machine Learning Analyses</h1>
-    <div class="actions">
-      <a class="btn" href="/">← Back to Main Page</a>
-      <a class="btn btn-primary" href="https://buymeacoffee.com/jmurillo" target="_blank">Buy Me a Coffee</a>\
-    </div>
-  </header>
+  <div class="page">
+    <header>
+      <h1>Advanced Machine Learning Analyses</h1>
+      <div class="actions">
+        <a class="btn" href="/">← Back to Main Page</a>
+        <a class="btn btn-primary" href="https://buymeacoffee.com/jmurillo" target="_blank">Buy Me a Coffee</a>
+      </div>
+    </header>
 
-  <main class="coming-soon-container">
-    <h2>Page Coming Soon :)</h2>
+    <main>
+      <div class="card">
+        <h2 class="card-title">Artist Analysis</h2>
+        <p class="card-subtitle">Search for target and destination artists to analyze their connections</p>
 
-    <div class="coming-img-wrapper">
-      <img src="/static/ml_placeholder.png" alt="ML Coming Soon" class="coming-img" />
-    </div>
+        <div class="search-section">
+          <div class="search-group">
+            <label for="targetSearch">Artist</label>
+            <input type="text" id="targetSearch" placeholder="Enter artist name..." />
+          </div>
 
-    <div class="arrow-wrapper">
-      <div class="arrow">⬇</div>
-      <a class="btn btn-primary" href="https://buymeacoffee.com/jmurillo" target="_blank">Support Development</a>
-      <p class="donation-msg">
-         Any donation will absolve you from <strong>future paywalls</strong> for the initial analysis.
-      </p>
-    </div>
-  </main>
+          <div class="search-group">
+            <label for="destSearch">Destination Artist</label>
+            <input type="text" id="destSearch" placeholder="Optional" />
+          </div>
+
+          <button class="btn btn-primary" id="analyzeBtn">Analyze</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-header" id="table1Header">
+          <h3 class="card-title">Artist and their connections</h3>
+          <button class="collapse-btn" id="collapse1">−</button>
+        </div>
+        <div class="table-container" id="table1Container">
+          <div id="table1" class="data-table"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-header" id="table2Header">
+          <h3 class="card-title">Non-connected artists with collaboration score</h3>
+          <button class="collapse-btn" id="collapse2">−</button>
+        </div>
+        <div class="table-container" id="table2Container">
+          <div id="table2" class="data-table"></div>
+        </div>
+      </div>
+
+      <!-- Saved Connections / Playlist Selection Panel -->
+      <div class="card" id="savedConnectionsCard" style="display:none;">
+        <div class="table-header" id="savedHeader">
+          <h3 class="card-title">Create Playlist From Synthetic Connections Above</h3>
+          <h4 class="card-subtitle">This will find similar songs based on the synthetic connections you select</h4>
+          <div class="saved-header-actions">
+            <span id="savedCount" class="badge badge-accent">0 connections</span>
+            <button class="btn btn-ghost" id="clearSavedBtn" title="Clear all">Clear</button>
+            <button class="collapse-btn" id="collapseSaved">&minus;</button>
+          </div>
+        </div>
+        <div class="table-container" id="savedContainer">
+          <div id="savedConnectionsList" class="saved-connections-list"></div>
+          <div class="saved-actions-bar" id="savedActionsBar">
+            <input type="text" id="mlPlaylistName" placeholder="Playlist name (optional)" />
+            <button class="btn btn-primary" id="createPlaylistFromSavedBtn">
+              Create Spotify Playlist
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Set the SDS token from the backend
+    window.SDSToken = "{{.Token}}";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="//cdn.datatables.net/2.3.6/js/dataTables.min.js"></script>
+  <script src="static/ml_pagev2_table_changes.js"></script>
+  <script src="static/ml_page.js"></script>
 </body>
 </html>

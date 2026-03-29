@@ -211,6 +211,22 @@ h1 {
   color: var(--text-main);
 }
 
+.save-btn {
+  font-size: 50px;  /* Adjust size as needed */
+  padding: 8px 12px; /* Optional: add padding for clickable area */
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.save-btn.saved {
+  color: green;
+}
+
+.save-btn.unsaved {
+  color: grey;
+}
+
 /* =========================================
    Cards & Layout
 ========================================= */

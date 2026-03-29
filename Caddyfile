@@ -1,0 +1,44 @@
+# Development: localhost with auto-generated self-signed cert
+# Production: replace localhost with your domain (e.g., api.interlude.fm)
+# Caddy auto-provisions TLS certificates from Let's Encrypt for real domains.
+
+localhost {
+    # API v1 endpoints -> ML service directly
+    handle /api/v1/* {
+        reverse_proxy ml:8000
+    }
+
+    # Prometheus metrics (internal only in production)
+    handle /metrics {
+        reverse_proxy ml:8000
+    }
+
+    # Swagger/Redoc docs
+    handle /docs {
+        reverse_proxy ml:8000
+    }
+    handle /redoc {
+        reverse_proxy ml:8000
+    }
+    handle /openapi.json {
+        reverse_proxy ml:8000
+    }
+
+    # Health check
+    handle /health {
+        reverse_proxy ml:8000
+    }
+
+    # Legacy ML endpoints
+    handle /ml/* {
+        reverse_proxy ml:8000
+    }
+    handle /interlude/* {
+        reverse_proxy ml:8000
+    }
+
+    # Everything else -> Go frontend
+    handle {
+        reverse_proxy api:8080
+    }
+}

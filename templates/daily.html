@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>MelodyMap - Daily Playlist</title>
+
+  <script>
+    window.SDSToken = "{{ .Token }}";
+  </script>
+
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="//cdn.datatables.net/2.3.6/css/dataTables.dataTables.min.css" type="text/css" />
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="static/style.css" type="text/css" />
+  <link rel="stylesheet" href="static/ml_page.css" type="text/css" />
+  <link rel="stylesheet" href="static/daily.css" type="text/css" />
+</head>
+
+<body>
+  <div class="page">
+    <header>
+      <div class="header-left">
+        <h1><span class="logo-dot"></span>MelodyMap Daily</h1>
+        <div class="header-subtitle">
+          Select a genre and discover ML-predicted artist collaborations with synthetic playlists.
+        </div>
+        <div class="header-badges">
+          <span class="badge badge-accent">Genre Discovery</span>
+          <span class="badge">ML Predictions</span>
+          <span class="badge">Spotify Playlists</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn btn-ghost" href="/">Main Page</a>
+        <a class="btn btn-ghost" href="/ml">ML Analysis</a>
+        <a class="btn btn-ghost" href="/status" target="_blank">Status</a>
+      </div>
+    </header>
+
+    <div class="daily-layout">
+
+      <!-- Login / Tier Bar -->
+      <div class="card tier-bar">
+        <div class="tier-bar-left">
+          <div id="loginSection">
+            <button class="btn btn-primary" id="loginBtn" onclick="startLogin()">Login with Spotify</button>
+          </div>
+          <div id="userSection" style="display:none;">
+            <span class="badge badge-accent" id="tierBadge">Free</span>
+            <span class="usage-counter" id="usageCounter">0/1 playlists used today</span>
+          </div>
+        </div>
+        <div class="tier-bar-right" id="upgradeSection" style="display:none;">
+          <button class="btn btn-primary" id="upgradeBtn" onclick="showUpgradeModal()">Upgrade to Unlimited</button>
+        </div>
+      </div>
+
+      <!-- Genre Picker -->
+      <div class="card">
+        <h2 class="card-title">Choose a Genre</h2>
+        <div class="card-subtitle">Select a genre to discover predicted artist collaborations</div>
+        <div class="genre-picker" id="genrePicker">
+          <button class="genre-btn" data-genre="rock">Rock</button>
+          <button class="genre-btn" data-genre="pop">Pop</button>
+          <button class="genre-btn" data-genre="hip hop">Hip Hop</button>
+          <button class="genre-btn" data-genre="jazz">Jazz</button>
+          <button class="genre-btn" data-genre="classical">Classical</button>
+          <button class="genre-btn" data-genre="electronic">Electronic</button>
+          <button class="genre-btn" data-genre="r&b">R&B</button>
+          <button class="genre-btn" data-genre="country">Country</button>
+          <button class="genre-btn" data-genre="metal">Metal</button>
+          <button class="genre-btn" data-genre="folk">Folk</button>
+          <button class="genre-btn" data-genre="punk">Punk</button>
+          <button class="genre-btn" data-genre="blues">Blues</button>
+        </div>
+        <div id="genreSpinner" class="spinner" style="margin-top: 1rem;">Loading predictions...</div>
+      </div>
+
+      <!-- Seed Artist Info -->
+      <div class="card" id="seedArtistCard" style="display:none;">
+        <h2 class="card-title" id="seedArtistTitle">Seed Artist</h2>
+        <div class="card-subtitle" id="seedArtistSubtitle"></div>
+      </div>
+
+      <!-- Results Table (table2 style - synthetic connections) -->
+      <div class="card" id="resultsCard" style="display:none;">
+        <div class="table-header" id="dailyTableHeader">
+          <h3 class="card-title">Predicted Collaborations</h3>
+          <button class="collapse-btn" id="collapseDaily">&minus;</button>
+        </div>
+        <div class="table-container" id="dailyTableContainer">
+          <div id="dailyTable" class="data-table"></div>
+        </div>
+      </div>
+
+      <!-- Saved Connections / Playlist Creation -->
+      <div class="card" id="savedConnectionsCard" style="display:none;">
+        <div class="table-header" id="savedHeader">
+          <h3 class="card-title">Create Playlist From Selected Connections</h3>
+          <h4 class="card-subtitle">Select connections above, then create a Spotify playlist</h4>
+          <div class="saved-header-actions">
+            <span id="savedCount" class="badge badge-accent">0 connections</span>
+            <button class="btn btn-ghost" id="clearSavedBtn" title="Clear all">Clear</button>
+            <button class="collapse-btn" id="collapseSaved">&minus;</button>
+          </div>
+        </div>
+        <div class="table-container" id="savedContainer">
+          <div id="savedConnectionsList" class="saved-connections-list"></div>
+          <div class="saved-actions-bar" id="savedActionsBar">
+            <input type="text" id="mlPlaylistName" placeholder="Playlist name (optional)" />
+            <button class="btn btn-primary" id="createPlaylistFromSavedBtn">
+              Create Spotify Playlist
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end .daily-layout -->
+  </div><!-- end .page -->
+
+  <!-- Upgrade Modal -->
+  <div class="modal-overlay" id="upgradeModal" style="display:none;">
+    <div class="modal-content">
+      <button class="modal-close" onclick="hideUpgradeModal()">&times;</button>
+      <h2 class="modal-title">Upgrade to Unlimited</h2>
+      <p class="modal-subtitle">Remove the daily limit and generate unlimited playlists</p>
+      <div class="pricing-cards">
+        <div class="pricing-card">
+          <h3>Monthly</h3>
+          <div class="price">$4.99<span>/mo</span></div>
+          <ul class="pricing-features">
+            <li>Unlimited daily playlists</li>
+            <li>All genres</li>
+            <li>Cancel anytime</li>
+          </ul>
+          <button class="btn btn-primary" onclick="startCheckout('monthly')">Subscribe Monthly</button>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-badge">Best Value</div>
+          <h3>Lifetime</h3>
+          <div class="price">$29.99</div>
+          <ul class="pricing-features">
+            <li>Unlimited daily playlists</li>
+            <li>All genres</li>
+            <li>One-time payment</li>
+            <li>Lifetime access</li>
+          </ul>
+          <button class="btn btn-primary" onclick="startCheckout('lifetime')">Buy Lifetime</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery + DataTables -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="//cdn.datatables.net/2.3.6/js/dataTables.min.js"></script>
+
+  <!-- Shared ML table logic -->
+  <script src="static/ml_pagev2_table_changes.js"></script>
+
+  <!-- Daily page logic -->
+  <script src="static/daily.js"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+Documentation for API for frontend to read
+
+This is going to be the following data in the output. 
+
+Artist ID | Neighbor ID | Recording ID | Synthetic (Bool)
+
+
+The additional data for the frontend to lookup:
+Artist: Artist Name 
+Neighbor: Neighbor Name
+Recording: Recording Name, Recording Popularity
+Synthetic: 
+   - If false, show link to track
+   - If true, show the following data:
+       - predicted connection strength (Logistic Regression Results)
+       - predicted tracks (default 5, user can input more) (CVAE Model Results)
+       - predicted popularity (Linear Regression)
+       
+
+If we get synthetic tracks we have to tell the backend to apply the models
+Then we have to tell the frontend (okay we will run it, here are the results)
+
+Frontend sends:
+ArtistID | Non-existing NeighborID 
+
+OR 
+
+Frontend sends
+
+ArtistID 
+Then backend creates Non-existing NeighborID
+
+Backend returns the synthetic data above
+
+Frontend:
+
+GET 
+/lookup?name=?synth=False? -> Returns the neighbor from the lookup name
+
+This is going to be our neighbors, we will put this into a table
+
+GET
+/synth/artists?src=?dst=?limit= -> This tells the backend: Find me synthetic connections for this src and this dst
+
+GET
+/synth/artists?src=?limit= -> This tells the backend: Find me synthetic dst for this src 
+
+GET
+/synth/tracks?src=?dst=?limit= -> This tells the backend: Find me synthetic tracks for the src-dst connections
+
+
+
+Backend:
+POST
+/lookup?name? -> Already have this, this is our search function posting it's connections when it runs the search
+
+src | dst | probability (Logit) | Existing Tracks
+
+POST
+/synth/artists?src=?dst=?limit= -> Backend will Return the following:
+
+src | dst | probability (Results of Logistic Regression)
+
+This is acheived by:
+1. get_artist_embeddings(src) & get_artist_embeddings(dst)
+   - This goes into the database, returns their embeddings
+2. load_logit_model(model_id)
+3. predict_links(logit_model,src,dst)
+
+POST
+/synth/artists?src=?limit= -> Backend needs to find connections for the src
+
+src | dst | probability (Results of Logistic Regression)
+
+1. get_artist_embeddings(src)
+   - This goes into the database, returns their embeddings
+2. load_logit_model(model_id)
+3. predict_links(logit_model,src)
+4. get_artist_predictions(src)
+   - Returns a table of predicted connections
+
+
+POST
+/synth/tracks?src=?dst=?limit= -> Backend will run the CVAE model by putting in the embeddings of the two artists
+
+src | dst | probability (Logit) | Synthetic Track Features (CVAE)| Popularity (Linear Regression) 
+
+1. get_artist_embeddings(src) & get_artist_embeddings(dst)
+   - This goes into the database, returns their embeddings
+2. GET /synth/artist?src=?dst=?
+3. load_cvae_artifact(path)
+4. generate_for_rows([(src,dst])
+
+Returns Parquet of the table above
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

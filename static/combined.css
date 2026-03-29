@@ -1,0 +1,136 @@
+/* =========================================
+   Combined Page Layout Overrides
+========================================= */
+
+/* Widen the page to accommodate 3-column layout */
+.page {
+  max-width: 1800px;
+}
+
+/* Main layout: left search panel + right area */
+.layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Right area: 2 columns on top, full-width bottom */
+.right-area {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  grid-template-rows: auto auto;
+  gap: 1.0rem;
+}
+
+#graph-card {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 800px;
+  overflow: hidden;
+}
+
+.tables-column {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.0rem;
+  min-width: 0;
+  max-height: min(80vh, 900px);
+  overflow-y: auto;
+}
+
+#savedConnectionsCard {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+/* Reduce graph height for combined layout */
+#graph {
+  height: min(40vh, 600px);
+}
+
+/* Search mode dropdown styling */
+#searchMode {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.9);
+  font-size: 0.88rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+#searchMode:focus {
+  border-color: rgba(45, 212, 191, 0.8);
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.75);
+}
+
+/* Playlist group at bottom of graph card */
+.graph-playlist-group {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.graph-playlist-group label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.graph-playlist-group .row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Tables column scrollbar */
+.tables-column::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tables-column::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 4px;
+}
+
+.tables-column::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+.tables-column::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* =========================================
+   Responsive: medium screens
+========================================= */
+@media (max-width: 1400px) {
+  .right-area {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+/* =========================================
+   Responsive: small screens
+========================================= */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .right-area {
+    grid-template-columns: 1fr;
+  }
+
+  #graph {
+    height: min(60vh, 500px);
+  }
+}

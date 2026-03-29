@@ -1,0 +1,275 @@
+/* =========================================
+   Daily Page Layout
+========================================= */
+
+.daily-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Widen the page for daily */
+.page {
+  max-width: 1200px;
+}
+
+/* =========================================
+   Tier Bar
+========================================= */
+.tier-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.tier-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tier-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.usage-counter {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* =========================================
+   Genre Picker
+========================================= */
+.genre-picker {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.genre-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.genre-btn:hover {
+  background: rgba(31, 41, 55, 0.9);
+  color: var(--text-main);
+  border-color: rgba(148, 163, 184, 0.6);
+  transform: translateY(-1px);
+}
+
+.genre-btn.active {
+  background: linear-gradient(135deg, #22c55e, #0ea5e9);
+  color: #0b1120;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(45, 212, 191, 0.35);
+}
+
+.genre-btn.active:hover {
+  background: linear-gradient(135deg, #4ade80, #38bdf8);
+  box-shadow: 0 6px 18px rgba(45, 212, 191, 0.5);
+}
+
+.genre-btn.precomputed {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.genre-btn.precomputed::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  margin-left: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* =========================================
+   Seed Artist Card
+========================================= */
+#seedArtistCard {
+  border-left: 3px solid var(--accent);
+}
+
+/* =========================================
+   Modal Overlay
+========================================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  border-radius: 18px;
+  border: 1px solid var(--card-border);
+  padding: 2rem;
+  max-width: 650px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(18px);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  transition: 0.15s ease;
+}
+
+.modal-close:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.3rem;
+}
+
+.modal-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+/* =========================================
+   Pricing Cards
+========================================= */
+.pricing-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.pricing-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+  transition: 0.2s ease;
+}
+
+.pricing-card:hover {
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.pricing-card.featured {
+  border-color: var(--accent);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.pricing-badge {
+  position: absolute;
+  top: -0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #0b1120;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pricing-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.price {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--accent-strong);
+}
+
+.price span {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem 0;
+  text-align: left;
+}
+
+.pricing-features li {
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.pricing-features li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.pricing-card .btn {
+  width: 100%;
+}
+
+/* =========================================
+   Responsive
+========================================= */
+@media (max-width: 600px) {
+  .genre-picker {
+    gap: 0.4rem;
+  }
+  .genre-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  .pricing-cards {
+    grid-template-columns: 1fr;
+  }
+  .tier-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

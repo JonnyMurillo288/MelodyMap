@@ -1,0 +1,46 @@
+cd etl
+python3 extract_artist_edges.py
+python3 generate_embeddings.py --visualize
+python3 load_embeddings_to_db.py
+
+# Features
+cd features
+python3 pipeline_hops.py
+python3 pipeline_links.py --num-samples 5000000 --neg-ratio 0.2
+python3 -m features.pipeline_links --num-samples 5000000 --neg-ratio 1.0
+
+
+# Models
+cd models
+python3 hop_predictor.py
+python3 link_predictor.py
+python3 -m models.link_predictor
+
+# Train CVAE for synthetic track generation
+python3 track_feature_predictor.py
+
+# With custom parameters
+python3 track_feature_predictor.py --epochs 50 --z-dim 32 --batch-size 256
+
+# Skip data prep if combined embeddings already exist
+# Do this becuase you already
+python3 track_feature_predictor.py --skip-data-prep
+
+
+
+python3 run_pipeline.py --extract-edges
+python3 run_pipeline.py --generate-embeddings
+python3 run_pipeline.py --load-to-db
+
+# Step 2: Features
+python3 run_pipeline.py --hop-features
+python3 run_pipeline.py --link-features
+
+# Step 3: Models
+python3 run_pipeline.py --train-hop-model
+python3 run_pipeline.py --train-link-model
+python3 run_pipeline.py --train-synth-tracks-model
+
+
+TRUNCATE TABLE synthetic_track_model_versions, synthetic_tracks_high_level_features, synthetic_tracks RESTART IDENTITY CASCADE;
+

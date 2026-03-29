@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -36,7 +37,7 @@ func getSpotifyTokenPath() string {
 	if p := os.Getenv("SPOTIFY_TOKEN_PATH"); p != "" {
 		return p
 	}
-	return "/var/data/spotify_token.json"
+	return "spotify_token.json"
 }
 
 // HasSpotifyToken checks whether a usable Spotify OAuth token exists
@@ -104,15 +105,23 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		config = createConfig()
 	}
 
+	log.Printf("[auth/callback] RedirectURL in config: %s", config.RedirectURL)
+	log.Printf("[auth/callback] ClientID: %s", config.ClientID)
+
 	// 4. Exchange code → token
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
+		log.Printf("[auth/callback] Exchange failed: %v", err)
 		http.Error(w, "cannot exchange token: "+err.Error(), 500)
 		return
 	}
 
 	// 5. Save token
-	saveToken(token)
+	if err := saveToken(token); err != nil {
+		log.Printf("[auth/callback] Failed to save token: %v", err)
+		http.Error(w, "token obtained but failed to save: "+err.Error(), 500)
+		return
+	}
 
 	// 6. Popup sends event to opener
 	w.Header().Set("Content-Type", "text/html")
@@ -153,7 +162,7 @@ func createConfig() *oauth2.Config {
 // Save OAuth token to /var/data
 // ---------------------------------------------
 
-func saveToken(tok *oauth2.Token) {
+func saveToken(tok *oauth2.Token) error {
 	st := struct {
 		AccessToken string `json:"access_token"`
 		Type        string `json:"token_type"`
@@ -166,15 +175,18 @@ func saveToken(tok *oauth2.Token) {
 		Expires:     tok.Expiry.Format(time.RFC3339Nano),
 	}
 
-	// 🔥 Ensure directory exists
-	os.MkdirAll(filepath.Dir(tokenPath), 0o700)
+	if dir := filepath.Dir(tokenPath); dir != "." {
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			return fmt.Errorf("create token dir: %w", err)
+		}
+	}
 
 	f, err := os.OpenFile(tokenPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("open token file: %w", err)
 	}
-	json.NewEncoder(f).Encode(st)
-	f.Close()
+	defer f.Close()
+	return json.NewEncoder(f).Encode(st)
 }
 
 // LoadSpotifyToken reads the stored token, refreshes it if needed,
@@ -217,7 +229,9 @@ func LoadSpotifyToken(config *oauth2.Config) (*oauth2.Token, error) {
 
 	// If a new token was issued, persist it
 	if newTok.AccessToken != tok.AccessToken || !newTok.Expiry.Equal(tok.Expiry) {
-		saveToken(newTok)
+		if err := saveToken(newTok); err != nil {
+			log.Printf("[auth] Warning: failed to persist refreshed token: %v", err)
+		}
 	}
 
 	return newTok, nil

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Jonnymurillo288/MelodyMap/internal/auth"
 	"github.com/Jonnymurillo288/MelodyMap/internal/jobs"
@@ -64,11 +66,27 @@ func tokenAuth(next http.Handler) http.Handler {
 	})
 }
 
+func loadEnv() {
+	runEnv := os.Getenv("RUN_ENV")
+
+	switch runEnv {
+	case "docker":
+		// Docker already injects env vars via docker-compose
+		log.Println("[ENV] Running in Docker, skipping .env loading")
+
+	default:
+		// Local dev
+		if err := godotenv.Load(".env.local"); err != nil {
+			log.Printf("[ENV] .env.local not found (ok): %v", err)
+		} else {
+			log.Println("[ENV] Loaded .env.local")
+		}
+	}
+}
+
 func main() {
 	// Load .env file
-	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: .env file not found or could not be loaded: %v", err)
-	}
+	loadEnv()
 
 	root := findProjectRoot()
 	if err := secret.LoadSecrets(""); err != nil {
@@ -91,16 +109,20 @@ func main() {
 			return
 		}
 		data := struct{ Token string }{Token: tok}
-		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "graph_test.html")))
+		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "combined.html")))
 		t.Execute(w, data)
 	})
 
 	// search API (background)
 	// --- PROTECTED ROUTES ---
 	mux.Handle("/createPlaylist", tokenAuth(http.HandlerFunc(createPlaylistHandler)))
+	mux.Handle("/api/createplaylist", tokenAuth(http.HandlerFunc(createPlaylistFromSavedHandler)))
 	mux.Handle("/api/search/start", tokenAuth(http.HandlerFunc(startSearchHandler)))
 	mux.Handle("/api/search/status", tokenAuth(http.HandlerFunc(searchStatusHandler)))
-	mux.Handle("/lookup", tokenAuth(http.HandlerFunc(handleLookup)))
+	mux.Handle("/lookup", tokenAuth(http.HandlerFunc(handleArtistLookup)))
+	mux.Handle("/api/artist/neighbors", tokenAuth(http.HandlerFunc(artistNeighborsHandler)))
+	mux.Handle("/trackLookup", http.HandlerFunc(handleTrackLookup))
+	mux.Handle("/artistLookupByGID", http.HandlerFunc(handleArtistLookupByGID))
 
 	// Spotify OAuth begin (public)
 	mux.HandleFunc("/auth/start", auth.HomePage)
@@ -118,6 +140,47 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]any{"ok": true})
 	})
 
+	// Daily Page
+	mux.HandleFunc("/daily", dailyPageHandler)
+	mux.Handle("/api/daily/predict", tokenAuth(http.HandlerFunc(dailyPredictHandler)))
+	mux.Handle("/api/daily/today", tokenAuth(http.HandlerFunc(dailyTodayHandler)))
+	mux.Handle("/api/daily/create-playlist", tokenAuth(http.HandlerFunc(dailyCreatePlaylistHandler)))
+	mux.Handle("/api/user/tier", tokenAuth(http.HandlerFunc(userTierHandler)))
+
+	// Stripe endpoints (NOT behind tokenAuth — Stripe calls webhook directly)
+	mux.HandleFunc("/api/stripe/create-checkout", stripeCreateCheckoutHandler)
+	mux.HandleFunc("/api/stripe/webhook", stripeWebhookHandler)
+
+	// API Demo Page
+	mux.HandleFunc("/demo", func(w http.ResponseWriter, r *http.Request) {
+		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "demo.html")))
+		t.Execute(w, nil)
+	})
+
+	// Machine Learning Page
+	mux.HandleFunc("/ml", func(w http.ResponseWriter, r *http.Request) {
+		tok, err := auth.CreateToken()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("token generation failed %s", err), 500)
+			return
+		}
+		data := struct{ Token string }{Token: tok}
+		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "ml_page.html")))
+		t.Execute(w, data)
+	})
+
+	// MachineLearning API (background)
+	// --- TODO: PROTECT THE ROUTES ---
+	mux.Handle("/ml/synth/artist", tokenAuth(http.HandlerFunc(HandleMachineLearningMainPage)))
+	mux.Handle("/ml/synth/tracks", tokenAuth(http.HandlerFunc(SynthTrackLookupHandler)))
+
+	// Initialize daily predictions table and start scheduler
+	if err := initDailyPredictionsTable(); err != nil {
+		log.Printf("[WARN] Failed to init daily_predictions table: %v", err)
+	} else {
+		startDailyScheduler()
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -129,7 +192,8 @@ func main() {
 	}
 }
 
-func handleLookup(w http.ResponseWriter, r *http.Request) {
+// GET - Tells backend to give me what you have so far in the GlobalNeighborLookup for this [Name]
+func handleArtistLookup(w http.ResponseWriter, r *http.Request) {
 	name := strings.ToLower(r.URL.Query().Get("name"))
 
 	step, ok := search.GlobalNeighborLookup[name]
@@ -145,7 +209,97 @@ func handleLookup(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(step)
 }
 
-// POST /createPlaylist
+type gidFeaturesToGet struct {
+	GIDs []string `json:"gids"`
+}
+
+// GET - Tells backend to give me what you have so far in the GlobalNeighborLookup for this [Name]
+// output is type search.FrontendTracksList map[gid]RecordingFeatures
+// RecordingFeatures:
+func handleTrackLookup(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "method_not_allowed",
+		})
+		return
+	}
+
+	fmt.Println("[TRACK LOOKUP] HIT")
+	// name := strings.ToLower(r.URL.Query().Get("track"))
+	var featuresMap gidFeaturesToGet
+	var features search.FrontendTracksList
+
+	// Should be passing in Json type with list of []string `json:"gids"`
+	err := json.NewDecoder(r.Body).Decode(&featuresMap)
+
+	store, err := search.Open("")
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer store.Close()
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	// fmt.Println("Here are the input recording featuresby gids:", featuresMap)
+	// fmt.Printf("The types of the items in the featres: %T\n", (featuresMap.GIDs[0]))
+	features.FeaturesMap, err = search.GetRecordingFeaturesByGIDs(ctx, store, featuresMap.GIDs)
+	json.NewEncoder(w).Encode(features)
+}
+
+// POST /artistLookupByGID - Batch lookup artist names by their GIDs
+func handleArtistLookupByGID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "method_not_allowed",
+		})
+		return
+	}
+
+	var req struct {
+		GIDs []string `json:"gids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"invalid_body"}`, http.StatusBadRequest)
+		return
+	}
+
+	fmt.Printf("[artistLookupByGID] Received %d GIDs: %v\n", len(req.GIDs), req.GIDs)
+
+	store, err := search.Open("")
+	if err != nil {
+		fmt.Printf("[artistLookupByGID] Failed to open store: %v\n", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer store.Close()
+
+	// Build response map: gid -> name
+	namesMap := make(map[string]string)
+	for _, gid := range req.GIDs {
+		artist, err := store.LookupArtistByMBID(gid)
+		if err != nil {
+			fmt.Printf("[artistLookupByGID] Failed to lookup GID %s: %v\n", gid, err)
+			continue
+		}
+		if artist != nil {
+			namesMap[gid] = artist.Name
+			fmt.Printf("[artistLookupByGID] Resolved %s -> %s\n", gid, artist.Name)
+		}
+	}
+
+	fmt.Printf("[artistLookupByGID] Returning %d resolved names\n", len(namesMap))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"artistNames": namesMap,
+	})
+}
+
 // POST /createPlaylist
 func createPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -251,6 +405,39 @@ func createPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	if len(spotifyIDs) == 0 {
 		http.Error(w, `{"error":"no_spotify_tracks_found"}`, http.StatusBadRequest)
 		return
+	}
+
+	// Need to save the number of tracks attempted to get, and the number of tracks inserted based on the src artist_id, this will help test how well the spotify search is working, and if there are certain artists that are not working well with the search
+	log.Printf("Attempting to find Spotify IDs for %d tracks from BFS path", len(spotifyIDs))
+	// Save a csv logging with |src_artist_id|num_tracks|num_spotify_ids_found for each step in the path, this will help us understand if there are certain artists that are not working well with the spotify search, and if there are certain steps in the path that are more difficult to find spotify tracks for
+	// Save at ./internal/interlude_service/machine_learning/outputs/createPlaylistLogging/spotify_search_log.csv
+	logFile, err := os.OpenFile("./internal/interlude_service/machine_learning/outputs/createPlaylistLogging/spotify_search_log.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Printf("Failed to open log file: %v", err)
+	} else {
+		defer logFile.Close()
+		for _, step := range path {
+			srcArtistID := step.From
+			numTracks := len(step.Tracks)
+			numSpotifyIDs := 0
+			for _, t := range step.Tracks {
+				recName := t.RecordingName
+				if recName == "" {
+					recName = t.Name
+				}
+				if recName == "" {
+					continue
+				}
+				id, err := spotify.SearchTrackID(ctx, recName, step.From, step.To)
+				if err == nil && id != "" {
+					numSpotifyIDs++
+				}
+			}
+			logLine := fmt.Sprintf("%s|%d|%d\n", srcArtistID, numTracks, numSpotifyIDs)
+			if _, err := logFile.WriteString(logLine); err != nil {
+				log.Printf("Failed to write log line: %v", err)
+			}
+		}
 	}
 
 	// 3. Create playlist
