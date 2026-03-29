@@ -9,9 +9,9 @@
 
 databases:
   - name: melodymap-db
-    plan: starter  # 1 GB, $7/mo — upgrade to standard for production
+    plan: basic_256mb  # New Render plan — $7/mo, 256 MB RAM, 1 GB storage
     databaseName: musicbrainz_db
-    postgresMajorVersion: "16"  # Render max is 16; PG18 features we use are backward-compatible
+    postgresMajorVersion: "18"
 
 services:
   # -----------------------------------------------------------
