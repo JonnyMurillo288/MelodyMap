@@ -118,6 +118,10 @@ dedupe_perf_log.csv
 search_log.csv
 *.log
 
+# Large parquet files (data artifacts, not code)
+**/predict_artist_hops/*.parquet
+**/recording_ml_features.parquet
+
 # ------------------------------------------------------------------------------
 # Large generated / media files
 # ------------------------------------------------------------------------------
