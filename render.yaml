@@ -9,7 +9,7 @@
 
 databases:
   - name: melodymap-db
-    plan: basic-256mb  # $7/mo, 256 MB RAM, 1 GB storage
+    plan: pro-4gb  # $45/mo, 4 GB RAM, 50 GB storage — needed for ~20 GB of Interlude tables
     databaseName: musicbrainz_db
     postgresMajorVersion: "18"
 
