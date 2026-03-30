@@ -15,6 +15,9 @@ FROM gcr.io/distroless/base-debian12
 
 WORKDIR /app
 COPY --from=build /app/server /app/server
+COPY --from=build /app/static /app/static
+COPY --from=build /app/templates /app/templates
+COPY --from=build /app/config /app/config
 
 EXPOSE 8080
 CMD ["/app/server"]
