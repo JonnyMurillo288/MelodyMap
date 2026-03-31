@@ -115,10 +115,8 @@ func main() {
 		r.Host = mlTarget.Host
 	}
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
-		// Forward internal secret if set
-		if sec := os.Getenv("INTERNAL_SERVICE_SECRET"); sec != "" && r.Header.Get("X-Internal-Secret") == "" {
-			r.Header.Set("X-Internal-Secret", sec)
-		}
+		// Pass through user requests as-is — don't inject internal secret.
+		// The user's X-API-Key header handles auth on the ML side.
 		mlProxy.ServeHTTP(w, r)
 	})
 
