@@ -108,6 +108,10 @@ func main() {
 	}
 	mlTarget, _ := url.Parse(mlURL)
 	mlProxy := httputil.NewSingleHostReverseProxy(mlTarget)
+	mlProxy.Transport = &http.Transport{
+		ResponseHeaderTimeout: 120 * time.Second,
+		IdleConnTimeout:       90 * time.Second,
+	}
 	// Override the Director to set the correct Host header for Render internal networking
 	origDirector := mlProxy.Director
 	mlProxy.Director = func(r *http.Request) {
