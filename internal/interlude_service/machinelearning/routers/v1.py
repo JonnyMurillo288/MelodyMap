@@ -232,18 +232,7 @@ async def predict_connection(req: ConnectionRequest, request: Request):
 
     # Run inference using existing pipeline
     from features.pipeline_links import build_link_prediction_embeddings_from_artist_list
-    try:
-        artist_embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
-        missing = [f for f in _LOGIT_FEATURES if f not in artist_embeddings.columns]
-        if missing or artist_embeddings.empty:
-            raise HTTPException(
-                status_code=422,
-                detail=f"One or both artists lack the data needed for prediction (missing embeddings or popularity data). Try a more well-known artist.",
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Feature pipeline error: {e}")
+    artist_embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
 
     X = artist_embeddings[_LOGIT_FEATURES].values
     probs = model.predict_proba(X)
