@@ -13,22 +13,67 @@
     <header>
       <div>
         <h1><span class="logo-dot"></span> Interlude</h1>
-        <p class="tagline">Artist Collaboration Prediction API</p>
+        <p class="tagline">Predict artist collaborations. Generate synthetic tracks. Discover connections.</p>
       </div>
       <div class="actions">
-        <a class="btn" href="/ml">ML Explorer</a>
+        <a class="btn btn-accent" href="/ml">ML Explorer</a>
+        <a class="btn" href="/combined">Graph Explorer</a>
+        <a class="btn" href="/daily">Daily Discovery</a>
         <a class="btn btn-primary" href="/docs" target="_blank">API Docs</a>
       </div>
     </header>
 
     <main>
-      <!-- API Key Bar -->
+      <!-- Hero / What You Get -->
+      <div class="card hero-card">
+        <h2 class="hero-title">What can Interlude do?</h2>
+        <div class="hero-grid">
+          <div class="hero-item">
+            <div class="hero-icon">&#x1f3af;</div>
+            <h3>Predict Collaborations</h3>
+            <p>Our ML models predict which artists would create music together, with probability scores across multiple model versions.</p>
+          </div>
+          <div class="hero-item">
+            <div class="hero-icon">&#x1f3b5;</div>
+            <h3>Generate Synthetic Tracks</h3>
+            <p>A CVAE generates hypothetical track features — genre, mood, timbre, rhythm — for any artist pairing.</p>
+          </div>
+          <div class="hero-item">
+            <div class="hero-icon">&#x1f50d;</div>
+            <h3>Find Similar Real Tracks</h3>
+            <p>Aitchison distance matching finds real recordings that sound like the synthetic predictions.</p>
+          </div>
+          <div class="hero-item">
+            <div class="hero-icon">&#x1f4ca;</div>
+            <h3>Artist Intelligence</h3>
+            <p>Full artist profiles with genre distributions, collaboration networks, popularity scores, and embedding data.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Key Bar + Get Key -->
       <div class="card card-compact">
         <div class="api-key-bar">
           <label for="apiKeyInput">API Key</label>
-          <input type="password" id="apiKeyInput" placeholder="Enter your API key..." />
+          <input type="password" id="apiKeyInput" placeholder="Enter your API key or register below..." />
           <button class="btn btn-sm" id="toggleKeyBtn" title="Show/hide key">Show</button>
           <span id="keyStatus" class="status-dot"></span>
+          <button class="btn btn-primary btn-sm" id="getKeyBtn">Get Free API Key</button>
+        </div>
+        <!-- Registration form (hidden by default) -->
+        <div id="registerForm" style="display:none; margin-top:0.75rem;">
+          <div class="search-section" style="margin-top:0;">
+            <div class="search-group">
+              <label for="registerEmail">Email</label>
+              <input type="email" id="registerEmail" placeholder="your@email.com" />
+            </div>
+            <div class="search-group">
+              <label for="registerOrg">Organization (optional)</label>
+              <input type="text" id="registerOrg" placeholder="Company or project name" />
+            </div>
+            <button class="btn btn-primary" id="registerBtn">Create Account</button>
+          </div>
+          <div id="registerResult" style="margin-top:0.5rem;"></div>
         </div>
       </div>
 
@@ -152,6 +197,67 @@
               <div class="collab-list" id="collabList"></div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- API Endpoints Reference -->
+      <div class="card">
+        <h2 class="card-title">API Endpoints</h2>
+        <p class="card-subtitle">All endpoints available at <code>/api/v1/</code> — <a href="/docs" target="_blank" style="color:var(--accent);">Full interactive docs</a></p>
+        <div class="endpoints-grid">
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/predict/connection</span>
+            <span class="endpoint-desc">Predict collaboration probability between two artists</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/predict/neighbors</span>
+            <span class="endpoint-desc">Top-k predicted collaborators for an artist</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/predict/batch</span>
+            <span class="endpoint-desc">Bulk predictions for up to 1,000 artist pairs</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/predict/compare</span>
+            <span class="endpoint-desc">A/B test predictions across model versions</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/explore/what-if</span>
+            <span class="endpoint-desc">"What if X and Y collaborated?" full scenario</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/generate/tracks</span>
+            <span class="endpoint-desc">Generate synthetic track features via CVAE</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/generate/playlist</span>
+            <span class="endpoint-desc">Find real tracks matching synthetic predictions</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method get">GET</span>
+            <span class="endpoint-path">/artist/{id}/profile</span>
+            <span class="endpoint-desc">Full artist profile with genres, popularity, collabs</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method get">GET</span>
+            <span class="endpoint-path">/trends/daily</span>
+            <span class="endpoint-desc">Pre-computed daily featured predictions</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method get">GET</span>
+            <span class="endpoint-path">/dataset/export</span>
+            <span class="endpoint-desc">CSV/Parquet download of prediction data</span>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:1rem;">
+          <a class="btn btn-primary" href="/docs" target="_blank">Open Interactive API Docs</a>
         </div>
       </div>
 

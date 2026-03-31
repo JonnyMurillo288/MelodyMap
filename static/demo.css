@@ -530,6 +530,129 @@ main {
   to { transform: rotate(360deg); }
 }
 
+/* ---- Hero Section ---- */
+.hero-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.6));
+  border: 1px solid rgba(96, 165, 250, 0.15);
+}
+.hero-title {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-bottom: 1.25rem;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+.hero-item {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+}
+.hero-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+.hero-item h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+.hero-item p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ---- Nav Buttons ---- */
+.btn-accent {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+.btn-accent:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* ---- API Endpoints Reference ---- */
+.endpoints-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.endpoint-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.06);
+}
+.endpoint-method {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  min-width: 40px;
+  text-align: center;
+}
+.endpoint-method.post {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.endpoint-method.get {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+.endpoint-path {
+  font-size: 0.82rem;
+  font-family: 'Courier New', monospace;
+  color: var(--text-main);
+  font-weight: 500;
+  min-width: 200px;
+}
+.endpoint-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  flex: 1;
+}
+@media (max-width: 768px) {
+  .endpoint-item { flex-wrap: wrap; }
+  .endpoint-path { min-width: auto; }
+  .endpoint-desc { width: 100%; margin-top: 0.25rem; }
+}
+
+/* ---- Register Result ---- */
+.register-success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+.register-success code {
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  color: #22c55e;
+  word-break: break-all;
+}
+
 /* ---- Scrollbar ---- */
 .table-container::-webkit-scrollbar { width: 6px; }
 .table-container::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 3px; }

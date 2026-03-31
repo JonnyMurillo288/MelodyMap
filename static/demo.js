@@ -338,6 +338,40 @@ function escHtml(str) {
   return div.innerHTML;
 }
 
+// ---- API Key Registration ----
+async function registerApiKey() {
+  const email = $('#registerEmail').value.trim();
+  if (!email) return alert('Enter your email');
+
+  const org = $('#registerOrg').value.trim();
+  const resultDiv = $('#registerResult');
+  resultDiv.innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Creating your account...</div>';
+
+  try {
+    const res = await api('/api/v1/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, org_name: org || null }),
+    });
+
+    const key = res.api_key;
+
+    // Auto-fill the API key input
+    $('#apiKeyInput').value = key;
+    apiKey = key;
+    localStorage.setItem('interlude_api_key', key);
+    $('#keyStatus').classList.add('ok');
+
+    resultDiv.innerHTML = `
+      <div class="register-success">
+        <strong>Account created!</strong> Your API key:<br/>
+        <code>${escHtml(key)}</code><br/>
+        <small style="color:var(--text-muted);">Save this key — it won't be shown again. It's been auto-filled above.</small>
+      </div>`;
+  } catch (e) {
+    resultDiv.innerHTML = `<span style="color:var(--error);">${e.message}</span>`;
+  }
+}
+
 // ---- Event Listeners ----
 document.addEventListener('DOMContentLoaded', () => {
   initApiKey();
@@ -346,6 +380,14 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#predictBtn').addEventListener('click', predictConnection);
   $('#neighborBtn').addEventListener('click', discoverNeighbors);
   $('#profileBtn').addEventListener('click', loadProfile);
+
+  // Get API Key button
+  $('#getKeyBtn').addEventListener('click', () => {
+    const form = $('#registerForm');
+    form.style.display = form.style.display === 'none' ? '' : 'none';
+  });
+  $('#registerBtn').addEventListener('click', registerApiKey);
+  $('#registerEmail').addEventListener('keydown', (e) => { if (e.key === 'Enter') registerApiKey(); });
 
   // Enter key support
   $('#srcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });

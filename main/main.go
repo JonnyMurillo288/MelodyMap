@@ -101,8 +101,14 @@ func main() {
 	// static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(filepath.Join(root, "static")))))
 
-	// HTML template + token inject
+	// Homepage → Demo page (the landing page for leads)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "demo.html")))
+		t.Execute(w, nil)
+	})
+
+	// Combined graph + ML page (the full exploration dashboard)
+	mux.HandleFunc("/combined", func(w http.ResponseWriter, r *http.Request) {
 		tok, err := auth.CreateToken()
 		if err != nil {
 			http.Error(w, fmt.Sprintf("token generation failed %s", err), 500)
@@ -151,10 +157,9 @@ func main() {
 	mux.HandleFunc("/api/stripe/create-checkout", stripeCreateCheckoutHandler)
 	mux.HandleFunc("/api/stripe/webhook", stripeWebhookHandler)
 
-	// API Demo Page
+	// /demo redirects to homepage (backward compat)
 	mux.HandleFunc("/demo", func(w http.ResponseWriter, r *http.Request) {
-		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "demo.html")))
-		t.Execute(w, nil)
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	})
 
 	// Machine Learning Page
