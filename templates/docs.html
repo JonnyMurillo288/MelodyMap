@@ -410,7 +410,7 @@
 
   <script>
     const base = window.location.origin;
-    const API = base.replace(':8080', ':8002');
+    const API = base; // Go proxies /api/v1/* to ML service
 
     // Get demo key from localStorage (shared with landing page)
     const demoKeys = [

@@ -9,6 +9,8 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -97,6 +99,22 @@ func main() {
 	fmt.Printf("AUTHCONFIG RAW: %+v\n", secret.AuthConfig)
 
 	mux := http.NewServeMux()
+
+	// Reverse proxy /api/v1/* to the ML service
+	// On Render, both services have separate URLs so the browser can't reach ML directly.
+	mlURL := os.Getenv("ML_SERVICE_URL")
+	if mlURL == "" {
+		mlURL = "http://127.0.0.1:8000"
+	}
+	mlTarget, _ := url.Parse(mlURL)
+	mlProxy := httputil.NewSingleHostReverseProxy(mlTarget)
+	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
+		// Forward internal secret if set
+		if secret := os.Getenv("INTERNAL_SERVICE_SECRET"); secret != "" && r.Header.Get("X-Internal-Secret") == "" {
+			r.Header.Set("X-Internal-Secret", secret)
+		}
+		mlProxy.ServeHTTP(w, r)
+	})
 
 	// static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(filepath.Join(root, "static")))))

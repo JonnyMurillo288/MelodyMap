@@ -3,7 +3,8 @@
    Calls /api/v1/* endpoints directly
 ========================================= */
 
-const API_BASE = window.location.origin.replace(':8080', ':8002');
+// API calls go through the same origin — Go proxies /api/v1/* to the ML service
+const API_BASE = window.location.origin;
 
 // ---- Demo Keys (10 pre-registered, randomly assigned per session) ----
 const DEMO_KEYS = [
