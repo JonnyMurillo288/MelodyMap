@@ -11,8 +11,12 @@ def get_pg_conn():
     """
     Returns a new Postgres connection.
     Caller is responsible for closing it.
+    Sets search_path to musicbrainz,public so queries work without schema prefix.
     """
-    return psycopg2.connect(DB_URL)
+    conn = psycopg2.connect(DB_URL)
+    conn.cursor().execute("SET search_path TO musicbrainz, public;")
+    conn.commit()
+    return conn
 
 
 def get_artist_collab(conn):
