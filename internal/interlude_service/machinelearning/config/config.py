@@ -5,10 +5,17 @@ import os
 import time
 
 # Database Configuration
-DB_URL = os.getenv(
+_raw_dsn = os.getenv(
     "PG_DSN",
     "postgres://postgres:baseball162162@localhost:5432/musicbrainz_db?sslmode=disable"
 )
+# Ensure search_path includes musicbrainz schema so queries work without schema prefix.
+# On Render, the default search_path is 'public' only.
+if "options=" not in _raw_dsn:
+    _sep = "&" if "?" in _raw_dsn else "?"
+    DB_URL = _raw_dsn + _sep + "options=-csearch_path%3Dmusicbrainz,public"
+else:
+    DB_URL = _raw_dsn
 
 # Keys to the LastFM API
 LAST_FM_KEYS = {
