@@ -19,8 +19,8 @@ let apiKey = '';
 
 // ---- DOM Helpers ----
 const $ = (sel) => document.querySelector(sel);
-const show = (el) => { if (typeof el === 'string') el = $(el); el.style.display = ''; };
-const hide = (el) => { if (typeof el === 'string') el = $(el); el.style.display = 'none'; };
+const show = (el) => { if (typeof el === 'string') el = $(el); if (el) el.style.display = ''; };
+const hide = (el) => { if (typeof el === 'string') el = $(el); if (el) el.style.display = 'none'; };
 
 function probClass(p) {
   if (p >= 0.65) return 'high';
