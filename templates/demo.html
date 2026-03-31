@@ -58,10 +58,10 @@
           <input type="text" id="apiKeyInput" readonly />
           <span id="keyStatus" class="status-dot"></span>
           <span class="key-info" id="keyInfo">Demo key auto-assigned</span>
-          <button class="btn btn-primary btn-sm" id="getKeyBtn">Get Your Own Key</button>
+          <button class="btn btn-primary btn-sm" id="getKeyBtn" onclick="document.getElementById('registerForm').style.display = document.getElementById('registerForm').style.display === 'none' ? '' : 'none'">Get Your Own Key</button>
         </div>
         <div class="demo-limits-note" id="demoNote">
-          Demo keys: 50 requests/hour, exports limited to 100 rows (10 exports max). <a href="/docs">Get a full account</a> for higher limits.
+          Demo keys: 50 requests/hour, exports limited to 100 rows (10 exports max).
         </div>
         <!-- Registration form (hidden by default) -->
         <div id="registerForm" style="display:none; margin-top:0.75rem;">
