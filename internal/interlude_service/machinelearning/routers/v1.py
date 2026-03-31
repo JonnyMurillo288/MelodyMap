@@ -105,12 +105,15 @@ def _resolve_artist(raw: str) -> int:
         pass
 
     # Try as name
-    conn = get_pg_conn()
-    q = "SELECT id FROM artist WHERE LOWER(name) = LOWER(%s) LIMIT 1;"
-    df = pd.read_sql_query(q, conn, params=(raw,))
-    conn.close()
+    try:
+        conn = get_pg_conn()
+        q = "SELECT id FROM artist WHERE LOWER(name) = LOWER(%s) LIMIT 1;"
+        df = pd.read_sql_query(q, conn, params=(raw,))
+        conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error resolving artist '{raw}': {e}")
     if df.empty:
-        raise HTTPException(status_code=404, detail=f"Artist not found: '{raw}'")
+        raise HTTPException(status_code=404, detail=f"Artist not found: '{raw}'. Try a different spelling or use a MusicBrainz ID.")
     return int(df["id"].iloc[0])
 
 

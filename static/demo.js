@@ -39,8 +39,12 @@ async function api(path, opts = {}) {
   if (apiKey) headers['X-API-Key'] = apiKey;
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers: { ...headers, ...opts.headers } });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`${res.status}: ${text}`);
+    let detail = `${res.status}`;
+    try {
+      const err = await res.json();
+      detail = err.detail || err.message || JSON.stringify(err);
+    } catch { detail += ': ' + await res.text(); }
+    throw new Error(detail);
   }
   return res.json();
 }

@@ -93,6 +93,18 @@ app.add_middleware(                     # outermost — handles OPTIONS prefligh
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-Request-ID"],
 )
 
+# Global exception handler — return actual error message instead of generic 500
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    import traceback
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc), "type": type(exc).__name__},
+    )
+
 # Prometheus /metrics endpoint
 app.add_route("/metrics", metrics_endpoint, methods=["GET"])
 
