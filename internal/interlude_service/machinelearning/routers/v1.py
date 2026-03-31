@@ -234,6 +234,14 @@ async def predict_connection(req: ConnectionRequest, request: Request):
     from features.pipeline_links import build_link_prediction_embeddings_from_artist_list
     artist_embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
 
+    # Debug: if features are missing, return what we got so we can diagnose
+    missing = [f for f in _LOGIT_FEATURES if f not in artist_embeddings.columns]
+    if missing:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Pipeline returned {len(artist_embeddings)} rows with columns: {list(artist_embeddings.columns)[:20]}. Missing features: {missing}. _LOGIT_FEATURES={_LOGIT_FEATURES}",
+        )
+
     X = artist_embeddings[_LOGIT_FEATURES].values
     probs = model.predict_proba(X)
     if probs.ndim > 1 and probs.shape[1] > 1:
