@@ -40,6 +40,18 @@ main {
   font-size: 0.75rem;
 }
 
+/* ---- Autocomplete z-index fix ---- */
+.card {
+  position: relative;
+}
+.autocomplete-container {
+  position: relative;
+  z-index: 100;
+}
+.autocomplete-list {
+  z-index: 9999 !important;
+}
+
 /* ---- Search Section ---- */
 .search-section {
   display: grid;
