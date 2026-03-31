@@ -162,7 +162,7 @@ async function predictConnection() {
   $('#dstBadge').textContent = dst;
   $('#probValue').textContent = '...';
   $('#probRing').className = 'prob-ring';
-  $('#connectionMeta').innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Predicting...</div>';
+  $('#connectionMeta').innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Running ML pipeline — this can take up to 30 seconds for uncached artists...</div>';
 
   try {
     // 1. Predict connection
@@ -301,7 +301,7 @@ async function discoverNeighbors() {
 
   show('#neighborsCard');
   $('#neighborsTitle').textContent = 'Predicted Collaborators';
-  $('#neighborsBody').innerHTML = '<tr><td colspan="4"><div class="loading-inline"><div class="spinner-sm"></div>Discovering neighbors...</div></td></tr>';
+  $('#neighborsBody').innerHTML = '<tr><td colspan="4"><div class="loading-inline"><div class="spinner-sm"></div>Running ML pipeline — this can take up to 30 seconds for uncached artists...</div></td></tr>';
 
   try {
     const res = await api('/api/v1/predict/neighbors', {
