@@ -108,10 +108,16 @@ func main() {
 	}
 	mlTarget, _ := url.Parse(mlURL)
 	mlProxy := httputil.NewSingleHostReverseProxy(mlTarget)
+	// Override the Director to set the correct Host header for Render internal networking
+	origDirector := mlProxy.Director
+	mlProxy.Director = func(r *http.Request) {
+		origDirector(r)
+		r.Host = mlTarget.Host
+	}
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		// Forward internal secret if set
-		if secret := os.Getenv("INTERNAL_SERVICE_SECRET"); secret != "" && r.Header.Get("X-Internal-Secret") == "" {
-			r.Header.Set("X-Internal-Secret", secret)
+		if sec := os.Getenv("INTERNAL_SERVICE_SECRET"); sec != "" && r.Header.Get("X-Internal-Secret") == "" {
+			r.Header.Set("X-Internal-Secret", sec)
 		}
 		mlProxy.ServeHTTP(w, r)
 	})
