@@ -104,10 +104,16 @@ def _resolve_artist(raw: str) -> int:
     except ValueError:
         pass
 
-    # Try as name
+    # Try as name — prefer artists with embeddings (needed for predictions)
     try:
         conn = get_pg_conn()
-        q = "SELECT id FROM artist WHERE LOWER(name) = LOWER(%s) LIMIT 1;"
+        q = """SELECT a.id FROM artist a
+               LEFT JOIN artist_embeddings_n2v e ON e.artist_id = a.id
+               LEFT JOIN artist_collab c ON c.artist_id = a.id
+               WHERE LOWER(a.name) = LOWER(%s)
+               GROUP BY a.id
+               ORDER BY COUNT(DISTINCT e.artist_id) DESC, COUNT(c.artist_id) DESC
+               LIMIT 1;"""
         df = pd.read_sql_query(q, conn, params=(raw,))
         conn.close()
     except Exception as e:
@@ -232,31 +238,7 @@ async def predict_connection(req: ConnectionRequest, request: Request):
 
     # Run inference using existing pipeline
     from features.pipeline_links import build_link_prediction_embeddings_from_artist_list
-
-    # Debug: test that search_path is working before running pipeline
-    debug_conn = get_pg_conn()
-    try:
-        debug_df = pd.read_sql_query(
-            "SELECT current_setting('search_path') AS sp, count(*) AS artist_count FROM artist LIMIT 1",
-            debug_conn,
-        )
-        debug_sp = str(debug_df["sp"].iloc[0]) if not debug_df.empty else "EMPTY"
-        debug_cnt = int(debug_df["artist_count"].iloc[0]) if not debug_df.empty else 0
-    except Exception as e:
-        debug_sp = f"ERROR: {e}"
-        debug_cnt = -1
-    finally:
-        debug_conn.close()
-
     artist_embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
-
-    # Debug: if features are missing, return diagnostics
-    missing = [f for f in _LOGIT_FEATURES if f not in artist_embeddings.columns]
-    if missing:
-        raise HTTPException(
-            status_code=500,
-            detail=f"search_path={debug_sp}, artist_count={debug_cnt}, src={src_int}, dst={dst_int}, pipeline returned {len(artist_embeddings)} rows, columns={list(artist_embeddings.columns)[:20]}, missing={missing}",
-        )
 
     X = artist_embeddings[_LOGIT_FEATURES].values
     probs = model.predict_proba(X)
