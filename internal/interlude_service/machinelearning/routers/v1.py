@@ -1141,12 +1141,28 @@ async def dataset_export(request: Request, format: str = "csv", genre: str = Non
     email = user.get("email", "")
     is_admin = email == "admin@interlude.local" or tier == "internal"
 
-    # Tier gate: free users blocked unless admin
+    # Tier gate
     if tier == "free" and not is_admin:
         raise HTTPException(
             status_code=403,
             detail="Export requires Researcher tier or above. Upgrade at /api/v1/auth/upgrade",
         )
+
+    # Demo tier: 100 rows max, 10 exports max per key
+    if tier == "demo":
+        limit = min(limit, 100)
+        # Check export count for this demo user
+        user_id = user.get("user_id")
+        conn = get_pg_conn()
+        q = "SELECT COUNT(*) AS cnt FROM dataset_exports WHERE user_id = %s::uuid"
+        df_cnt = pd.read_sql_query(q, conn, params=(user_id,))
+        conn.close()
+        export_count = int(df_cnt["cnt"].iloc[0]) if not df_cnt.empty else 0
+        if export_count >= 10:
+            raise HTTPException(
+                status_code=429,
+                detail="Demo export limit reached (10 exports per key). Register for a free account to continue.",
+            )
 
     # Cap limits by tier
     if tier == "researcher" and not is_admin:

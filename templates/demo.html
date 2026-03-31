@@ -13,52 +13,55 @@
     <header>
       <div>
         <h1><span class="logo-dot"></span> Interlude</h1>
-        <p class="tagline">Predict artist collaborations. Generate synthetic tracks. Discover connections.</p>
+        <p class="tagline">Music collaboration intelligence powered by machine learning</p>
       </div>
       <div class="actions">
         <a class="btn btn-accent" href="/ml">ML Explorer</a>
-        <a class="btn" href="/combined">Graph Explorer</a>
-        <a class="btn" href="/daily">Daily Discovery</a>
-        <a class="btn btn-primary" href="/docs" target="_blank">API Docs</a>
+        <a class="btn" href="https://www.Melody-Map.com" target="_blank">Graph Explorer</a>
+        <a class="btn btn-primary" href="/docs">API Docs</a>
       </div>
     </header>
 
     <main>
       <!-- Hero / What You Get -->
       <div class="card hero-card">
-        <h2 class="hero-title">What can Interlude do?</h2>
+        <h2 class="hero-title">The API for music collaboration intelligence</h2>
+        <p class="hero-subtitle">Built on 2.7M artists and 18.4M real collaboration edges from MusicBrainz. Try it live below.</p>
         <div class="hero-grid">
           <div class="hero-item">
             <div class="hero-icon">&#x1f3af;</div>
-            <h3>Predict Collaborations</h3>
-            <p>Our ML models predict which artists would create music together, with probability scores across multiple model versions.</p>
+            <h3>Collaboration Prediction</h3>
+            <p>Enter any two artists. Get a probability score for how likely they are to collaborate, powered by graph ML on real data.</p>
           </div>
           <div class="hero-item">
             <div class="hero-icon">&#x1f3b5;</div>
-            <h3>Generate Synthetic Tracks</h3>
-            <p>A CVAE generates hypothetical track features — genre, mood, timbre, rhythm — for any artist pairing.</p>
+            <h3>Synthetic Track Generation</h3>
+            <p>See what a collaboration would sound like. Our CVAE generates 62 audio features — genre, mood, energy, timbre — for the hypothetical tracks.</p>
           </div>
           <div class="hero-item">
-            <div class="hero-icon">&#x1f50d;</div>
-            <h3>Find Similar Real Tracks</h3>
-            <p>Aitchison distance matching finds real recordings that sound like the synthetic predictions.</p>
+            <div class="hero-icon">&#x1f4e1;</div>
+            <h3>Batch &amp; Export</h3>
+            <p>Score up to 1,000 pairs at once. Export predictions as CSV or Parquet. Compare model versions side-by-side.</p>
           </div>
           <div class="hero-item">
             <div class="hero-icon">&#x1f4ca;</div>
-            <h3>Artist Intelligence</h3>
-            <p>Full artist profiles with genre distributions, collaboration networks, popularity scores, and embedding data.</p>
+            <h3>Artist Profiles</h3>
+            <p>Genre distributions, popularity scores, top collaborators, Spotify linkage, and Node2Vec embeddings for any artist.</p>
           </div>
         </div>
       </div>
 
-      <!-- API Key Bar + Get Key -->
+      <!-- API Key Bar -->
       <div class="card card-compact">
         <div class="api-key-bar">
           <label for="apiKeyInput">API Key</label>
-          <input type="password" id="apiKeyInput" placeholder="Enter your API key or register below..." />
-          <button class="btn btn-sm" id="toggleKeyBtn" title="Show/hide key">Show</button>
+          <input type="text" id="apiKeyInput" readonly />
           <span id="keyStatus" class="status-dot"></span>
-          <button class="btn btn-primary btn-sm" id="getKeyBtn">Get Free API Key</button>
+          <span class="key-info" id="keyInfo">Demo key auto-assigned</span>
+          <button class="btn btn-primary btn-sm" id="getKeyBtn">Get Your Own Key</button>
+        </div>
+        <div class="demo-limits-note" id="demoNote">
+          Demo keys: 50 requests/hour, exports limited to 100 rows (10 exports max). <a href="/docs">Get a full account</a> for higher limits.
         </div>
         <!-- Registration form (hidden by default) -->
         <div id="registerForm" style="display:none; margin-top:0.75rem;">
@@ -203,7 +206,7 @@
       <!-- API Endpoints Reference -->
       <div class="card">
         <h2 class="card-title">API Endpoints</h2>
-        <p class="card-subtitle">All endpoints available at <code>/api/v1/</code> — <a href="/docs" target="_blank" style="color:var(--accent);">Full interactive docs</a></p>
+        <p class="card-subtitle">All endpoints available at <code>/api/v1/</code> — <a href="/docs" style="color:var(--accent);">Full documentation with examples</a></p>
         <div class="endpoints-grid">
           <div class="endpoint-item">
             <span class="endpoint-method post">POST</span>
@@ -257,7 +260,7 @@
           </div>
         </div>
         <div style="text-align:center;margin-top:1rem;">
-          <a class="btn btn-primary" href="/docs" target="_blank">Open Interactive API Docs</a>
+          <a class="btn btn-primary" href="/docs">View Full API Documentation</a>
         </div>
       </div>
 

@@ -538,7 +538,27 @@ main {
 .hero-title {
   text-align: center;
   font-size: 1.4rem;
+  margin-bottom: 0.4rem;
+}
+.hero-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
   margin-bottom: 1.25rem;
+}
+.demo-limits-note {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.demo-limits-note a {
+  color: var(--accent);
+}
+.key-info {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 .hero-grid {
   display: grid;

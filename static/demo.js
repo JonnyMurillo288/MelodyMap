@@ -5,6 +5,14 @@
 
 const API_BASE = window.location.origin.replace(':8080', ':8002');
 
+// ---- Demo Keys (10 pre-registered, randomly assigned per session) ----
+const DEMO_KEYS = [
+  'interlude-demo-001', 'interlude-demo-002', 'interlude-demo-003',
+  'interlude-demo-004', 'interlude-demo-005', 'interlude-demo-006',
+  'interlude-demo-007', 'interlude-demo-008', 'interlude-demo-009',
+  'interlude-demo-010',
+];
+
 // ---- State ----
 let apiKey = '';
 
@@ -55,28 +63,71 @@ async function checkStatus() {
   }
 }
 
-// ---- API Key ----
+// ---- API Key: auto-assign demo key per session ----
 function initApiKey() {
   const input = $('#apiKeyInput');
-  const toggle = $('#toggleKeyBtn');
   const dot = $('#keyStatus');
+  const info = $('#keyInfo');
 
-  // Load from localStorage
-  const saved = localStorage.getItem('interlude_api_key');
-  if (saved) { input.value = saved; apiKey = saved; dot.classList.add('ok'); }
+  // Check if user has their own key saved
+  const savedKey = localStorage.getItem('interlude_api_key');
+  const savedType = localStorage.getItem('interlude_key_type');
 
-  input.addEventListener('input', () => {
-    apiKey = input.value.trim();
-    localStorage.setItem('interlude_api_key', apiKey);
-    dot.classList.toggle('ok', apiKey.length > 0);
-    dot.classList.remove('err');
-  });
+  if (savedKey && savedType === 'personal') {
+    // User registered their own key
+    apiKey = savedKey;
+    input.value = savedKey;
+    dot.classList.add('ok');
+    info.textContent = 'Your personal API key';
+    $('#demoNote').style.display = 'none';
+  } else {
+    // Assign a random demo key for this session
+    const idx = Math.floor(Math.random() * DEMO_KEYS.length);
+    const demoKey = DEMO_KEYS[idx];
+    apiKey = demoKey;
+    input.value = demoKey;
+    localStorage.setItem('interlude_api_key', demoKey);
+    localStorage.setItem('interlude_key_type', 'demo');
+    dot.classList.add('ok');
+    info.textContent = 'Demo key (auto-assigned)';
+  }
+}
 
-  toggle.addEventListener('click', () => {
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
-    toggle.textContent = isPassword ? 'Hide' : 'Show';
-  });
+// ---- API Key Registration ----
+async function registerApiKey() {
+  const email = $('#registerEmail').value.trim();
+  if (!email) return alert('Enter your email');
+
+  const org = $('#registerOrg').value.trim();
+  const resultDiv = $('#registerResult');
+  resultDiv.innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Creating your account...</div>';
+
+  try {
+    const res = await api('/api/v1/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, org_name: org || null }),
+    });
+
+    const key = res.api_key;
+
+    // Save as personal key
+    apiKey = key;
+    $('#apiKeyInput').value = key;
+    localStorage.setItem('interlude_api_key', key);
+    localStorage.setItem('interlude_key_type', 'personal');
+    $('#keyStatus').classList.add('ok');
+    $('#keyInfo').textContent = 'Your personal API key';
+    $('#demoNote').style.display = 'none';
+
+    resultDiv.innerHTML = `
+      <div class="register-success">
+        <strong>Account created!</strong> Your API key:<br/>
+        <code>${escHtml(key)}</code><br/>
+        <small style="color:var(--text-muted);">Saved automatically. 100 requests/hour on the free tier.</small>
+      </div>`;
+  } catch (e) {
+    resultDiv.innerHTML = `<span style="color:var(--error);">${e.message}</span>`;
+  }
 }
 
 // ---- Predict Connection ----
@@ -338,40 +389,6 @@ function escHtml(str) {
   return div.innerHTML;
 }
 
-// ---- API Key Registration ----
-async function registerApiKey() {
-  const email = $('#registerEmail').value.trim();
-  if (!email) return alert('Enter your email');
-
-  const org = $('#registerOrg').value.trim();
-  const resultDiv = $('#registerResult');
-  resultDiv.innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Creating your account...</div>';
-
-  try {
-    const res = await api('/api/v1/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, org_name: org || null }),
-    });
-
-    const key = res.api_key;
-
-    // Auto-fill the API key input
-    $('#apiKeyInput').value = key;
-    apiKey = key;
-    localStorage.setItem('interlude_api_key', key);
-    $('#keyStatus').classList.add('ok');
-
-    resultDiv.innerHTML = `
-      <div class="register-success">
-        <strong>Account created!</strong> Your API key:<br/>
-        <code>${escHtml(key)}</code><br/>
-        <small style="color:var(--text-muted);">Save this key — it won't be shown again. It's been auto-filled above.</small>
-      </div>`;
-  } catch (e) {
-    resultDiv.innerHTML = `<span style="color:var(--error);">${e.message}</span>`;
-  }
-}
-
 // ---- Event Listeners ----
 document.addEventListener('DOMContentLoaded', () => {
   initApiKey();
@@ -381,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#neighborBtn').addEventListener('click', discoverNeighbors);
   $('#profileBtn').addEventListener('click', loadProfile);
 
-  // Get API Key button
+  // Get own key button → toggle registration form
   $('#getKeyBtn').addEventListener('click', () => {
     const form = $('#registerForm');
     form.style.display = form.style.display === 'none' ? '' : 'none';

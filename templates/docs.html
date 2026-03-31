@@ -105,6 +105,16 @@
   "meta": {"model_version": "v5", "latency_ms": 234.5, "cached": false}
 }</pre>
           </div>
+          <!-- Try It -->
+          <div class="try-it">
+            <h4>Try It</h4>
+            <div class="try-inputs">
+              <input type="text" id="try-conn-src" placeholder="Source artist (e.g. Radiohead)" value="Radiohead" />
+              <input type="text" id="try-conn-dst" placeholder="Destination artist (e.g. Kendrick Lamar)" value="Kendrick Lamar" />
+              <button class="btn btn-primary" onclick="tryConnection()">Send Request</button>
+            </div>
+            <pre class="try-output" id="try-conn-result">Click "Send Request" to see a live response</pre>
+          </div>
         </div>
 
         <div class="endpoint">
@@ -128,6 +138,16 @@
   -H "X-API-Key: YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"artist": "Drake", "limit": 5}'</pre>
+          </div>
+          <!-- Try It -->
+          <div class="try-it">
+            <h4>Try It</h4>
+            <div class="try-inputs">
+              <input type="text" id="try-nb-artist" placeholder="Artist name" value="Drake" />
+              <input type="number" id="try-nb-limit" placeholder="Limit" value="5" min="1" max="20" />
+              <button class="btn btn-primary" onclick="tryNeighbors()">Send Request</button>
+            </div>
+            <pre class="try-output" id="try-nb-result">Click "Send Request" to see a live response</pre>
           </div>
         </div>
 
@@ -273,6 +293,15 @@
 <pre>curl {{BASE_URL}}/api/v1/artist/Radiohead/profile \
   -H "X-API-Key: YOUR_KEY"</pre>
           </div>
+          <!-- Try It -->
+          <div class="try-it">
+            <h4>Try It</h4>
+            <div class="try-inputs">
+              <input type="text" id="try-profile-artist" placeholder="Artist name" value="Radiohead" />
+              <button class="btn btn-primary" onclick="tryProfile()">Send Request</button>
+            </div>
+            <pre class="try-output" id="try-profile-result">Click "Send Request" to see a live response</pre>
+          </div>
         </div>
 
         <div class="endpoint">
@@ -381,19 +410,84 @@
 
   <script>
     const base = window.location.origin;
+    const API = base.replace(':8080', ':8002');
+
+    // Get demo key from localStorage (shared with landing page)
+    const demoKeys = [
+      'interlude-demo-001','interlude-demo-002','interlude-demo-003',
+      'interlude-demo-004','interlude-demo-005','interlude-demo-006',
+      'interlude-demo-007','interlude-demo-008','interlude-demo-009',
+      'interlude-demo-010',
+    ];
+    let apiKey = localStorage.getItem('interlude_api_key') || demoKeys[Math.floor(Math.random() * demoKeys.length)];
+
     document.getElementById('apiBase').textContent = base + '/api/v1/';
-    // Replace {{BASE_URL}} placeholders
-    document.querySelectorAll('pre').forEach(el => {
+
+    // Replace {{BASE_URL}} placeholders (only in non-try-output pre elements)
+    document.querySelectorAll('pre:not(.try-output)').forEach(el => {
       el.textContent = el.textContent.replace(/\{\{BASE_URL\}\}/g, base);
     });
+
     // Health check
-    fetch(base.replace(':8080', ':8002') + '/api/v1/health')
+    fetch(API + '/api/v1/health')
       .then(r => r.json())
       .then(d => {
         const dot = document.getElementById('healthDot');
         dot.classList.add(d.data?.db_connected ? 'ok' : 'err');
       })
       .catch(() => document.getElementById('healthDot').classList.add('err'));
+
+    // ---- Try-It Functions ----
+    async function tryApi(path, opts = {}) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (apiKey) headers['X-API-Key'] = apiKey;
+      const res = await fetch(`${API}${path}`, { ...opts, headers });
+      return { status: res.status, body: await res.json() };
+    }
+
+    async function tryConnection() {
+      const out = document.getElementById('try-conn-result');
+      out.textContent = 'Sending request...';
+      try {
+        const src = document.getElementById('try-conn-src').value || 'Radiohead';
+        const dst = document.getElementById('try-conn-dst').value || 'Kendrick Lamar';
+        const r = await tryApi('/api/v1/predict/connection', {
+          method: 'POST',
+          body: JSON.stringify({ src_artist: src, dst_artist: dst, limit: 3 }),
+        });
+        out.textContent = JSON.stringify(r.body, null, 2);
+      } catch (e) {
+        out.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function tryNeighbors() {
+      const out = document.getElementById('try-nb-result');
+      out.textContent = 'Sending request...';
+      try {
+        const artist = document.getElementById('try-nb-artist').value || 'Drake';
+        const limit = parseInt(document.getElementById('try-nb-limit').value) || 5;
+        const r = await tryApi('/api/v1/predict/neighbors', {
+          method: 'POST',
+          body: JSON.stringify({ artist, limit }),
+        });
+        out.textContent = JSON.stringify(r.body, null, 2);
+      } catch (e) {
+        out.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function tryProfile() {
+      const out = document.getElementById('try-profile-result');
+      out.textContent = 'Sending request...';
+      try {
+        const artist = document.getElementById('try-profile-artist').value || 'Radiohead';
+        const r = await tryApi(`/api/v1/artist/${encodeURIComponent(artist)}/profile`);
+        out.textContent = JSON.stringify(r.body, null, 2);
+      } catch (e) {
+        out.textContent = 'Error: ' + e.message;
+      }
+    }
   </script>
 </body>
 </html>
