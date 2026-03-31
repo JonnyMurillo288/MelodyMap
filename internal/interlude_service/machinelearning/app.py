@@ -597,10 +597,9 @@ def generate_synthetic_tracks(cvae_version,
             dst_id = [int(dst)]
     
     from sqlalchemy import create_engine, text
-    
-    # print("OS ENV PG_DSN:",os.getenv("PG_DSN"))
-    dsn = os.getenv("PG_DSN")
+    from config.config import DB_URL
 
+    dsn = DB_URL  # Uses the DSN with search_path options from config.py
     if dsn and dsn.startswith("postgres://"):
         dsn = dsn.replace("postgres://", "postgresql://", 1)
 
