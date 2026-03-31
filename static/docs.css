@@ -1,0 +1,260 @@
+/* =========================================
+   API Docs Page Styles
+========================================= */
+
+.tagline {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+main h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.3rem;
+}
+
+main h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+
+main p {
+  margin: 0.4rem 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+code {
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+
+.note {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ---- Code Blocks ---- */
+.code-block {
+  background: rgba(10, 15, 30, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 8px;
+  margin: 0.75rem 0;
+  overflow: hidden;
+}
+.code-block.response {
+  border-color: rgba(34, 197, 94, 0.2);
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(15, 23, 42, 0.5);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.code-block pre {
+  margin: 0;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  font-family: 'Courier New', monospace;
+  color: #e2e8f0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+/* ---- Method Badges ---- */
+.method {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+}
+.method.post {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.method.get {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+/* ---- Endpoint Sections ---- */
+.endpoint {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+.endpoint:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.endpoint-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.endpoint-header code {
+  font-size: 1rem;
+  font-weight: 600;
+  background: none;
+  padding: 0;
+  color: var(--text-main);
+}
+
+/* ---- Parameter Tables ---- */
+.params {
+  margin: 0.75rem 0;
+}
+.params h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.params table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.params td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+  vertical-align: top;
+}
+.params td:first-child {
+  font-family: 'Courier New', monospace;
+  color: var(--accent);
+  white-space: nowrap;
+  width: 180px;
+}
+.params td:nth-child(2) {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  width: 140px;
+}
+
+/* ---- Pricing Tiers ---- */
+.tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+.tier-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+}
+.tier-card.featured {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.1);
+}
+.tier-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: var(--text-main);
+}
+.tier-price {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+.tier-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  text-align: left;
+}
+.tier-card li {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+}
+.tier-card li:last-child { border-bottom: none; }
+
+/* ---- Models Table ---- */
+.docs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.docs-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  vertical-align: top;
+}
+.docs-table td:first-child {
+  color: var(--text-main);
+  white-space: nowrap;
+}
+.docs-table td:nth-child(2) {
+  color: var(--text-muted);
+}
+.docs-table td:nth-child(3) {
+  color: #22c55e;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+/* ---- Status Bar ---- */
+.card-compact {
+  padding: 0.75rem 1.25rem;
+}
+.status-bar {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.status-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.status-value {
+  font-size: 0.75rem;
+  color: var(--text-main);
+  font-family: 'Courier New', monospace;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6b7280;
+}
+.status-dot.ok { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+.status-dot.err { background: #ef4444; }

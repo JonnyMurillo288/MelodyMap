@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interlude API Documentation</title>
+  <link rel="stylesheet" href="static/style.css" type="text/css" />
+  <link rel="stylesheet" href="static/docs.css" type="text/css" />
+</head>
+
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1><span class="logo-dot"></span> Interlude API</h1>
+        <p class="tagline">Artist Collaboration Prediction &amp; Synthetic Track Generation</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="/">Home</a>
+        <a class="btn" href="/ml">ML Explorer</a>
+        <a class="btn btn-primary" id="swaggerLink" href="/api/v1/health" target="_blank">Interactive Swagger</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- Overview -->
+      <div class="card">
+        <h2>Getting Started</h2>
+        <p>The Interlude API provides ML-powered artist collaboration predictions, synthetic track generation, and music intelligence data. All endpoints are under <code>/api/v1/</code>.</p>
+
+        <h3>1. Get an API Key</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="method post">POST</span>
+            <span>/api/v1/auth/register</span>
+          </div>
+<pre>curl -X POST {{BASE_URL}}/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "you@example.com"}'</pre>
+        </div>
+        <p class="note">Returns your API key once. Save it securely. Free tier: 100 requests/hour.</p>
+
+        <h3>2. Authenticate</h3>
+        <p>Include your API key in every request:</p>
+        <div class="code-block">
+<pre>curl -H "X-API-Key: YOUR_KEY" {{BASE_URL}}/api/v1/health</pre>
+        </div>
+
+        <h3>3. Response Format</h3>
+        <p>All endpoints return a standard envelope:</p>
+        <div class="code-block">
+<pre>{
+  "data": { ... },
+  "meta": {
+    "model_version": "v5",
+    "latency_ms": 42.3,
+    "cached": false,
+    "request_id": "uuid"
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- Prediction Endpoints -->
+      <div class="card">
+        <h2>Prediction Endpoints</h2>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <code>/api/v1/predict/connection</code>
+          </div>
+          <p>Predict the collaboration probability between two artists.</p>
+          <div class="params">
+            <h4>Request Body</h4>
+            <table>
+              <tr><td><code>src_artist</code></td><td>string, required</td><td>Artist name, MBID, or integer ID</td></tr>
+              <tr><td><code>dst_artist</code></td><td>string, required</td><td>Artist name, MBID, or integer ID</td></tr>
+              <tr><td><code>model_version</code></td><td>string, optional</td><td>Model version (v1, v3, v5). Default: v5</td></tr>
+              <tr><td><code>limit</code></td><td>int, optional</td><td>Number of synthetic tracks to generate (1-25, default 5)</td></tr>
+            </table>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span>Example</span></div>
+<pre>curl -X POST {{BASE_URL}}/api/v1/predict/connection \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "src_artist": "Radiohead",
+    "dst_artist": "Kendrick Lamar"
+  }'</pre>
+          </div>
+          <div class="code-block response">
+            <div class="code-header"><span>Response</span></div>
+<pre>{
+  "data": {
+    "src_artist": "Radiohead",
+    "dst_artist": "Kendrick Lamar",
+    "src_name": "Radiohead",
+    "dst_name": "Kendrick Lamar",
+    "probability": 0.72,
+    "tracks": [1042, 1043, 1044, 1045, 1046],
+    "features_used": {"cos_sim": 0.43, "shared_neighbors": 12, ...}
+  },
+  "meta": {"model_version": "v5", "latency_ms": 234.5, "cached": false}
+}</pre>
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <code>/api/v1/predict/neighbors</code>
+          </div>
+          <p>Find the top predicted collaborators for any artist. Uses cached predictions when available (fast path) or runs the full ML pipeline (slow path).</p>
+          <div class="params">
+            <h4>Request Body</h4>
+            <table>
+              <tr><td><code>artist</code></td><td>string, required</td><td>Artist name, MBID, or integer ID</td></tr>
+              <tr><td><code>limit</code></td><td>int, optional</td><td>Number of neighbors (1-100, default 20)</td></tr>
+              <tr><td><code>min_probability</code></td><td>float, optional</td><td>Minimum probability threshold (0.0-1.0)</td></tr>
+              <tr><td><code>model_version</code></td><td>string, optional</td><td>Model version. Default: v5</td></tr>
+            </table>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span>Example</span></div>
+<pre>curl -X POST {{BASE_URL}}/api/v1/predict/neighbors \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"artist": "Drake", "limit": 5}'</pre>
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <code>/api/v1/predict/batch</code>
+          </div>
+          <p>Bulk prediction for up to 1,000 artist pairs in a single request.</p>
+          <div class="code-block">
+            <div class="code-header"><span>Example</span></div>
+<pre>curl -X POST {{BASE_URL}}/api/v1/predict/batch \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pairs": [
+      {"src": "Drake", "dst": "Taylor Swift"},
+      {"src": "Radiohead", "dst": "Bjork"},
+      {"src": "Kendrick Lamar", "dst": "SZA"}
+    ]
+  }'</pre>
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <code>/api/v1/predict/compare</code>
+          </div>
+          <p>A/B test the same artist pair across multiple model versions. Compare v1 (basic logistic), v3 (tuned), and v5 (PU learning) side-by-side.</p>
+          <div class="code-block">
+            <div class="code-header"><span>Example</span></div>
+<pre>curl -X POST {{BASE_URL}}/api/v1/predict/compare \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "src_artist": "Frank Ocean",
+    "dst_artist": "Tame Impala",
+    "versions": ["v1", "v3", "v5"]
+  }'</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario Endpoints -->
+      <div class="card">
+        <h2>Scenario &amp; Discovery</h2>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <code>/api/v1/explore/what-if</code>
+          </div>
+          <p>The "What would happen if X and Y collaborated?" endpoint. Takes 2-10 artists, generates all pair combinations, predicts probabilities, creates synthetic tracks, and finds matching real recordings.</p>
+          <div class="params">
+            <h4>Request Body</h4>
+            <table>
+              <tr><td><code>artists</code></td><td>list[string], required</td><td>2-10 artist names or IDs</td></tr>
+              <tr><td><code>scenario</code></td><td>object, optional</td><td>Constraints: <code>genre_target</code>, <code>popularity_range</code>, <code>mood_target</code></td></tr>
+              <tr><td><code>num_tracks</code></td><td>int, optional</td><td>Synthetic tracks per pair (default 5)</td></tr>
+              <tr><td><code>num_similar</code></td><td>int, optional</td><td>Similar real tracks per pair (default 5)</td></tr>
+            </table>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span>Example</span></div>
+<pre>curl -X POST {{BASE_URL}}/api/v1/explore/what-if \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "artists": ["Billie Eilish", "The Weeknd", "Daft Punk"],
+    "num_tracks": 3,
+    "num_similar": 3
+  }'</pre>
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <code>/api/v1/trends/daily</code>
+          </div>
+          <p>Pre-computed daily featured predictions across 12 genres. Updated every day at 12:00 PM EST.</p>
+          <div class="params">
+            <h4>Query Parameters</h4>
+            <table>
+              <tr><td><code>date</code></td><td>string, optional</td><td>YYYY-MM-DD (default: today)</td></tr>
+              <tr><td><code>genre</code></td><td>string, optional</td><td>Filter by genre (rock, pop, jazz, etc.)</td></tr>
+              <tr><td><code>limit</code></td><td>int, optional</td><td>Number of results (default 5)</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generation Endpoints -->
+      <div class="card">
+        <h2>Track Generation</h2>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <code>/api/v1/generate/tracks</code>
+          </div>
+          <p>Generate synthetic track features using the CVAE model. The model produces 62 features covering genre, mood, timbre, rhythm, danceability, and more.</p>
+          <div class="params">
+            <h4>Request Body</h4>
+            <table>
+              <tr><td><code>src_artist</code></td><td>string, required</td><td>Source artist</td></tr>
+              <tr><td><code>dst_artist</code></td><td>string, required</td><td>Destination artist</td></tr>
+              <tr><td><code>num_tracks</code></td><td>int, optional</td><td>Tracks to generate (1-20, default 5)</td></tr>
+              <tr><td><code>model_version</code></td><td>string, optional</td><td>CVAE version (default: v1)</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <code>/api/v1/generate/playlist</code>
+          </div>
+          <p>Find real recordings similar to synthetic tracks using Aitchison distance on genre distributions.</p>
+          <div class="params">
+            <h4>Request Body</h4>
+            <table>
+              <tr><td><code>synthetic_track_ids</code></td><td>list[int], required</td><td>Track IDs from /generate/tracks</td></tr>
+              <tr><td><code>num_similar</code></td><td>int, optional</td><td>Similar tracks per synthetic (1-25, default 5)</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intelligence Endpoints -->
+      <div class="card">
+        <h2>Artist Intelligence</h2>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <code>/api/v1/artist/{id}/profile</code>
+          </div>
+          <p>Full artist profile aggregating MusicBrainz metadata, Last.fm popularity, genre proportions (4 taxonomies), collaboration network, Spotify linkage, and embedding availability.</p>
+          <div class="code-block">
+            <div class="code-header"><span>Example</span></div>
+<pre>curl {{BASE_URL}}/api/v1/artist/Radiohead/profile \
+  -H "X-API-Key: YOUR_KEY"</pre>
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <code>/api/v1/dataset/export</code>
+          </div>
+          <p>Download prediction data as CSV or Parquet. Filter by genre, probability range, and model version. Requires Researcher tier or above (admin can export on free tier).</p>
+          <div class="params">
+            <h4>Query Parameters</h4>
+            <table>
+              <tr><td><code>format</code></td><td>string</td><td><code>csv</code> or <code>parquet</code> (default: csv)</td></tr>
+              <tr><td><code>genre</code></td><td>string</td><td>Filter by genre</td></tr>
+              <tr><td><code>min_probability</code></td><td>float</td><td>Minimum probability (0.0-1.0)</td></tr>
+              <tr><td><code>limit</code></td><td>int</td><td>Max rows (default 10,000)</td></tr>
+              <tr><td><code>model_version</code></td><td>string</td><td>Filter by model version</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="card">
+        <h2>Pricing Tiers</h2>
+        <div class="tiers-grid">
+          <div class="tier-card">
+            <h3>Free</h3>
+            <div class="tier-price">$0/mo</div>
+            <ul>
+              <li>100 requests/hour</li>
+              <li>Single predictions</li>
+              <li>10 neighbors max</li>
+              <li>No batch or export</li>
+            </ul>
+            <a class="btn btn-primary" href="/">Get Free Key</a>
+          </div>
+          <div class="tier-card featured">
+            <h3>Researcher</h3>
+            <div class="tier-price">$49/mo</div>
+            <ul>
+              <li>1,000 requests/hour</li>
+              <li>All prediction endpoints</li>
+              <li>Batch (1,000 pairs)</li>
+              <li>Monthly CSV/Parquet export</li>
+              <li>Model version selection</li>
+            </ul>
+            <a class="btn btn-primary" href="/">Upgrade</a>
+          </div>
+          <div class="tier-card">
+            <h3>Enterprise</h3>
+            <div class="tier-price">$299/mo</div>
+            <ul>
+              <li>10,000 requests/hour</li>
+              <li>Everything in Researcher</li>
+              <li>Unlimited batch &amp; export</li>
+              <li>Webhook notifications</li>
+              <li>Priority support</li>
+            </ul>
+            <a class="btn" href="mailto:admin@interlude.local">Contact Us</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Models -->
+      <div class="card">
+        <h2>Models &amp; Data</h2>
+        <table class="docs-table">
+          <tr>
+            <td><strong>Link Predictor (v5)</strong></td>
+            <td>Logistic Regression + PU Learning</td>
+            <td>ROC AUC: 0.92, F1: 0.84</td>
+          </tr>
+          <tr>
+            <td><strong>CVAE (v1)</strong></td>
+            <td>Conditional Variational Autoencoder (PyTorch)</td>
+            <td>62 binary features: genre, mood, timbre, rhythm</td>
+          </tr>
+          <tr>
+            <td><strong>Track Similarity</strong></td>
+            <td>Aitchison Distance on genre distributions</td>
+            <td>Exact compositional distance metric</td>
+          </tr>
+          <tr>
+            <td><strong>Graph</strong></td>
+            <td>2.7M artists, 18.4M collaboration edges</td>
+            <td>Node2Vec 128-dim embeddings</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- System Status -->
+      <div class="card card-compact">
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-label">API Base</span>
+            <span class="status-value" id="apiBase">--</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Health</span>
+            <span class="status-dot" id="healthDot"></span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const base = window.location.origin;
+    document.getElementById('apiBase').textContent = base + '/api/v1/';
+    // Replace {{BASE_URL}} placeholders
+    document.querySelectorAll('pre').forEach(el => {
+      el.textContent = el.textContent.replace(/\{\{BASE_URL\}\}/g, base);
+    });
+    // Health check
+    fetch(base.replace(':8080', ':8002') + '/api/v1/health')
+      .then(r => r.json())
+      .then(d => {
+        const dot = document.getElementById('healthDot');
+        dot.classList.add(d.data?.db_connected ? 'ok' : 'err');
+      })
+      .catch(() => document.getElementById('healthDot').classList.add('err'));
+  </script>
+</body>
+</html>

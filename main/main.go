@@ -162,6 +162,12 @@ func main() {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	})
 
+	// API Documentation page
+	mux.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "docs.html")))
+		t.Execute(w, nil)
+	})
+
 	// Machine Learning Page
 	mux.HandleFunc("/ml", func(w http.ResponseWriter, r *http.Request) {
 		tok, err := auth.CreateToken()
