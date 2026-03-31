@@ -184,8 +184,8 @@ async function predictConnection() {
     if (d.dst_name) $('#dstBadge').textContent = d.dst_name;
 
     // Probability display
-    const pct = (prob * 100).toFixed(1);
-    $('#probValue').textContent = `${pct}%`;
+    const pct = (prob * 100).toFixed(2);
+    $('#probValue').textContent = `${pct}`;
     $('#probRing').className = `prob-ring ${probClass(prob)}`;
 
     // Meta
@@ -199,11 +199,9 @@ async function predictConnection() {
     // 2. Run model comparison in parallel
     runComparison(src, dst);
 
-    // 3. Show synthetic tracks if we have them
+    // 3. Show synthetic tracks with features
     if (d.tracks && d.tracks.length > 0) {
       showSyntheticTracks(d.tracks);
-      // 4. Find similar real tracks
-      findSimilarTracks(d.tracks);
     }
 
   } catch (e) {
@@ -246,55 +244,64 @@ async function runComparison(src, dst) {
   }
 }
 
-// ---- Synthetic Tracks Display ----
-function showSyntheticTracks(trackIds) {
-  show('#tracksCard');
-  $('#tracksGrid').innerHTML = trackIds.map(tid => {
-    const id = typeof tid === 'object' ? tid.track_id : tid;
-    return `
-      <div class="track-card">
-        <div class="track-card-header">
-          <span class="track-id">Track #${id}</span>
-        </div>
-        <div class="track-features" id="trackFeatures_${id}">
-          <span style="font-size:0.75rem;color:var(--text-muted);">Synthetic track generated</span>
-        </div>
-      </div>`;
-  }).join('');
+// ---- Feature display config (same categories as ML page) ----
+const FEATURE_CATEGORIES = [
+  { id: 'mood', label: 'Mood', icon: '🎭', color: '#f59e0b', keys: [
+    'mood_acoustic','mood_aggressive','mood_electronic','mood_happy','mood_party','mood_relaxed','mood_sad'
+  ]},
+  { id: 'voice', label: 'Voice', icon: '🎤', color: '#ec4899', keys: [
+    'voice_instrumental_voice','voice_instrumental_instrumental'
+  ]},
+  { id: 'timbre', label: 'Timbre', icon: '🔊', color: '#8b5cf6', keys: [
+    'timbre_bright','timbre_dark','tonal_atonal_tonal','tonal_atonal_atonal'
+  ]},
+  { id: 'rhythm', label: 'Rhythm', icon: '💃', color: '#10b981', keys: [
+    'danceability','ismir04_rhythm_chachacha','ismir04_rhythm_jive','ismir04_rhythm_samba','ismir04_rhythm_tango','ismir04_rhythm_waltz'
+  ]},
+  { id: 'genre', label: 'Genre', icon: '🎵', color: '#3b82f6', keys: [
+    'genre_dortmund_alternative','genre_dortmund_blues','genre_dortmund_electronic','genre_dortmund_folkcountry',
+    'genre_dortmund_funksoulrnb','genre_dortmund_jazz','genre_dortmund_pop','genre_dortmund_raphiphop','genre_dortmund_rock'
+  ]},
+];
+
+function featureLabel(key) {
+  return key.replace(/^(genre_dortmund_|genre_electronic_|genre_rosamerica_|genre_tzanetakis_|mood_|voice_instrumental_|ismir04_rhythm_|timbre_|tonal_atonal_|gender_)/, '');
 }
 
-// ---- Similar Real Tracks ----
-async function findSimilarTracks(trackIds) {
-  show('#playlistCard');
-  loading('#playlistList', 'Finding similar real tracks...');
+// ---- Synthetic Tracks Display with Feature Bars ----
+function showSyntheticTracks(tracks) {
+  show('#tracksCard');
+  $('#tracksGrid').innerHTML = tracks.map((track, idx) => {
+    const id = typeof track === 'object' ? track.track_id : track;
+    const hasFeatures = typeof track === 'object' && Object.keys(track).length > 2;
 
-  const ids = trackIds.map(t => typeof t === 'object' ? t.track_id : t);
-
-  try {
-    const res = await api('/api/v1/generate/playlist', {
-      method: 'POST',
-      body: JSON.stringify({ synthetic_track_ids: ids, num_similar: 5 }),
-    });
-
-    const tracks = res.data.similar_tracks || [];
-    if (tracks.length === 0) {
-      $('#playlistList').innerHTML = '<div style="color:var(--text-muted);padding:1rem;text-align:center;">No similar tracks found</div>';
-      return;
+    let featuresHtml = '';
+    if (hasFeatures) {
+      featuresHtml = FEATURE_CATEGORIES.map(cat => {
+        const bars = cat.keys.filter(k => track[k] != null).map(k => {
+          const val = track[k];
+          const pct = Math.min(100, Math.max(0, val * 100));
+          return `<div class="feat-row">
+            <span class="feat-label">${featureLabel(k)}</span>
+            <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(0)}%;background:${cat.color};"></div></div>
+            <span class="feat-val">${pct.toFixed(0)}%</span>
+          </div>`;
+        }).join('');
+        if (!bars) return '';
+        return `<div class="feat-category">
+          <div class="feat-cat-header">${cat.icon} ${cat.label}</div>
+          ${bars}
+        </div>`;
+      }).join('');
+    } else {
+      featuresHtml = '<span style="font-size:0.75rem;color:var(--text-muted);">No feature data</span>';
     }
 
-    $('#playlistList').innerHTML = tracks.map((t, i) => `
-      <div class="playlist-item">
-        <span class="playlist-rank">${i + 1}</span>
-        <div class="playlist-info">
-          <div class="playlist-track-name">${escHtml(t.recording_name)}</div>
-          <div class="playlist-artist-name">${escHtml(t.artist_name)}${t.artist_name_2 ? ' & ' + escHtml(t.artist_name_2) : ''}</div>
-        </div>
-        <span class="playlist-score">${(t.similarity * 100).toFixed(1)}%</span>
-      </div>
-    `).join('');
-  } catch (e) {
-    $('#playlistList').innerHTML = `<span style="color:var(--text-muted);">Playlist unavailable: ${e.message}</span>`;
-  }
+    return `<div class="track-card">
+      <div class="track-card-header"><span class="track-id">Track #${id}</span></div>
+      <div class="track-features">${featuresHtml}</div>
+    </div>`;
+  }).join('');
 }
 
 // ---- Neighbor Discovery ----

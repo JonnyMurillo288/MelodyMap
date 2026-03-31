@@ -123,6 +123,37 @@ def _resolve_artist(raw: str) -> int:
     return int(df["id"].iloc[0])
 
 
+def _get_track_features(track_ids: list) -> list:
+    """Fetch synthetic track features from DB and return as list of dicts."""
+    if not track_ids:
+        return []
+    conn = get_pg_conn()
+    try:
+        placeholders = ",".join(["%s"] * len(track_ids))
+        q = f"SELECT * FROM synthetic_tracks_high_level_features WHERE track_id IN ({placeholders})"
+        df = pd.read_sql_query(q, conn, params=tuple(int(t) for t in track_ids))
+    except Exception:
+        df = pd.DataFrame()
+    finally:
+        conn.close()
+
+    if df.empty:
+        return [{"track_id": tid} for tid in track_ids]
+
+    result = []
+    for tid in track_ids:
+        row = df[df["track_id"] == int(tid)]
+        if row.empty:
+            result.append({"track_id": tid})
+        else:
+            features = row.iloc[0].to_dict()
+            features["track_id"] = int(tid)
+            # Convert numpy types to native Python for JSON serialization
+            features = {k: (float(v) if hasattr(v, 'item') else v) for k, v in features.items()}
+            result.append(features)
+    return result
+
+
 def _build_meta(version: str, latency: float, cached: bool, request: Request) -> ResponseMeta:
     return ResponseMeta(
         model_version=version,
@@ -220,6 +251,7 @@ async def predict_connection(req: ConnectionRequest, request: Request):
         # Get existing synthetic tracks (version-aware)
         existing = check_existing_synthetic_tracks(str(src_int), str(dst_int), limit=req.limit, cvae_version=version)
         track_ids = [tid for tid, _ in existing]
+        tracks_with_features = _get_track_features(track_ids)
 
         observe_prediction(prob, version)
         return APIResponse(
@@ -229,7 +261,7 @@ async def predict_connection(req: ConnectionRequest, request: Request):
                 src_name=src_name,
                 dst_name=dst_name,
                 probability=prob,
-                tracks=track_ids,
+                tracks=tracks_with_features,
             ),
             meta=_build_meta(version, (time.time() - start) * 1000, True, request),
         )
@@ -260,6 +292,9 @@ async def predict_connection(req: ConnectionRequest, request: Request):
         limit=req.limit,
     )
 
+    # Fetch synthetic track features for display
+    tracks_with_features = _get_track_features(track_ids)
+
     observe_prediction(prob, version)
 
     return APIResponse(
@@ -269,7 +304,7 @@ async def predict_connection(req: ConnectionRequest, request: Request):
             src_name=src_name,
             dst_name=dst_name,
             probability=prob,
-            tracks=track_ids,
+            tracks=tracks_with_features,
             features_used=dict(zip(_LOGIT_FEATURES, X[0].tolist())),
         ),
         meta=_build_meta(version, (time.time() - start) * 1000, False, request),
