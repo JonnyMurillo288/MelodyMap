@@ -104,14 +104,29 @@ async function registerApiKey() {
   resultDiv.innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Creating your account...</div>';
 
   try {
-    const res = await api('/api/v1/auth/register', {
+    const headers = { 'Content-Type': 'application/json' };
+    // Don't send API key for registration — it's a public endpoint
+    const res = await fetch(`${API_BASE}/api/v1/auth/register`, {
       method: 'POST',
+      headers,
       body: JSON.stringify({ email, org_name: org || null }),
     });
 
-    const key = res.api_key;
+    const data = await res.json();
+    console.log('Register response:', res.status, data);
 
-    // Save as personal key
+    if (!res.ok) {
+      resultDiv.innerHTML = `<span style="color:#ef4444;">Error ${res.status}: ${data.detail || JSON.stringify(data)}</span>`;
+      return;
+    }
+
+    const key = data.api_key;
+    if (!key) {
+      resultDiv.innerHTML = `<span style="color:#ef4444;">No API key in response: ${JSON.stringify(data)}</span>`;
+      return;
+    }
+
+    // Save as personal key and load into the bar
     apiKey = key;
     $('#apiKeyInput').value = key;
     localStorage.setItem('interlude_api_key', key);
@@ -127,7 +142,8 @@ async function registerApiKey() {
         <small style="color:var(--text-muted);">Saved automatically. 100 requests/hour on the free tier.</small>
       </div>`;
   } catch (e) {
-    resultDiv.innerHTML = `<span style="color:var(--error);">${e.message}</span>`;
+    console.error('Register error:', e);
+    resultDiv.innerHTML = `<span style="color:#ef4444;">Request failed: ${e.message}. Is the ML service running?</span>`;
   }
 }
 
