@@ -233,7 +233,7 @@ async function runComparison(src, dst) {
           <span class="compare-label">${r.version}</span>
           <div class="compare-bar-track">
             <div class="compare-bar-fill" style="width:${w}%;background:${color};">
-              <span>${pct.toFixed(1)}%</span>
+              <span>${pct.toFixed(2)}</span>
             </div>
           </div>
           <span class="compare-latency">${r.latency_ms.toFixed(0)}ms</span>

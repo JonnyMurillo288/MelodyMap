@@ -251,6 +251,19 @@ async def predict_connection(req: ConnectionRequest, request: Request):
         # Get existing synthetic tracks (version-aware)
         existing = check_existing_synthetic_tracks(str(src_int), str(dst_int), limit=req.limit, cvae_version=version)
         track_ids = [tid for tid, _ in existing]
+
+        # If prediction is cached but no synthetic tracks exist, generate them
+        if not track_ids:
+            from features.pipeline_links import build_link_prediction_embeddings_from_artist_list
+            from app import generate_synthetic_tracks
+            embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
+            embeddings["prob"] = prob
+            track_ids = generate_synthetic_tracks(
+                cvae_version=version,
+                df_pred_links=embeddings,
+                limit=req.limit,
+            )
+
         tracks_with_features = _get_track_features(track_ids)
 
         observe_prediction(prob, version)
