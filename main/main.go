@@ -162,10 +162,11 @@ func main() {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	})
 
-	// API Documentation page
+	// API Documentation page (served as raw HTML — contains {{BASE_URL}} JS placeholders
+	// that conflict with Go's template engine)
 	mux.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
-		t := template.Must(template.ParseFiles(filepath.Join(root, "templates", "docs.html")))
-		t.Execute(w, nil)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		http.ServeFile(w, r, filepath.Join(root, "templates", "docs.html"))
 	})
 
 	// Machine Learning Page
