@@ -283,8 +283,8 @@ function showSyntheticTracks(tracks) {
           const pct = Math.min(100, Math.max(0, val * 100));
           return `<div class="feat-row">
             <span class="feat-label">${featureLabel(k)}</span>
-            <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(0)}%;background:${cat.color};"></div></div>
-            <span class="feat-val">${pct.toFixed(0)}%</span>
+            <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(2)};background:${cat.color};"></div></div>
+            <span class="feat-val">${pct.toFixed(2)}</span>
           </div>`;
         }).join('');
         if (!bars) return '';
@@ -383,7 +383,7 @@ async function loadProfile() {
           <div class="genre-row">
             <span class="genre-label">${label}</span>
             <div class="genre-bar-track">
-              <div class="genre-bar-fill" style="width:${pct}%;">
+              <div class="genre-bar-fill" style="width:${pct}%;"></div>
                 <span>${(val * 100).toFixed(0)}%</span>
               </div>
             </div>
@@ -417,10 +417,96 @@ function escHtml(str) {
   return div.innerHTML;
 }
 
+// ---- Artist Autocomplete ----
+let artistNameList = [];
+
+async function loadArtistNames() {
+  try {
+    const res = await fetch('/static/top_artists.txt');
+    if (!res.ok) return [];
+    const text = await res.text();
+    artistNameList = text.split('\n').map(x => x.trim()).filter(Boolean);
+    return artistNameList;
+  } catch { return []; }
+}
+
+function createAutocomplete(inputEl) {
+  const container = inputEl.closest('.autocomplete-container');
+  if (!container) return;
+  const listEl = container.querySelector('.autocomplete-list');
+  if (!listEl) return;
+  let currentIndex = -1;
+
+  function closeList() {
+    listEl.style.display = 'none';
+    listEl.innerHTML = '';
+    currentIndex = -1;
+  }
+
+  async function updateSuggestions() {
+    const q = inputEl.value.trim();
+    if (!q) return closeList();
+    if (!artistNameList.length) await loadArtistNames();
+    const lc = q.toLowerCase();
+    const starts = artistNameList.filter(n => n.toLowerCase().startsWith(lc));
+    const contains = artistNameList.filter(n => !n.toLowerCase().startsWith(lc) && n.toLowerCase().includes(lc));
+    const suggestions = [...starts, ...contains].slice(0, 15);
+    listEl.innerHTML = '';
+    if (!suggestions.length) return closeList();
+    suggestions.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.setAttribute('role', 'option');
+      item.innerHTML = `
+        <div class="autocomplete-left">
+          <div class="autocomplete-name">${escHtml(name)}</div>
+        </div>
+        <div class="autocomplete-tag">Artist</div>`;
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        inputEl.value = name;
+        closeList();
+      });
+      listEl.appendChild(item);
+    });
+    listEl.style.display = 'block';
+  }
+
+  inputEl.addEventListener('input', updateSuggestions);
+  inputEl.addEventListener('focus', updateSuggestions);
+  inputEl.addEventListener('blur', () => setTimeout(closeList, 120));
+  inputEl.addEventListener('keydown', e => {
+    const items = Array.from(listEl.querySelectorAll('.autocomplete-item'));
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      currentIndex = (currentIndex + 1) % items.length;
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      currentIndex = (currentIndex - 1 + items.length) % items.length;
+    } else if (e.key === 'Enter') {
+      if (currentIndex >= 0) {
+        e.preventDefault();
+        inputEl.value = items[currentIndex].querySelector('.autocomplete-name').textContent;
+        closeList();
+      }
+      return;
+    } else { return; }
+    items.forEach((item, idx) => item.setAttribute('aria-selected', idx === currentIndex));
+  });
+}
+
 // ---- Event Listeners ----
 document.addEventListener('DOMContentLoaded', () => {
   initApiKey();
   checkStatus();
+  loadArtistNames();
+
+  // Autocomplete on all artist inputs
+  createAutocomplete($('#srcInput'));
+  createAutocomplete($('#dstInput'));
+  createAutocomplete($('#neighborInput'));
+  createAutocomplete($('#profileInput'));
 
   $('#predictBtn').addEventListener('click', predictConnection);
   $('#neighborBtn').addEventListener('click', discoverNeighbors);

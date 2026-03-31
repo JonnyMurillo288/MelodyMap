@@ -85,13 +85,15 @@
         <h2 class="card-title">Predict a Collaboration</h2>
         <p class="card-subtitle">Enter two artists to predict their collaboration probability and generate synthetic tracks</p>
         <div class="search-section">
-          <div class="search-group">
+          <div class="search-group autocomplete-container">
             <label for="srcInput">Source Artist</label>
-            <input type="text" id="srcInput" placeholder="Artist name or MBID..." />
+            <input type="text" id="srcInput" placeholder="Artist name or MBID..." autocomplete="off" />
+            <div class="autocomplete-list"></div>
           </div>
-          <div class="search-group">
+          <div class="search-group autocomplete-container">
             <label for="dstInput">Destination Artist</label>
-            <input type="text" id="dstInput" placeholder="Artist name or MBID..." />
+            <input type="text" id="dstInput" placeholder="Artist name or MBID..." autocomplete="off" />
+            <div class="autocomplete-list"></div>
           </div>
           <button class="btn btn-primary" id="predictBtn">Predict</button>
         </div>
@@ -140,9 +142,10 @@
         <h2 class="card-title">Discover Neighbors</h2>
         <p class="card-subtitle">Find the top predicted collaborators for any artist</p>
         <div class="search-section">
-          <div class="search-group">
+          <div class="search-group autocomplete-container">
             <label for="neighborInput">Artist</label>
-            <input type="text" id="neighborInput" placeholder="Artist name or MBID..." />
+            <input type="text" id="neighborInput" placeholder="Artist name or MBID..." autocomplete="off" />
+            <div class="autocomplete-list"></div>
           </div>
           <div class="search-group">
             <label for="neighborLimit">Limit</label>
@@ -175,9 +178,10 @@
         <h2 class="card-title">Artist Profile</h2>
         <p class="card-subtitle">Complete profile with genre distribution, popularity, and collaboration data</p>
         <div class="search-section">
-          <div class="search-group" style="flex:1;">
+          <div class="search-group autocomplete-container" style="flex:1;">
             <label for="profileInput">Artist</label>
-            <input type="text" id="profileInput" placeholder="Artist name or MBID..." />
+            <input type="text" id="profileInput" placeholder="Artist name or MBID..." autocomplete="off" />
+            <div class="autocomplete-list"></div>
           </div>
           <button class="btn btn-primary" id="profileBtn">Load Profile</button>
         </div>
