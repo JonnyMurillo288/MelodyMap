@@ -41,15 +41,26 @@ main {
 }
 
 /* ---- Autocomplete z-index fix ---- */
-.card {
-  position: relative;
-}
 .autocomplete-container {
   position: relative;
-  z-index: 100;
 }
 .autocomplete-list {
   z-index: 9999 !important;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+/* Cards with active dropdowns must be above subsequent cards */
+.card {
+  position: relative;
+  overflow: visible !important;
+}
+.search-section {
+  overflow: visible !important;
+}
+.search-group {
+  overflow: visible !important;
 }
 
 /* ---- Search Section ---- */
@@ -728,7 +739,7 @@ main {
 .feat-val {
   font-size: 0.65rem;
   color: var(--text-muted);
-  width: 32px;
+  width: 50px;
   text-align: right;
   font-family: 'Courier New', monospace;
 }

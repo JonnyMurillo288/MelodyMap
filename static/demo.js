@@ -185,7 +185,7 @@ async function predictConnection() {
 
     // Probability display
     const pct = (prob * 100).toFixed(2);
-    $('#probValue').textContent = `${pct}`;
+    $('#probValue').textContent = `${pct}%`;
     $('#probRing').className = `prob-ring ${probClass(prob)}`;
 
     // Meta
@@ -199,9 +199,12 @@ async function predictConnection() {
     // 2. Run model comparison in parallel
     runComparison(src, dst);
 
-    // 3. Show synthetic tracks with features
+    // 3. Show synthetic tracks with features (always show card)
+    show('#tracksCard');
     if (d.tracks && d.tracks.length > 0) {
       showSyntheticTracks(d.tracks);
+    } else {
+      $('#tracksGrid').innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1.5rem;">No synthetic tracks generated for this pair yet. Try a different pair or retry.</div>';
     }
 
   } catch (e) {
@@ -221,19 +224,17 @@ async function runComparison(src, dst) {
     });
 
     const results = res.data.results;
-    const maxProb = Math.max(...results.map(r => r.probability));
     const colors = ['#60a5fa', '#a78bfa', '#34d399', '#fbbf24', '#f472b6'];
 
     $('#compareBars').innerHTML = results.map((r, i) => {
-      const pct = Math.max(0, r.probability * 100);
-      const w = maxProb > 0 ? (r.probability / maxProb * 100) : 0;
+      const pct = Math.max(0, Math.min(100, r.probability * 100));
       const color = colors[i % colors.length];
       return `
         <div class="compare-row">
           <span class="compare-label">${r.version}</span>
           <div class="compare-bar-track">
-            <div class="compare-bar-fill" style="width:${w}%;background:${color};">
-              <span>${pct.toFixed(0)}</span>
+            <div class="compare-bar-fill" style="width:${pct.toFixed(0)}%;background:${color};">
+              <span>${pct.toFixed(2)}%</span>
             </div>
           </div>
           <span class="compare-latency">${r.latency_ms.toFixed(0)}ms</span>
@@ -284,7 +285,7 @@ function showSyntheticTracks(tracks) {
           return `<div class="feat-row">
             <span class="feat-label">${featureLabel(k)}</span>
             <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(0)}%;background:${cat.color};"></div></div>
-            <span class="feat-val">${pct.toFixed(0)}</span>
+            <span class="feat-val">${pct.toFixed(2)}%</span>
           </div>`;
         }).join('');
         if (!bars) return '';
