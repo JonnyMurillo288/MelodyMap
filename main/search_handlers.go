@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/Jonnymurillo288/MelodyMap/internal/jobs"
@@ -90,7 +89,12 @@ func artistNeighborsHandler(w http.ResponseWriter, r *http.Request) {
 		ORDER BY a2.gid;
 		`
 	// Need to return type FrontEndStep which contains ID, Name, Neighbors
-	con, _ := search.Open(os.Getenv("DB_PATH"))
+	con, err := search.Open("")
+	if err != nil {
+		http.Error(w, "database error", http.StatusInternalServerError)
+		return
+	}
+	defer con.Close()
 	// This will return rows, need to scan into FrontEndStep
 	rows, err := con.DB.Query(q, name)
 	// fmt.Println("Executing neighbor query for artist name:", name)
@@ -99,6 +103,7 @@ func artistNeighborsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
+	defer rows.Close()
 
 	var prevArtistID string
 	var prevNeighborObj struct {
@@ -183,13 +188,6 @@ func artistNeighborsHandler(w http.ResponseWriter, r *http.Request) {
 	step.Neighbors = append(step.Neighbors, prevNeighborObj)
 	debugNumberOfNeighbors++
 	// fmt.Println("[TESTING] Total neighbors found:", debugNumberOfNeighbors)
-
-	defer rows.Close()
-	if err != nil {
-		// fmt.Println(err, "[TESTING] Error in the rows somewhere")
-		http.Error(w, "database error", http.StatusInternalServerError)
-		return
-	}
 
 	// case for no artist found, just return empty ID, handle in frontend
 	if step.ID == "" {
