@@ -240,11 +240,12 @@ async def predict_connection(req: ConnectionRequest, request: Request):
     cached = check_prediction_connections(str(src_int), str(dst_int), model_id=model_id)
     if cached:
         observe_cache("prediction", True)
-        # Fetch cached probability
+        # Fetch cached probability (check both directions)
         conn = get_pg_conn()
         q = """SELECT prob FROM prediction_connections
-               WHERE src::int = %s AND dst::int = %s AND model_id = %s LIMIT 1"""
-        df = pd.read_sql_query(q, conn, params=(src_int, dst_int, model_id))
+               WHERE ((src::int = %s AND dst::int = %s) OR (src::int = %s AND dst::int = %s))
+               AND model_id = %s LIMIT 1"""
+        df = pd.read_sql_query(q, conn, params=(src_int, dst_int, dst_int, src_int, model_id))
         conn.close()
         prob = float(df["prob"].iloc[0]) if not df.empty else 0.0
 
