@@ -140,16 +140,12 @@
       <!-- Neighbor Discovery -->
       <div class="card">
         <h2 class="card-title">Discover Neighbors</h2>
-        <p class="card-subtitle">Find the top predicted collaborators for any artist</p>
+        <p class="card-subtitle">Find the top 20 predicted collaborators for any artist, ranked by probability</p>
         <div class="search-section">
-          <div class="search-group autocomplete-container">
+          <div class="search-group autocomplete-container" style="flex:1;">
             <label for="neighborInput">Artist</label>
             <input type="text" id="neighborInput" placeholder="Artist name or MBID..." autocomplete="off" />
             <div class="autocomplete-list"></div>
-          </div>
-          <div class="search-group">
-            <label for="neighborLimit">Limit</label>
-            <input type="number" id="neighborLimit" value="10" min="1" max="50" />
           </div>
           <button class="btn btn-primary" id="neighborBtn">Discover</button>
         </div>

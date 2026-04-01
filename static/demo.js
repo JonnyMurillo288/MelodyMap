@@ -233,7 +233,7 @@ async function runComparison(src, dst) {
           <span class="compare-label">${r.version}</span>
           <div class="compare-bar-track">
             <div class="compare-bar-fill" style="width:${w}%;background:${color};">
-              <span>${pct.toFixed(2)}</span>
+              <span>${pct.toFixed(0)}</span>
             </div>
           </div>
           <span class="compare-latency">${r.latency_ms.toFixed(0)}ms</span>
@@ -283,8 +283,8 @@ function showSyntheticTracks(tracks) {
           const pct = Math.min(100, Math.max(0, val * 100));
           return `<div class="feat-row">
             <span class="feat-label">${featureLabel(k)}</span>
-            <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(2)};background:${cat.color};"></div></div>
-            <span class="feat-val">${pct.toFixed(2)}</span>
+            <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(0)}%;background:${cat.color};"></div></div>
+            <span class="feat-val">${pct.toFixed(0)}</span>
           </div>`;
         }).join('');
         if (!bars) return '';
@@ -307,34 +307,36 @@ function showSyntheticTracks(tracks) {
 // ---- Neighbor Discovery ----
 async function discoverNeighbors() {
   const artist = $('#neighborInput').value.trim();
-  const limit = parseInt($('#neighborLimit').value) || 10;
   if (!artist) return alert('Enter an artist');
 
   show('#neighborsCard');
   $('#neighborsTitle').textContent = 'Predicted Collaborators';
-  $('#neighborsBody').innerHTML = '<tr><td colspan="4"><div class="loading-inline"><div class="spinner-sm"></div>Running ML pipeline — this can take up to 30 seconds for uncached artists...</div></td></tr>';
+  $('#neighborsBody').innerHTML = '<tr><td colspan="4"><div class="loading-inline"><div class="spinner-sm"></div>Running ML pipeline — this can take up to 60 seconds for uncached artists...</div></td></tr>';
 
   try {
     const res = await api('/api/v1/predict/neighbors', {
       method: 'POST',
-      body: JSON.stringify({ artist, limit }),
+      body: JSON.stringify({ artist, limit: 20 }),
     });
 
     const d = res.data;
-    const title = d.artist_name ? `Predicted Collaborators for ${d.artist_name}` : 'Predicted Collaborators';
+    const title = d.artist_name ? `Top Predicted Collaborators for ${d.artist_name}` : 'Top Predicted Collaborators';
     $('#neighborsTitle').textContent = title;
 
-    const neighbors = d.neighbors || [];
+    let neighbors = d.neighbors || [];
     if (neighbors.length === 0) {
       $('#neighborsBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">No neighbors found</td></tr>';
       return;
     }
 
+    // Sort descending by probability
+    neighbors.sort((a, b) => b.probability - a.probability);
+
     $('#neighborsBody').innerHTML = neighbors.map((n, i) => `
       <tr>
         <td>${i + 1}</td>
         <td>${escHtml(n.name || n.artist_id)}</td>
-        <td><span class="prob-badge ${probClass(n.probability)}">${(n.probability * 100).toFixed(1)}%</span></td>
+        <td><span class="prob-badge ${probClass(n.probability)}">${(n.probability * 100).toFixed(2)}%</span></td>
         <td>${(n.tracks || []).length} tracks</td>
       </tr>
     `).join('');
