@@ -191,7 +191,7 @@ class GenericDataTable {
     this.container.innerHTML = `
       <div class="loading-state">
         <div class="spinner"></div>
-        <p>Loading data...</p>
+        <p>Running ML pipeline — search can take up to 3 minutes for uncached artists...</p>
       </div>
     `;
   }
@@ -805,7 +805,7 @@ class SynthManager {
    * @returns {Promise<object>} synthData
    * @throws {DOMException} AbortError if cancelled
    */
-  async fetch(srcId, dstId, { limit = 100, intervalMs = 5000, timeoutMs = 360000 } = {}) {
+  async fetch(srcId, dstId, { limit = 100, intervalMs = 5000, timeoutMs = 600000 } = {}) {
     // 1. Cancel any previous poll
     this.cancel();
 
