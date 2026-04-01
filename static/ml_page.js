@@ -1005,8 +1005,8 @@ document.addEventListener('DOMContentLoaded', () => {
       await new Promise(r => setTimeout(r, 5000));
 
       const [targetData, destData] = await Promise.all([
-        fetchWithRetry(`/api/artist/neighbors?name=${encodeURIComponent(targetArtist)}`, 20000, 2000),
-        fetchWithRetry(`/api/artist/neighbors?name=${encodeURIComponent(destArtist)}`, 20000, 2000)
+        fetchWithRetry(`/api/artist/neighbors?name=${encodeURIComponent(targetArtist)}`, 180000, 3000),
+        fetchWithRetry(`/api/artist/neighbors?name=${encodeURIComponent(destArtist)}`, 180000, 3000)
       ]);
       console.log('[STEP 2] Fetched target artist data:', targetData);
       console.log('[STEP 2] Fetched destination artist data:', destData);
@@ -1151,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         synthData = await synthManager.fetch(
           srcArtistId,
           providedDestArtist === true ? dstArtistId : null,
-          { limit: 100, intervalMs: 5000, timeoutMs: 360000 }
+          { limit: 100, intervalMs: 5000, timeoutMs: 600000 }
         );
       } catch (err) {
         if (err.name === 'AbortError') {
