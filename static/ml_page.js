@@ -919,6 +919,25 @@ document.addEventListener('DOMContentLoaded', () => {
   table1.renderEmpty();
   table2.renderEmpty();
 
+  // --- Wire up Analyze button ---
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener('click', () => {
+      if (window.runMLAnalysis) window.runMLAnalysis();
+    });
+  }
+  // Enter key on inputs
+  if (mlStartInput) {
+    mlStartInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && window.runMLAnalysis) window.runMLAnalysis();
+    });
+  }
+  if (mlTargetInput) {
+    mlTargetInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && window.runMLAnalysis) window.runMLAnalysis();
+    });
+  }
+
   // --- Exported ML analysis function (called from app_v2.js via search mode) ---
   window.runMLAnalysis = async function() {
     // Cancel any in-flight synth poll from a previous search
