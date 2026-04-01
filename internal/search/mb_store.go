@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -26,7 +27,14 @@ func Open(dsn string) (*Store, error) {
 		dsn = os.Getenv("PG_DSN")
 	}
 
-	// log.Println("[DB] Opening DB with DSN:", dsn)
+	// Append search_path to DSN so all pooled connections use musicbrainz schema
+	if dsn != "" && !strings.Contains(dsn, "search_path") {
+		sep := "&"
+		if !strings.Contains(dsn, "?") {
+			sep = "?"
+		}
+		dsn = dsn + sep + "search_path=musicbrainz,public"
+	}
 
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {

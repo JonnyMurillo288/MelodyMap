@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -52,6 +53,14 @@ func openDailyDB() (*sql.DB, error) {
 	dsn := os.Getenv("PG_DSN")
 	if dsn == "" {
 		return nil, fmt.Errorf("PG_DSN not set")
+	}
+	// Append search_path so queries find musicbrainz schema tables
+	if !strings.Contains(dsn, "search_path") {
+		sep := "&"
+		if !strings.Contains(dsn, "?") {
+			sep = "?"
+		}
+		dsn = dsn + sep + "search_path=musicbrainz,public"
 	}
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
