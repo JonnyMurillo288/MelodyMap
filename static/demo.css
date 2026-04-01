@@ -678,6 +678,24 @@ main {
   .endpoint-desc { width: 100%; margin-top: 0.25rem; }
 }
 
+/* ---- Try It Banner ---- */
+.try-it-banner {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 0.75rem 0 0.25rem;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.1), transparent);
+  border-radius: 8px;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; text-shadow: 0 0 12px rgba(96, 165, 250, 0.5); }
+}
+
 /* ---- Endpoint Formats ---- */
 .endpoint-formats {
   margin-top: 1rem;
@@ -766,6 +784,34 @@ main {
   width: 50px;
   text-align: right;
   font-family: 'Courier New', monospace;
+}
+
+/* ---- Expandable Neighbor Rows ---- */
+.neighbor-row {
+  cursor: pointer;
+}
+.neighbor-row:hover td {
+  background: rgba(31, 41, 55, 0.4);
+}
+.expand-cell {
+  width: 30px;
+  text-align: center;
+}
+.expand-arrow {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.neighbor-expand-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+.expand-content {
+  padding: 0.75rem !important;
+  background: rgba(15, 23, 42, 0.3);
+}
+.expand-content .tracks-grid {
+  margin: 0;
 }
 
 /* ---- Scrollbar ---- */

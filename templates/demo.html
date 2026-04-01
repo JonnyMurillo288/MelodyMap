@@ -36,17 +36,17 @@
           <div class="hero-item">
             <div class="hero-icon">&#x1f3b5;</div>
             <h3>Synthetic Track Generation</h3>
-            <p>See what a collaboration would sound like. Our CVAE generates 62 audio features — genre, mood, energy, timbre — for the hypothetical tracks.</p>
+            <p>See what a collaboration would sound like. Our AI generates 62 audio features (more to come) — genre, mood, energy, timbre — for the hypothetical tracks.</p>
           </div>
           <div class="hero-item">
             <div class="hero-icon">&#x1f4e1;</div>
             <h3>Batch &amp; Export</h3>
-            <p>Score up to 1,000 pairs at once. Export predictions as CSV or Parquet. Compare model versions side-by-side.</p>
+            <p>Score up to 1,000 pairs, tracks, and genres at once. Export predictions as CSV or Parquet.</p>
           </div>
           <div class="hero-item">
             <div class="hero-icon">&#x1f4ca;</div>
             <h3>Artist Profiles</h3>
-            <p>Genre distributions, popularity scores, top collaborators, Spotify linkage, and Node2Vec embeddings for any artist.</p>
+            <p>Genre distributions, popularity scores, top collaborators, artist linkages, and Node2Vec embeddings for any artist.</p>
           </div>
         </div>
       </div>
@@ -92,6 +92,7 @@
       </div>
 
       <!-- Card 3: Predict a Collaboration (Demo) -->
+      <div class="try-it-banner">Try It Live</div>
       <div class="card">
         <h2 class="card-title">Predict a Collaboration</h2>
         <p class="card-subtitle">Enter two artists to predict their collaboration probability</p>
@@ -127,6 +128,13 @@
         </div>
       </div>
 
+      <!-- Synthetic Tracks (shown after prediction) -->
+      <div class="card" id="tracksCard" style="display:none;">
+        <h3 class="card-title">Synthetic Tracks Generated</h3>
+        <p class="card-subtitle">CVAE-generated track features for this hypothetical collaboration</p>
+        <div class="tracks-grid" id="tracksGrid"></div>
+      </div>
+
       <!-- Card 4: Discover Collaborations -->
       <div class="card">
         <h2 class="card-title">Discover Collaborations</h2>
@@ -152,6 +160,7 @@
                 <th>Artist</th>
                 <th>Probability</th>
                 <th>Tracks</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="neighborsBody"></tbody>
