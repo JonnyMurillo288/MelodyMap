@@ -74,8 +74,10 @@ func HandleMachineLearningMainPage(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	// Initialize synthetic tables (idempotent)
-	search.InitSyntheticTrackTables(ctx, store)
+	// Initialize synthetic tables (skip errors — tables already exist on Render)
+	if err := search.InitSyntheticTrackTables(ctx, store); err != nil {
+		log.Printf("[ML Handler] InitSyntheticTrackTables skipped: %v", err)
+	}
 
 	// 3. DB cache check — return cached predictions if they exist
 	srcArtist, lookupErr := store.LookupArtistByMBID(src)
