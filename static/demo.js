@@ -3,19 +3,7 @@
    Calls /api/v1/* endpoints directly
 ========================================= */
 
-// API calls go through the same origin — Go proxies /api/v1/* to the ML service
 const API_BASE = window.location.origin;
-
-// ---- Demo Keys (10 pre-registered, randomly assigned per session) ----
-const DEMO_KEYS = [
-  'interlude-demo-001', 'interlude-demo-002', 'interlude-demo-003',
-  'interlude-demo-004', 'interlude-demo-005', 'interlude-demo-006',
-  'interlude-demo-007', 'interlude-demo-008', 'interlude-demo-009',
-  'interlude-demo-010',
-];
-
-// ---- State ----
-let apiKey = '';
 
 // ---- DOM Helpers ----
 const $ = (sel) => document.querySelector(sel);
@@ -36,7 +24,6 @@ function loading(container, msg = 'Loading...') {
 // ---- API Calls ----
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['X-API-Key'] = apiKey;
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers: { ...headers, ...opts.headers } });
   if (!res.ok) {
     let detail = `${res.status}`;
@@ -49,108 +36,6 @@ async function api(path, opts = {}) {
   return res.json();
 }
 
-// ---- Boot: Health + Models ----
-async function checkStatus() {
-  try {
-    const health = await api('/api/v1/health');
-    const d = health.data;
-    $('#statusDb').classList.toggle('ok', d.db_connected);
-    $('#statusDb').classList.toggle('err', !d.db_connected);
-    $('#statusVersion').textContent = d.version || '1.0.0';
-
-    const models = await api('/api/v1/models');
-    const m = models.data;
-    const logitVersions = m.logit?.available?.join(', ') || '--';
-    $('#statusModels').textContent = `logit: ${logitVersions}`;
-  } catch (e) {
-    $('#statusDb').classList.add('err');
-    $('#statusVersion').textContent = 'offline';
-  }
-}
-
-// ---- API Key: auto-assign demo key per session ----
-function initApiKey() {
-  const input = $('#apiKeyInput');
-  const dot = $('#keyStatus');
-  const info = $('#keyInfo');
-
-  // Check if user has their own key saved
-  const savedKey = localStorage.getItem('interlude_api_key');
-  const savedType = localStorage.getItem('interlude_key_type');
-
-  if (savedKey && savedType === 'personal') {
-    // User registered their own key
-    apiKey = savedKey;
-    input.value = savedKey;
-    dot.classList.add('ok');
-    info.textContent = 'Your personal API key';
-    $('#demoNote').style.display = 'none';
-  } else {
-    // Assign a random demo key for this session
-    const idx = Math.floor(Math.random() * DEMO_KEYS.length);
-    const demoKey = DEMO_KEYS[idx];
-    apiKey = demoKey;
-    input.value = demoKey;
-    localStorage.setItem('interlude_api_key', demoKey);
-    localStorage.setItem('interlude_key_type', 'demo');
-    dot.classList.add('ok');
-    info.textContent = 'Demo key (auto-assigned)';
-  }
-}
-
-// ---- API Key Registration ----
-async function registerApiKey() {
-  const email = $('#registerEmail').value.trim();
-  if (!email) return alert('Enter your email');
-
-  const org = $('#registerOrg').value.trim();
-  const resultDiv = $('#registerResult');
-  resultDiv.innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Creating your account...</div>';
-
-  try {
-    const headers = { 'Content-Type': 'application/json' };
-    // Don't send API key for registration — it's a public endpoint
-    const res = await fetch(`${API_BASE}/api/v1/auth/register`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ email, org_name: org || null }),
-    });
-
-    const data = await res.json();
-    console.log('Register response:', res.status, data);
-
-    if (!res.ok) {
-      resultDiv.innerHTML = `<span style="color:#ef4444;">Error ${res.status}: ${data.detail || JSON.stringify(data)}</span>`;
-      return;
-    }
-
-    const key = data.api_key;
-    if (!key) {
-      resultDiv.innerHTML = `<span style="color:#ef4444;">No API key in response: ${JSON.stringify(data)}</span>`;
-      return;
-    }
-
-    // Save as personal key and load into the bar
-    apiKey = key;
-    $('#apiKeyInput').value = key;
-    localStorage.setItem('interlude_api_key', key);
-    localStorage.setItem('interlude_key_type', 'personal');
-    $('#keyStatus').classList.add('ok');
-    $('#keyInfo').textContent = 'Your personal API key';
-    $('#demoNote').style.display = 'none';
-
-    resultDiv.innerHTML = `
-      <div class="register-success">
-        <strong>Account created!</strong> Your API key:<br/>
-        <code>${escHtml(key)}</code><br/>
-        <small style="color:var(--text-muted);">Saved automatically. 100 requests/hour on the free tier.</small>
-      </div>`;
-  } catch (e) {
-    console.error('Register error:', e);
-    resultDiv.innerHTML = `<span style="color:#ef4444;">Request failed: ${e.message}. Is the ML service running?</span>`;
-  }
-}
-
 // ---- Predict Connection ----
 async function predictConnection() {
   const src = $('#srcInput').value.trim();
@@ -158,9 +43,6 @@ async function predictConnection() {
   if (!src || !dst) return alert('Enter both artists');
 
   show('#connectionCard');
-  hide('#compareCard');
-  hide('#tracksCard');
-  hide('#playlistCard');
 
   $('#srcBadge').textContent = src;
   $('#dstBadge').textContent = dst;
@@ -169,7 +51,6 @@ async function predictConnection() {
   $('#connectionMeta').innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Running ML pipeline — this can take up to 30 seconds for uncached artists...</div>';
 
   try {
-    // 1. Predict connection
     const res = await api('/api/v1/predict/connection', {
       method: 'POST',
       body: JSON.stringify({ src_artist: src, dst_artist: dst, limit: 5 }),
@@ -179,130 +60,22 @@ async function predictConnection() {
     const m = res.meta;
     const prob = d.probability;
 
-    // Update artist names if returned
     if (d.src_name) $('#srcBadge').textContent = d.src_name;
     if (d.dst_name) $('#dstBadge').textContent = d.dst_name;
 
-    // Probability display
     const pct = (prob * 100).toFixed(2);
     $('#probValue').textContent = `${pct}%`;
     $('#probRing').className = `prob-ring ${probClass(prob)}`;
 
-    // Meta
     $('#connectionMeta').innerHTML = `
       <span>Model: <span class="meta-tag">${m.model_version}</span></span>
       <span>Latency: <span class="meta-tag">${m.latency_ms.toFixed(0)}ms</span></span>
       <span>Cached: <span class="meta-tag">${m.cached ? 'yes' : 'no'}</span></span>
-      <span>Tracks: <span class="meta-tag">${(d.tracks || []).length}</span></span>
     `;
-
-    // 2. Run model comparison in parallel
-    runComparison(src, dst);
-
-    // 3. Show synthetic tracks with features (always show card)
-    show('#tracksCard');
-    if (d.tracks && d.tracks.length > 0) {
-      showSyntheticTracks(d.tracks);
-    } else {
-      $('#tracksGrid').innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1.5rem;">No synthetic tracks generated for this pair yet. Try a different pair or retry.</div>';
-    }
 
   } catch (e) {
     $('#connectionMeta').innerHTML = `<span style="color:var(--error);">${e.message}</span>`;
   }
-}
-
-// ---- Model Comparison ----
-async function runComparison(src, dst) {
-  show('#compareCard');
-  loading('#compareBars', 'Comparing model versions...');
-
-  try {
-    const res = await api('/api/v1/predict/compare', {
-      method: 'POST',
-      body: JSON.stringify({ src_artist: src, dst_artist: dst, versions: ['v1', 'v3', 'v5'] }),
-    });
-
-    const results = res.data.results;
-    const colors = ['#60a5fa', '#a78bfa', '#34d399', '#fbbf24', '#f472b6'];
-
-    $('#compareBars').innerHTML = results.map((r, i) => {
-      const pct = Math.max(0, Math.min(100, r.probability * 100));
-      const color = colors[i % colors.length];
-      return `
-        <div class="compare-row">
-          <span class="compare-label">${r.version}</span>
-          <div class="compare-bar-track">
-            <div class="compare-bar-fill" style="width:${pct.toFixed(0)}%;background:${color};">
-              <span>${pct.toFixed(2)}%</span>
-            </div>
-          </div>
-          <span class="compare-latency">${r.latency_ms.toFixed(0)}ms</span>
-        </div>`;
-    }).join('');
-  } catch (e) {
-    $('#compareBars').innerHTML = `<span style="color:var(--text-muted);">Compare unavailable: ${e.message}</span>`;
-  }
-}
-
-// ---- Feature display config (same categories as ML page) ----
-const FEATURE_CATEGORIES = [
-  { id: 'mood', label: 'Mood', icon: '🎭', color: '#f59e0b', keys: [
-    'mood_acoustic','mood_aggressive','mood_electronic','mood_happy','mood_party','mood_relaxed','mood_sad'
-  ]},
-  { id: 'voice', label: 'Voice', icon: '🎤', color: '#ec4899', keys: [
-    'voice_instrumental_voice','voice_instrumental_instrumental'
-  ]},
-  { id: 'timbre', label: 'Timbre', icon: '🔊', color: '#8b5cf6', keys: [
-    'timbre_bright','timbre_dark','tonal_atonal_tonal','tonal_atonal_atonal'
-  ]},
-  { id: 'rhythm', label: 'Rhythm', icon: '💃', color: '#10b981', keys: [
-    'danceability','ismir04_rhythm_chachacha','ismir04_rhythm_jive','ismir04_rhythm_samba','ismir04_rhythm_tango','ismir04_rhythm_waltz'
-  ]},
-  { id: 'genre', label: 'Genre', icon: '🎵', color: '#3b82f6', keys: [
-    'genre_dortmund_alternative','genre_dortmund_blues','genre_dortmund_electronic','genre_dortmund_folkcountry',
-    'genre_dortmund_funksoulrnb','genre_dortmund_jazz','genre_dortmund_pop','genre_dortmund_raphiphop','genre_dortmund_rock'
-  ]},
-];
-
-function featureLabel(key) {
-  return key.replace(/^(genre_dortmund_|genre_electronic_|genre_rosamerica_|genre_tzanetakis_|mood_|voice_instrumental_|ismir04_rhythm_|timbre_|tonal_atonal_|gender_)/, '');
-}
-
-// ---- Synthetic Tracks Display with Feature Bars ----
-function showSyntheticTracks(tracks) {
-  show('#tracksCard');
-  $('#tracksGrid').innerHTML = tracks.map((track, idx) => {
-    const id = typeof track === 'object' ? track.track_id : track;
-    const hasFeatures = typeof track === 'object' && Object.keys(track).length > 2;
-
-    let featuresHtml = '';
-    if (hasFeatures) {
-      featuresHtml = FEATURE_CATEGORIES.map(cat => {
-        const bars = cat.keys.filter(k => track[k] != null).map(k => {
-          const val = track[k];
-          const pct = Math.min(100, Math.max(0, val * 100));
-          return `<div class="feat-row">
-            <span class="feat-label">${featureLabel(k)}</span>
-            <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(0)}%;background:${cat.color};"></div></div>
-            <span class="feat-val">${pct.toFixed(2)}%</span>
-          </div>`;
-        }).join('');
-        if (!bars) return '';
-        return `<div class="feat-category">
-          <div class="feat-cat-header">${cat.icon} ${cat.label}</div>
-          ${bars}
-        </div>`;
-      }).join('');
-    } else {
-      featuresHtml = '<span style="font-size:0.75rem;color:var(--text-muted);">No feature data</span>';
-    }
-
-    return `<div class="track-card">
-      <div class="track-card-header"><span class="track-id">Track #${id}</span></div>
-      <div class="track-features">${featuresHtml}</div>
-    </div>`;
-  }).join('');
 }
 
 // ---- Neighbor Discovery ----
@@ -317,7 +90,7 @@ async function discoverNeighbors() {
   try {
     const res = await api('/api/v1/predict/neighbors', {
       method: 'POST',
-      body: JSON.stringify({ artist, limit: 20 }),
+      body: JSON.stringify({ artist, limit: 50 }),
     });
 
     const d = res.data;
@@ -330,8 +103,9 @@ async function discoverNeighbors() {
       return;
     }
 
-    // Sort descending by probability
+    // Sort descending by probability, show top 10
     neighbors.sort((a, b) => b.probability - a.probability);
+    neighbors = neighbors.slice(0, 10);
 
     $('#neighborsBody').innerHTML = neighbors.map((n, i) => `
       <tr>
@@ -343,73 +117,6 @@ async function discoverNeighbors() {
     `).join('');
   } catch (e) {
     $('#neighborsBody').innerHTML = `<tr><td colspan="4" style="color:var(--error);">${e.message}</td></tr>`;
-  }
-}
-
-// ---- Artist Profile ----
-async function loadProfile() {
-  const artist = $('#profileInput').value.trim();
-  if (!artist) return alert('Enter an artist');
-
-  show('#profileCard');
-  $('#profileName').textContent = 'Loading...';
-  $('#profileBadges').innerHTML = '';
-  $('#genreBars').innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div></div>';
-  $('#collabList').innerHTML = '';
-
-  try {
-    const res = await api(`/api/v1/artist/${encodeURIComponent(artist)}/profile`);
-    const d = res.data;
-
-    $('#profileName').textContent = d.name;
-
-    // Badges
-    const badges = [];
-    if (d.popularity != null) badges.push(`<span class="profile-badge popularity">Popularity: ${d.popularity.toFixed(1)}</span>`);
-    badges.push(`<span class="profile-badge collabs">${d.collab_count} collaborations</span>`);
-    if (d.spotify_id) badges.push(`<span class="profile-badge spotify">Spotify linked</span>`);
-    if (d.embedding_available) badges.push(`<span class="profile-badge embedding">Embedding ready</span>`);
-    $('#profileBadges').innerHTML = badges.join('');
-
-    // Genre distribution
-    const genres = d.genre_distribution || {};
-    const genreEntries = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 10);
-    const maxGenre = genreEntries.length > 0 ? genreEntries[0][1] : 1;
-
-    if (genreEntries.length === 0) {
-      $('#genreBars').innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No genre data available</div>';
-    } else {
-      $('#genreBars').innerHTML = genreEntries.map(([name, val]) => {
-        const pct = (val / maxGenre * 100).toFixed(0);
-        const label = name.replace('prop_genre_', '').replace('rosamerica_', '').replace('dortmund_', '');
-        return `
-          <div class="genre-row">
-            <span class="genre-label">${label}</span>
-            <div class="genre-bar-track">
-              <div class="genre-bar-fill" style="width:${pct}%;"></div>
-                <span>${(val * 100).toFixed(0)}%</span>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    // Top collaborators
-    const collabs = d.top_collabs || [];
-    if (collabs.length === 0) {
-      $('#collabList').innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No collaborators found</div>';
-    } else {
-      $('#collabList').innerHTML = collabs.map(c => `
-        <div class="collab-item">
-          <span class="name">${escHtml(c.name)}</span>
-          <span class="count">${c.collab_count} tracks</span>
-        </div>
-      `).join('');
-    }
-
-  } catch (e) {
-    $('#profileName').textContent = 'Error';
-    $('#genreBars').innerHTML = `<span style="color:var(--error);">${e.message}</span>`;
   }
 }
 
@@ -501,31 +208,18 @@ function createAutocomplete(inputEl) {
 
 // ---- Event Listeners ----
 document.addEventListener('DOMContentLoaded', () => {
-  initApiKey();
-  checkStatus();
   loadArtistNames();
 
-  // Autocomplete on all artist inputs
+  // Autocomplete on artist inputs
   createAutocomplete($('#srcInput'));
   createAutocomplete($('#dstInput'));
   createAutocomplete($('#neighborInput'));
-  createAutocomplete($('#profileInput'));
 
   $('#predictBtn').addEventListener('click', predictConnection);
   $('#neighborBtn').addEventListener('click', discoverNeighbors);
-  $('#profileBtn').addEventListener('click', loadProfile);
-
-  // Get own key button → toggle registration form
-  $('#getKeyBtn').addEventListener('click', () => {
-    const form = $('#registerForm');
-    form.style.display = form.style.display === 'none' ? '' : 'none';
-  });
-  $('#registerBtn').addEventListener('click', registerApiKey);
-  $('#registerEmail').addEventListener('keydown', (e) => { if (e.key === 'Enter') registerApiKey(); });
 
   // Enter key support
   $('#srcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#dstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#neighborInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') discoverNeighbors(); });
-  $('#profileInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadProfile(); });
 });

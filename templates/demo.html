@@ -23,7 +23,7 @@
     </header>
 
     <main>
-      <!-- Hero / What You Get -->
+      <!-- Card 1: Hero / Informational -->
       <div class="card hero-card">
         <h2 class="hero-title">The API for music collaboration intelligence</h2>
         <p class="hero-subtitle">Built on 2.7M artists and 18.4M real collaboration edges from MusicBrainz. Try it live below.</p>
@@ -51,47 +51,58 @@
         </div>
       </div>
 
-      <!-- API Key Bar -->
-      <div class="card card-compact">
-        <div class="api-key-bar">
-          <label for="apiKeyInput">API Key</label>
-          <input type="text" id="apiKeyInput" readonly />
-          <span id="keyStatus" class="status-dot"></span>
-          <span class="key-info" id="keyInfo">Demo key auto-assigned</span>
-          <button class="btn btn-primary btn-sm" id="getKeyBtn" onclick="document.getElementById('registerForm').style.display = document.getElementById('registerForm').style.display === 'none' ? '' : 'none'">Get Your Own Key</button>
-        </div>
-        <div class="demo-limits-note" id="demoNote">
-          Demo keys: 50 requests/hour, exports limited to 100 rows (10 exports max).
-        </div>
-        <!-- Registration form (hidden by default) -->
-        <div id="registerForm" style="display:none; margin-top:0.75rem;">
-          <div class="search-section" style="margin-top:0;">
-            <div class="search-group">
-              <label for="registerEmail">Email</label>
-              <input type="email" id="registerEmail" placeholder="your@email.com" />
-            </div>
-            <div class="search-group">
-              <label for="registerOrg">Organization (optional)</label>
-              <input type="text" id="registerOrg" placeholder="Company or project name" />
-            </div>
-            <button class="btn btn-primary" id="registerBtn">Create Account</button>
+      <!-- Card 2: API Endpoints Reference -->
+      <div class="card">
+        <h2 class="card-title">API Endpoints</h2>
+        <p class="card-subtitle">Documentation and API usage — all endpoints available at <code>/api/v1/</code></p>
+        <div class="endpoints-grid">
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/api/v1/predict/connection</span>
+            <span class="endpoint-desc">Predict collaboration probability between two artists</span>
           </div>
-          <div id="registerResult" style="margin-top:0.5rem;"></div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/api/v1/predict/neighbors</span>
+            <span class="endpoint-desc">Top-k predicted collaborators for an artist</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/api/v1/predict/batch</span>
+            <span class="endpoint-desc">Bulk predictions for up to 1,000 artist pairs</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/api/v1/explore/what-if</span>
+            <span class="endpoint-desc">"What if X and Y collaborated?" — synthetic tracks scenario</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/api/v1/generate/tracks</span>
+            <span class="endpoint-desc">Generate synthetic track features via CVAE</span>
+          </div>
+        </div>
+        <div class="endpoint-formats">
+          <h4>Input / Output Formats</h4>
+          <p>All endpoints accept and return JSON. Authentication via <code>X-API-Key</code> header.</p>
+        </div>
+        <div style="text-align:center;margin-top:1rem;">
+          <a class="btn btn-primary" href="/docs">View Full Documentation</a>
         </div>
       </div>
 
-      <!-- Search Section -->
+      <!-- Card 3: Predict a Collaboration (Demo) -->
       <div class="card">
         <h2 class="card-title">Predict a Collaboration</h2>
-        <p class="card-subtitle">Enter two artists to predict their collaboration probability and generate synthetic tracks</p>
+        <p class="card-subtitle">Enter two artists to predict their collaboration probability</p>
         <div class="search-section">
           <div class="search-group autocomplete-container">
-            <label for="srcInput">Source Artist</label>
+            <label for="srcInput">Artist 1</label>
             <input type="text" id="srcInput" placeholder="Artist name or MBID..." autocomplete="off" />
             <div class="autocomplete-list"></div>
           </div>
           <div class="search-group autocomplete-container">
-            <label for="dstInput">Destination Artist</label>
+            <label for="dstInput">Artist 2</label>
             <input type="text" id="dstInput" placeholder="Artist name or MBID..." autocomplete="off" />
             <div class="autocomplete-list"></div>
           </div>
@@ -116,38 +127,17 @@
         </div>
       </div>
 
-      <!-- Model Comparison (A/B) -->
-      <div class="card" id="compareCard" style="display:none;">
-        <h3 class="card-title">Model Version Comparison</h3>
-        <p class="card-subtitle">Same artist pair scored by different model versions</p>
-        <div class="compare-bars" id="compareBars"></div>
-      </div>
-
-      <!-- Synthetic Tracks -->
-      <div class="card" id="tracksCard" style="display:none;">
-        <h3 class="card-title">Synthetic Tracks Generated</h3>
-        <p class="card-subtitle">CVAE-generated track features for this hypothetical collaboration</p>
-        <div class="tracks-grid" id="tracksGrid"></div>
-      </div>
-
-      <!-- Similar Real Tracks (requires recording + l_artist_recording tables — coming soon) -->
-      <!-- <div class="card" id="playlistCard" style="display:none;">
-        <h3 class="card-title">Similar Real Tracks</h3>
-        <p class="card-subtitle">Real recordings matching the synthetic predictions via Aitchison distance</p>
-        <div class="playlist-list" id="playlistList"></div>
-      </div> -->
-
-      <!-- Neighbor Discovery -->
+      <!-- Card 4: Discover Collaborations -->
       <div class="card">
-        <h2 class="card-title">Discover Neighbors</h2>
-        <p class="card-subtitle">Find the top 20 predicted collaborators for any artist, ranked by probability</p>
+        <h2 class="card-title">Discover Collaborations</h2>
+        <p class="card-subtitle">Find the top predicted collaborators for any artist, ranked by probability</p>
         <div class="search-section">
           <div class="search-group autocomplete-container" style="flex:1;">
             <label for="neighborInput">Artist</label>
             <input type="text" id="neighborInput" placeholder="Artist name or MBID..." autocomplete="off" />
             <div class="autocomplete-list"></div>
           </div>
-          <button class="btn btn-primary" id="neighborBtn">Discover</button>
+          <button class="btn btn-primary" id="neighborBtn">Find Collaborators</button>
         </div>
       </div>
 
@@ -169,118 +159,6 @@
         </div>
       </div>
 
-      <!-- Artist Profile -->
-      <div class="card">
-        <h2 class="card-title">Artist Profile</h2>
-        <p class="card-subtitle">Complete profile with genre distribution, popularity, and collaboration data</p>
-        <div class="search-section">
-          <div class="search-group autocomplete-container" style="flex:1;">
-            <label for="profileInput">Artist</label>
-            <input type="text" id="profileInput" placeholder="Artist name or MBID..." autocomplete="off" />
-            <div class="autocomplete-list"></div>
-          </div>
-          <button class="btn btn-primary" id="profileBtn">Load Profile</button>
-        </div>
-      </div>
-
-      <!-- Profile Display -->
-      <div class="card" id="profileCard" style="display:none;">
-        <div class="profile-layout">
-          <div class="profile-header">
-            <h3 id="profileName">--</h3>
-            <div class="profile-badges" id="profileBadges"></div>
-          </div>
-          <div class="profile-grid">
-            <div class="profile-section">
-              <h4>Genre Distribution</h4>
-              <div class="genre-bars" id="genreBars"></div>
-            </div>
-            <div class="profile-section">
-              <h4>Top Collaborators</h4>
-              <div class="collab-list" id="collabList"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- API Endpoints Reference -->
-      <div class="card">
-        <h2 class="card-title">API Endpoints</h2>
-        <p class="card-subtitle">All endpoints available at <code>/api/v1/</code> — <a href="/docs" style="color:var(--accent);">Full documentation with examples</a></p>
-        <div class="endpoints-grid">
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/predict/connection</span>
-            <span class="endpoint-desc">Predict collaboration probability between two artists</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/predict/neighbors</span>
-            <span class="endpoint-desc">Top-k predicted collaborators for an artist</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/predict/batch</span>
-            <span class="endpoint-desc">Bulk predictions for up to 1,000 artist pairs</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/predict/compare</span>
-            <span class="endpoint-desc">A/B test predictions across model versions</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/explore/what-if</span>
-            <span class="endpoint-desc">"What if X and Y collaborated?" full scenario</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/generate/tracks</span>
-            <span class="endpoint-desc">Generate synthetic track features via CVAE</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/generate/playlist</span>
-            <span class="endpoint-desc">Find real tracks matching synthetic predictions</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method get">GET</span>
-            <span class="endpoint-path">/artist/{id}/profile</span>
-            <span class="endpoint-desc">Full artist profile with genres, popularity, collabs</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method get">GET</span>
-            <span class="endpoint-path">/trends/daily</span>
-            <span class="endpoint-desc">Pre-computed daily featured predictions</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method get">GET</span>
-            <span class="endpoint-path">/dataset/export</span>
-            <span class="endpoint-desc">CSV/Parquet download of prediction data</span>
-          </div>
-        </div>
-        <div style="text-align:center;margin-top:1rem;">
-          <a class="btn btn-primary" href="/docs">View Full API Documentation</a>
-        </div>
-      </div>
-
-      <!-- System Status -->
-      <div class="card card-compact">
-        <div class="status-bar">
-          <div class="status-item">
-            <span class="status-label">Models</span>
-            <span class="status-value" id="statusModels">--</span>
-          </div>
-          <div class="status-item">
-            <span class="status-label">DB</span>
-            <span class="status-dot" id="statusDb"></span>
-          </div>
-          <div class="status-item">
-            <span class="status-label">Service</span>
-            <span class="status-value" id="statusVersion">--</span>
-          </div>
-        </div>
-      </div>
     </main>
   </div>
 
