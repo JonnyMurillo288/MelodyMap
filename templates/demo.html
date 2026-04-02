@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Interlude API Demo</title>
-  <link rel="stylesheet" href="static/style.css" type="text/css" />
-  <link rel="stylesheet" href="static/demo.css" type="text/css" />
+  <link rel="stylesheet" href="static/style.css?v=2" type="text/css" />
+  <link rel="stylesheet" href="static/demo.css?v=2" type="text/css" />
 </head>
 
 <body>
@@ -75,6 +75,11 @@
             <span class="endpoint-method post">POST</span>
             <span class="endpoint-path">/api/v1/explore/what-if</span>
             <span class="endpoint-desc">"What if X and Y collaborated?" — synthetic tracks scenario</span>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-method post">POST</span>
+            <span class="endpoint-path">/api/v1/explore/synthetic-track-features</span>
+            <span class="endpoint-desc">Synthetic tracks with popularity, instrumentation, and lyric analysis</span>
           </div>
           <div class="endpoint-item">
             <span class="endpoint-method post">POST</span>
@@ -171,6 +176,6 @@
     </main>
   </div>
 
-  <script src="static/demo.js"></script>
+  <script src="static/demo.js?v=2"></script>
 </body>
 </html>

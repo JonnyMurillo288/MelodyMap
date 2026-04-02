@@ -50,7 +50,7 @@ async function api(path, opts = {}) {
     try {
       const err = await res.json();
       detail = err.detail || err.message || JSON.stringify(err);
-    } catch { detail += ': ' + await res.text(); }
+    } catch (e) { detail += ': ' + await res.text(); }
     throw new Error(detail);
   }
   return res.json();
@@ -265,7 +265,7 @@ async function loadArtistNames() {
     const text = await res.text();
     artistNameList = text.split('\n').map(x => x.trim()).filter(Boolean);
     return artistNameList;
-  } catch { return []; }
+  } catch (e) { return []; }
 }
 
 function createAutocomplete(inputEl) {

@@ -201,26 +201,452 @@
             <span class="method post">POST</span>
             <code>/api/v1/explore/what-if</code>
           </div>
-          <p>The "What would happen if X and Y collaborated?" endpoint. Takes 2-10 artists, generates all pair combinations, predicts probabilities, creates synthetic tracks, and finds matching real recordings.</p>
+          <p>The "What would happen if X and Y collaborated?" endpoint. Takes 2-10 artists, generates all pair permutations, predicts collaboration probabilities, creates synthetic tracks with genre/mood/popularity constraints, and finds matching real recordings.</p>
           <div class="params">
             <h4>Request Body</h4>
             <table>
               <tr><td><code>artists</code></td><td>list[string], required</td><td>2-10 artist names or IDs</td></tr>
               <tr><td><code>scenario</code></td><td>object, optional</td><td>Constraints: <code>genre_target</code>, <code>popularity_range</code>, <code>mood_target</code></td></tr>
-              <tr><td><code>num_tracks</code></td><td>int, optional</td><td>Synthetic tracks per pair (default 5)</td></tr>
-              <tr><td><code>num_similar</code></td><td>int, optional</td><td>Similar real tracks per pair (default 5)</td></tr>
+              <tr><td><code>num_tracks</code></td><td>int, optional</td><td>Synthetic tracks per pair (default 2)</td></tr>
+              <tr><td><code>num_similar</code></td><td>int, optional</td><td>Similar real tracks per synthetic track (default 2)</td></tr>
             </table>
           </div>
           <div class="code-block">
-            <div class="code-header"><span>Example</span></div>
+            <div class="code-header"><span>Example Request</span></div>
 <pre>curl -X POST {{BASE_URL}}/api/v1/explore/what-if \
   -H "X-API-Key: YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "artists": ["Billie Eilish", "The Weeknd", "Daft Punk"],
-    "num_tracks": 3,
-    "num_similar": 3
+    "artists": ["Billie Eilish", "The Weeknd", "Daft Punk", "Tame Impala"],
+    "scenario": {
+      "genre_target": "electronic",
+      "popularity_range": [60, 95],
+      "mood_target": "dreamy"
+    },
+    "num_tracks": 2,
+    "num_similar": 2
   }'</pre>
+          </div>
+          <div class="code-block response">
+            <div class="code-header"><span>Example Response (test data)</span></div>
+<pre>{
+  "data": {
+    "artists": ["Billie Eilish", "The Weeknd", "Daft Punk", "Tame Impala"],
+    "scenario": {
+      "genre_target": "electronic",
+      "popularity_range": [60, 95],
+      "mood_target": "dreamy"
+    },
+    "permutations": [
+      {
+        "src": "Billie Eilish",
+        "dst": "The Weeknd",
+        "probability": 0.81,
+        "synthetic_tracks": [
+          {
+            "track_id": 5001,
+            "genre_dortmund_electronic": 0.62,
+            "genre_dortmund_pop": 0.28,
+            "mood_sad": 0.45,
+            "mood_electronic": 0.58,
+            "mood_relaxed": 0.31,
+            "danceability": 0.72,
+            "timbre_dark": 0.67,
+            "voice_instrumental_voice": 0.85,
+            "predicted_popularity": 88,
+            "similar_real_tracks": [
+              {"recording": "Save Your Tears", "artist": "The Weeknd", "similarity": 0.91},
+              {"recording": "bad guy", "artist": "Billie Eilish", "similarity": 0.87}
+            ]
+          },
+          {
+            "track_id": 5002,
+            "genre_dortmund_electronic": 0.55,
+            "genre_dortmund_pop": 0.35,
+            "mood_happy": 0.22,
+            "mood_electronic": 0.63,
+            "mood_relaxed": 0.48,
+            "danceability": 0.65,
+            "timbre_dark": 0.59,
+            "voice_instrumental_voice": 0.79,
+            "predicted_popularity": 82,
+            "similar_real_tracks": [
+              {"recording": "Blinding Lights", "artist": "The Weeknd", "similarity": 0.85},
+              {"recording": "everything i wanted", "artist": "Billie Eilish", "similarity": 0.82}
+            ]
+          }
+        ]
+      },
+      {
+        "src": "Billie Eilish",
+        "dst": "Daft Punk",
+        "probability": 0.43,
+        "synthetic_tracks": [
+          {
+            "track_id": 5003,
+            "genre_dortmund_electronic": 0.78,
+            "genre_dortmund_pop": 0.15,
+            "mood_electronic": 0.82,
+            "mood_relaxed": 0.41,
+            "mood_sad": 0.29,
+            "danceability": 0.80,
+            "timbre_bright": 0.54,
+            "voice_instrumental_voice": 0.60,
+            "predicted_popularity": 76,
+            "similar_real_tracks": [
+              {"recording": "Get Lucky", "artist": "Daft Punk", "similarity": 0.79},
+              {"recording": "lovely", "artist": "Billie Eilish", "similarity": 0.71}
+            ]
+          },
+          {
+            "track_id": 5004,
+            "genre_dortmund_electronic": 0.83,
+            "genre_dortmund_pop": 0.10,
+            "mood_electronic": 0.88,
+            "mood_party": 0.52,
+            "mood_relaxed": 0.20,
+            "danceability": 0.85,
+            "timbre_bright": 0.61,
+            "voice_instrumental_instrumental": 0.72,
+            "predicted_popularity": 71,
+            "similar_real_tracks": [
+              {"recording": "Around the World", "artist": "Daft Punk", "similarity": 0.83},
+              {"recording": "Instant Crush", "artist": "Daft Punk", "similarity": 0.76}
+            ]
+          }
+        ]
+      },
+      {
+        "src": "Billie Eilish",
+        "dst": "Tame Impala",
+        "probability": 0.56,
+        "synthetic_tracks": [
+          {
+            "track_id": 5005,
+            "genre_dortmund_alternative": 0.48,
+            "genre_dortmund_electronic": 0.39,
+            "mood_relaxed": 0.65,
+            "mood_sad": 0.38,
+            "mood_acoustic": 0.22,
+            "danceability": 0.55,
+            "timbre_dark": 0.52,
+            "voice_instrumental_voice": 0.73,
+            "predicted_popularity": 79,
+            "similar_real_tracks": [
+              {"recording": "The Less I Know the Better", "artist": "Tame Impala", "similarity": 0.80},
+              {"recording": "ocean eyes", "artist": "Billie Eilish", "similarity": 0.74}
+            ]
+          },
+          {
+            "track_id": 5006,
+            "genre_dortmund_alternative": 0.52,
+            "genre_dortmund_electronic": 0.34,
+            "mood_relaxed": 0.71,
+            "mood_electronic": 0.30,
+            "mood_happy": 0.25,
+            "danceability": 0.60,
+            "timbre_bright": 0.44,
+            "voice_instrumental_voice": 0.68,
+            "predicted_popularity": 74,
+            "similar_real_tracks": [
+              {"recording": "Borderline", "artist": "Tame Impala", "similarity": 0.78},
+              {"recording": "my future", "artist": "Billie Eilish", "similarity": 0.72}
+            ]
+          }
+        ]
+      },
+      {
+        "src": "The Weeknd",
+        "dst": "Daft Punk",
+        "probability": 0.94,
+        "synthetic_tracks": [
+          {
+            "track_id": 5007,
+            "genre_dortmund_electronic": 0.70,
+            "genre_dortmund_pop": 0.22,
+            "mood_electronic": 0.75,
+            "mood_party": 0.61,
+            "mood_happy": 0.40,
+            "danceability": 0.88,
+            "timbre_bright": 0.58,
+            "voice_instrumental_voice": 0.77,
+            "predicted_popularity": 92,
+            "similar_real_tracks": [
+              {"recording": "Starboy", "artist": "The Weeknd", "similarity": 0.95},
+              {"recording": "I Feel It Coming", "artist": "The Weeknd", "similarity": 0.93}
+            ]
+          },
+          {
+            "track_id": 5008,
+            "genre_dortmund_electronic": 0.76,
+            "genre_dortmund_funksoulrnb": 0.18,
+            "mood_electronic": 0.80,
+            "mood_party": 0.55,
+            "mood_relaxed": 0.30,
+            "danceability": 0.91,
+            "timbre_bright": 0.65,
+            "voice_instrumental_voice": 0.70,
+            "predicted_popularity": 89,
+            "similar_real_tracks": [
+              {"recording": "Lose Yourself to Dance", "artist": "Daft Punk", "similarity": 0.90},
+              {"recording": "One More Time", "artist": "Daft Punk", "similarity": 0.86}
+            ]
+          }
+        ]
+      },
+      {
+        "src": "The Weeknd",
+        "dst": "Tame Impala",
+        "probability": 0.67,
+        "synthetic_tracks": [
+          {
+            "track_id": 5009,
+            "genre_dortmund_alternative": 0.35,
+            "genre_dortmund_pop": 0.30,
+            "genre_dortmund_electronic": 0.28,
+            "mood_relaxed": 0.55,
+            "mood_electronic": 0.42,
+            "mood_sad": 0.30,
+            "danceability": 0.68,
+            "timbre_dark": 0.48,
+            "voice_instrumental_voice": 0.82,
+            "predicted_popularity": 85,
+            "similar_real_tracks": [
+              {"recording": "Less I Know the Better", "artist": "Tame Impala", "similarity": 0.81},
+              {"recording": "After Hours", "artist": "The Weeknd", "similarity": 0.78}
+            ]
+          },
+          {
+            "track_id": 5010,
+            "genre_dortmund_alternative": 0.40,
+            "genre_dortmund_electronic": 0.32,
+            "genre_dortmund_pop": 0.22,
+            "mood_relaxed": 0.62,
+            "mood_happy": 0.28,
+            "mood_electronic": 0.38,
+            "danceability": 0.63,
+            "timbre_bright": 0.50,
+            "voice_instrumental_voice": 0.75,
+            "predicted_popularity": 80,
+            "similar_real_tracks": [
+              {"recording": "New Person, Same Old Mistakes", "artist": "Tame Impala", "similarity": 0.77},
+              {"recording": "Die For You", "artist": "The Weeknd", "similarity": 0.73}
+            ]
+          }
+        ]
+      },
+      {
+        "src": "Daft Punk",
+        "dst": "Tame Impala",
+        "probability": 0.71,
+        "synthetic_tracks": [
+          {
+            "track_id": 5011,
+            "genre_dortmund_electronic": 0.65,
+            "genre_dortmund_alternative": 0.25,
+            "mood_electronic": 0.72,
+            "mood_relaxed": 0.50,
+            "mood_party": 0.38,
+            "danceability": 0.78,
+            "timbre_bright": 0.56,
+            "voice_instrumental_instrumental": 0.60,
+            "predicted_popularity": 77,
+            "similar_real_tracks": [
+              {"recording": "Something About Us", "artist": "Daft Punk", "similarity": 0.84},
+              {"recording": "Let It Happen", "artist": "Tame Impala", "similarity": 0.80}
+            ]
+          },
+          {
+            "track_id": 5012,
+            "genre_dortmund_electronic": 0.60,
+            "genre_dortmund_alternative": 0.30,
+            "mood_electronic": 0.68,
+            "mood_happy": 0.42,
+            "mood_relaxed": 0.45,
+            "danceability": 0.82,
+            "timbre_bright": 0.62,
+            "voice_instrumental_instrumental": 0.55,
+            "predicted_popularity": 73,
+            "similar_real_tracks": [
+              {"recording": "Digital Love", "artist": "Daft Punk", "similarity": 0.82},
+              {"recording": "Elephant", "artist": "Tame Impala", "similarity": 0.75}
+            ]
+          }
+        ]
+      }
+    ],
+    "total_permutations": 6
+  },
+  "meta": {
+    "model_version": "v5",
+    "cvae_version": "v1",
+    "latency_ms": 1842.3,
+    "cached": false,
+    "request_id": "whatif-abc123"
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <code>/api/v1/explore/synthetic-track-features</code>
+          </div>
+          <p>Deep-dive into synthetic track features with popularity metrics, instrumentation analysis, lyric assessment, and genre styling. Returns tracks broken down by regional popularity and consumer type segments.</p>
+          <div class="params">
+            <h4>Request Body</h4>
+            <table>
+              <tr><td><code>src_artist</code></td><td>string, required</td><td>Source artist name or ID</td></tr>
+              <tr><td><code>dst_artist</code></td><td>string, required</td><td>Destination artist name or ID</td></tr>
+              <tr><td><code>num_tracks</code></td><td>int, optional</td><td>Tracks to generate (1-10, default 3)</td></tr>
+              <tr><td><code>customization</code></td><td>object, optional</td><td>Override defaults: <code>instruments</code>, <code>lyric_mood</code>, <code>genre_style</code></td></tr>
+            </table>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span>Example Request</span></div>
+<pre>curl -X POST {{BASE_URL}}/api/v1/explore/synthetic-track-features \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "src_artist": "Billie Eilish",
+    "dst_artist": "Tame Impala",
+    "num_tracks": 2,
+    "customization": {
+      "instruments": ["synth", "guitar", "bass"],
+      "lyric_mood": "introspective",
+      "genre_style": "psychedelic-pop"
+    }
+  }'</pre>
+          </div>
+          <div class="code-block response">
+            <div class="code-header"><span>Example Response (test data)</span></div>
+<pre>{
+  "data": {
+    "src_artist": "Billie Eilish",
+    "dst_artist": "Tame Impala",
+    "probability": 0.56,
+    "tracks": [
+      {
+        "track_id": 7001,
+        "audio_features": {
+          "genre_dortmund_alternative": 0.48,
+          "genre_dortmund_electronic": 0.39,
+          "mood_relaxed": 0.65,
+          "mood_sad": 0.38,
+          "danceability": 0.55,
+          "timbre_dark": 0.52,
+          "voice_instrumental_voice": 0.73
+        },
+        "instrumentation": {
+          "primary": ["synth", "bass"],
+          "secondary": ["guitar", "drum_machine"],
+          "instrument_confidence": {
+            "synth": 0.89,
+            "bass": 0.82,
+            "guitar": 0.71,
+            "drum_machine": 0.65,
+            "strings": 0.22,
+            "piano": 0.18
+          }
+        },
+        "lyric_assessment": {
+          "mood": "introspective",
+          "theme_tags": ["isolation", "self-reflection", "longing"],
+          "vocal_style": "breathy",
+          "lyric_density": 0.42,
+          "sentiment_score": -0.15,
+          "explicit_probability": 0.12
+        },
+        "genre_style": {
+          "primary_genre": "psychedelic-pop",
+          "sub_genres": ["dream-pop", "electro-pop", "indie"],
+          "era_influence": "2020s",
+          "genre_blend_score": 0.74
+        },
+        "popularity_metrics": {
+          "predicted_popularity": 79,
+          "by_region": {
+            "north_america": {"score": 84, "rank_percentile": 92},
+            "europe": {"score": 81, "rank_percentile": 89},
+            "latin_america": {"score": 62, "rank_percentile": 71},
+            "asia_pacific": {"score": 70, "rank_percentile": 78},
+            "africa_middle_east": {"score": 48, "rank_percentile": 60}
+          },
+          "by_consumer_type": {
+            "casual_listener": {"appeal_score": 0.72, "skip_rate": 0.18},
+            "genre_enthusiast": {"appeal_score": 0.88, "skip_rate": 0.06},
+            "playlist_curator": {"appeal_score": 0.81, "skip_rate": 0.10},
+            "discovery_seeker": {"appeal_score": 0.90, "skip_rate": 0.05},
+            "passive_streamer": {"appeal_score": 0.60, "skip_rate": 0.28}
+          }
+        }
+      },
+      {
+        "track_id": 7002,
+        "audio_features": {
+          "genre_dortmund_alternative": 0.52,
+          "genre_dortmund_electronic": 0.34,
+          "mood_relaxed": 0.71,
+          "mood_electronic": 0.30,
+          "danceability": 0.60,
+          "timbre_bright": 0.44,
+          "voice_instrumental_voice": 0.68
+        },
+        "instrumentation": {
+          "primary": ["guitar", "synth"],
+          "secondary": ["bass", "reverb_vocals"],
+          "instrument_confidence": {
+            "guitar": 0.87,
+            "synth": 0.80,
+            "bass": 0.74,
+            "reverb_vocals": 0.69,
+            "drums": 0.58,
+            "piano": 0.15
+          }
+        },
+        "lyric_assessment": {
+          "mood": "dreamy",
+          "theme_tags": ["escape", "nostalgia", "wonder"],
+          "vocal_style": "layered_harmonies",
+          "lyric_density": 0.35,
+          "sentiment_score": 0.22,
+          "explicit_probability": 0.04
+        },
+        "genre_style": {
+          "primary_genre": "dream-pop",
+          "sub_genres": ["psychedelic-pop", "shoegaze", "art-pop"],
+          "era_influence": "2010s",
+          "genre_blend_score": 0.81
+        },
+        "popularity_metrics": {
+          "predicted_popularity": 74,
+          "by_region": {
+            "north_america": {"score": 78, "rank_percentile": 85},
+            "europe": {"score": 80, "rank_percentile": 88},
+            "latin_america": {"score": 55, "rank_percentile": 63},
+            "asia_pacific": {"score": 65, "rank_percentile": 72},
+            "africa_middle_east": {"score": 42, "rank_percentile": 54}
+          },
+          "by_consumer_type": {
+            "casual_listener": {"appeal_score": 0.65, "skip_rate": 0.22},
+            "genre_enthusiast": {"appeal_score": 0.91, "skip_rate": 0.04},
+            "playlist_curator": {"appeal_score": 0.78, "skip_rate": 0.12},
+            "discovery_seeker": {"appeal_score": 0.85, "skip_rate": 0.07},
+            "passive_streamer": {"appeal_score": 0.52, "skip_rate": 0.32}
+          }
+        }
+      }
+    ]
+  },
+  "meta": {
+    "model_version": "v5",
+    "cvae_version": "v1",
+    "latency_ms": 923.7,
+    "cached": false,
+    "request_id": "synth-feat-xyz789"
+  }
+}</pre>
           </div>
         </div>
 
