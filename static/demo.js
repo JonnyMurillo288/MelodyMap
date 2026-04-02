@@ -744,41 +744,81 @@ function renderWorldMap(byRegion) {
   const af = byRegion["Africa & Middle East"] || { score: 0 };
 
   return `<div class="world-map-container">
-    <svg viewBox="0 0 800 400" class="world-map-svg">
-      <!-- North America -->
-      <path d="M50,50 L220,50 L240,80 L230,120 L200,160 L160,180 L120,170 L80,140 L50,100 Z" fill="${regionColor(na.score)}" class="map-region" data-region="North America" data-score="${na.score}">
+    <svg viewBox="0 0 1000 500" class="world-map-svg">
+      <!-- Grid lines -->
+      <line x1="0" y1="250" x2="1000" y2="250" stroke="rgba(148,163,184,0.08)" stroke-dasharray="4,4"/>
+      <line x1="0" y1="125" x2="1000" y2="125" stroke="rgba(148,163,184,0.05)" stroke-dasharray="4,4"/>
+      <line x1="0" y1="375" x2="1000" y2="375" stroke="rgba(148,163,184,0.05)" stroke-dasharray="4,4"/>
+
+      <!-- North America: Alaska, Canada, USA, Mexico -->
+      <path d="M30,55 L55,40 L95,35 L120,50 L110,70 L130,65 L165,45 L200,40 L225,55 L245,50
+               L265,60 L275,75 L260,85 L240,80 L220,85 L235,95 L250,100 L260,110 L255,125
+               L240,135 L225,145 L215,160 L200,170 L185,175 L170,165 L155,170 L140,180
+               L125,185 L110,175 L95,160 L80,150 L65,155 L50,145 L40,130 L30,115 L25,95
+               L20,75 Z"
+        fill="${regionColor(na.score)}" class="map-region" data-region="North America" data-score="${na.score}">
         <title>North America: ${na.score}/100</title>
       </path>
-      <text x="145" y="110" class="map-label">NA</text>
-      <text x="145" y="128" class="map-score">${na.score}</text>
+      <text x="165" y="110" class="map-label">NA</text>
+      <text x="165" y="130" class="map-score">${na.score}</text>
 
-      <!-- Latin America -->
-      <path d="M140,185 L190,185 L210,220 L200,280 L180,330 L160,360 L140,340 L130,290 L120,240 Z" fill="${regionColor(la.score)}" class="map-region" data-region="Latin America" data-score="${la.score}">
+      <!-- Latin America: Central America, Caribbean, South America -->
+      <path d="M140,185 L155,180 L170,175 L185,180 L200,185 L210,195 L218,205 L222,215
+               L225,230 L230,245 L235,255 L240,265 L245,280 L248,295 L245,310 L240,325
+               L232,340 L225,350 L218,360 L210,370 L200,378 L192,385 L185,392 L178,398
+               L172,402 L168,408 L175,415 L172,425 L162,430 L155,420 L150,408 L148,395
+               L152,382 L155,370 L158,358 L160,345 L158,332 L155,320 L148,310 L140,300
+               L135,288 L132,275 L128,262 L125,250 L122,238 L120,225 L122,212 L128,200
+               L135,192 Z"
+        fill="${regionColor(la.score)}" class="map-region" data-region="Latin America" data-score="${la.score}">
         <title>Latin America: ${la.score}/100</title>
       </path>
-      <text x="165" y="265" class="map-label">LA</text>
-      <text x="165" y="283" class="map-score">${la.score}</text>
+      <text x="195" y="305" class="map-label">LATAM</text>
+      <text x="195" y="325" class="map-score">${la.score}</text>
 
-      <!-- Europe -->
-      <path d="M340,40 L440,35 L470,60 L460,100 L440,130 L400,140 L360,130 L340,100 L330,70 Z" fill="${regionColor(eu.score)}" class="map-region" data-region="Europe" data-score="${eu.score}">
+      <!-- Europe: Scandinavia, Western Europe, Eastern Europe, UK, Mediterranean -->
+      <path d="M420,30 L440,25 L460,28 L475,35 L488,28 L500,32 L515,40 L530,45 L540,55
+               L545,68 L548,80 L545,92 L540,102 L535,110 L525,118 L515,122 L505,128
+               L495,132 L485,135 L475,132 L465,128 L455,125 L448,130 L442,138 L438,145
+               L432,140 L425,135 L418,130 L412,122 L408,115 L405,108 L400,100 L398,90
+               L395,82 L392,72 L395,62 L400,52 L408,42 L415,35 Z
+               M388,72 L395,65 L400,72 L398,82 L390,85 L385,80 Z"
+        fill="${regionColor(eu.score)}" class="map-region" data-region="Europe" data-score="${eu.score}">
         <title>Europe: ${eu.score}/100</title>
       </path>
-      <text x="395" y="85" class="map-label">EU</text>
-      <text x="395" y="103" class="map-score">${eu.score}</text>
+      <text x="468" y="85" class="map-label">EU</text>
+      <text x="468" y="105" class="map-score">${eu.score}</text>
 
       <!-- Africa & Middle East -->
-      <path d="M370,145 L450,140 L480,170 L470,240 L440,300 L400,310 L370,280 L360,220 L355,170 Z" fill="${regionColor(af.score)}" class="map-region" data-region="Africa & Middle East" data-score="${af.score}">
+      <path d="M430,148 L445,142 L458,138 L470,140 L482,145 L495,148 L510,152 L525,148
+               L540,145 L555,150 L560,160 L558,172 L552,182 L545,190 L538,198 L530,205
+               L522,215 L515,225 L510,238 L508,252 L505,265 L502,278 L498,290 L495,302
+               L492,315 L488,328 L482,340 L475,350 L468,358 L460,362 L452,358 L445,350
+               L438,340 L432,328 L428,315 L425,302 L422,290 L420,278 L418,265 L416,252
+               L415,240 L416,228 L418,218 L420,208 L422,198 L425,188 L428,178 L430,168
+               L430,158 Z"
+        fill="${regionColor(af.score)}" class="map-region" data-region="Africa & Middle East" data-score="${af.score}">
         <title>Africa & Middle East: ${af.score}/100</title>
       </path>
-      <text x="415" y="215" class="map-label">AF/ME</text>
-      <text x="415" y="233" class="map-score">${af.score}</text>
+      <text x="478" y="245" class="map-label">AF/ME</text>
+      <text x="478" y="265" class="map-score">${af.score}</text>
 
-      <!-- Asia Pacific -->
-      <path d="M520,50 L700,45 L740,80 L730,150 L700,220 L650,260 L580,250 L530,200 L510,140 L515,80 Z" fill="${regionColor(ap.score)}" class="map-region" data-region="Asia Pacific" data-score="${ap.score}">
+      <!-- Asia Pacific: Russia/Central Asia, East Asia, Southeast Asia, India, Australia -->
+      <path d="M555,30 L585,25 L620,22 L660,25 L700,28 L740,32 L775,38 L800,45 L820,55
+               L835,68 L842,82 L845,95 L842,108 L835,120 L825,132 L815,142 L805,150
+               L795,155 L785,158 L775,162 L765,168 L758,175 L752,185 L748,195 L742,205
+               L735,215 L728,222 L718,228 L708,232 L698,228 L690,222 L685,215 L680,205
+               L675,195 L672,185 L665,178 L658,172 L650,168 L640,165 L630,162 L620,160
+               L610,158 L600,155 L590,150 L580,145 L570,138 L562,130 L558,120 L555,108
+               L552,95 L550,82 L548,68 L550,55 L552,42 Z
+               M720,240 L735,235 L752,238 L768,245 L782,255 L795,268 L805,282 L810,298
+               L808,312 L800,325 L788,335 L775,342 L760,345 L745,340 L732,332 L722,322
+               L715,310 L712,298 L710,285 L712,272 L715,260 L718,250 Z"
+        fill="${regionColor(ap.score)}" class="map-region" data-region="Asia Pacific" data-score="${ap.score}">
         <title>Asia Pacific: ${ap.score}/100</title>
       </path>
-      <text x="620" y="140" class="map-label">APAC</text>
-      <text x="620" y="158" class="map-score">${ap.score}</text>
+      <text x="700" y="115" class="map-label">APAC</text>
+      <text x="700" y="135" class="map-score">${ap.score}</text>
     </svg>
     <div class="map-legend">
       <span class="legend-item"><span class="legend-dot" style="background:hsl(142,70%,40%);"></span>75+</span>

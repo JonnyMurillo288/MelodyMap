@@ -1254,32 +1254,36 @@ main {
 }
 .world-map-svg {
   width: 100%;
-  max-width: 600px;
+  max-width: 750px;
   margin: 0 auto;
   display: block;
 }
 .map-region {
-  stroke: rgba(148, 163, 184, 0.2);
+  stroke: rgba(148, 163, 184, 0.25);
   stroke-width: 1.5;
+  stroke-linejoin: round;
   cursor: default;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, filter 0.2s;
+  filter: drop-shadow(0 0 3px rgba(0,0,0,0.3));
 }
 .map-region:hover {
-  opacity: 0.8;
-  stroke: rgba(255, 255, 255, 0.4);
+  opacity: 0.85;
+  stroke: rgba(255, 255, 255, 0.5);
   stroke-width: 2;
+  filter: drop-shadow(0 0 8px rgba(0,0,0,0.5));
 }
 .map-label {
-  fill: rgba(255, 255, 255, 0.9);
-  font-size: 12px;
+  fill: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
   font-weight: 700;
   text-anchor: middle;
   pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
 }
 .map-score {
-  fill: rgba(255, 255, 255, 0.6);
-  font-size: 11px;
-  font-weight: 500;
+  fill: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
   text-anchor: middle;
   font-family: monospace;
   pointer-events: none;
