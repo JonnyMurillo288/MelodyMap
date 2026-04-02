@@ -696,6 +696,20 @@ main {
   50% { opacity: 1; text-shadow: 0 0 12px rgba(96, 165, 250, 0.5); }
 }
 
+/* ---- Coming Soon Banner ---- */
+.coming-soon-banner {
+  background: linear-gradient(90deg, rgba(234, 179, 8, 0.1), rgba(234, 179, 8, 0.05));
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #eab308;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+
 /* ---- Endpoint Formats ---- */
 .endpoint-formats {
   margin-top: 1rem;

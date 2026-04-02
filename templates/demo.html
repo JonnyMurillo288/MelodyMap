@@ -175,80 +175,26 @@
 
       <!-- Card 5: What-If Explorer -->
       <div class="card">
+        <div class="coming-soon-banner">Preview — Not yet in production, currently underway</div>
         <h2 class="card-title">What-If Explorer</h2>
-        <p class="card-subtitle">What would happen if these artists collaborated? Add 2-4 artists to explore all pair permutations.</p>
-        <div class="whatif-input-area">
-          <div class="whatif-artists" id="whatifArtists">
-            <div class="search-group autocomplete-container">
-              <input type="text" class="whatif-artist-input" placeholder="Artist 1..." autocomplete="off" />
-              <div class="autocomplete-list"></div>
-            </div>
-            <div class="search-group autocomplete-container">
-              <input type="text" class="whatif-artist-input" placeholder="Artist 2..." autocomplete="off" />
-              <div class="autocomplete-list"></div>
-            </div>
-          </div>
-          <div class="whatif-actions">
-            <button class="btn" id="addArtistBtn" title="Add another artist (max 4)">+ Add Artist</button>
-            <button class="btn btn-primary" id="whatifBtn">Explore What-If</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- What-If Results -->
-      <div class="card" id="whatifCard" style="display:none;">
-        <h3 class="card-title" id="whatifTitle">Collaboration Scenarios</h3>
+        <p class="card-subtitle">What would happen if Billie Eilish, The Weeknd, Daft Punk, and Tame Impala collaborated? All pair permutations below.</p>
         <div class="whatif-network" id="whatifNetwork"></div>
         <div class="whatif-pairs" id="whatifPairs"></div>
       </div>
 
       <!-- Card 6: Synthetic Track Deep Dive -->
       <div class="card">
+        <div class="coming-soon-banner">Preview — Not yet in production, currently underway</div>
         <h2 class="card-title">Synthetic Track Deep Dive</h2>
-        <p class="card-subtitle">Generate tracks with full instrumentation, lyric analysis, and regional popularity breakdown</p>
-        <div class="search-section">
-          <div class="search-group autocomplete-container">
-            <label for="synthSrcInput">Artist 1</label>
-            <input type="text" id="synthSrcInput" placeholder="Artist name..." autocomplete="off" />
-            <div class="autocomplete-list"></div>
-          </div>
-          <div class="search-group autocomplete-container">
-            <label for="synthDstInput">Artist 2</label>
-            <input type="text" id="synthDstInput" placeholder="Artist name..." autocomplete="off" />
-            <div class="autocomplete-list"></div>
-          </div>
-          <button class="btn btn-primary" id="synthFeatBtn">Generate</button>
-        </div>
-      </div>
-
-      <!-- Synthetic Features Result -->
-      <div class="card" id="synthFeatCard" style="display:none;">
-        <h3 class="card-title" id="synthFeatTitle">Track Analysis</h3>
+        <p class="card-subtitle">Full instrumentation, lyric analysis, and regional popularity breakdown for Billie Eilish × Tame Impala</p>
         <div id="synthFeatContent"></div>
       </div>
 
       <!-- Card 7: Playlist Generator -->
       <div class="card">
+        <div class="coming-soon-banner">Preview — Not yet in production, currently underway</div>
         <h2 class="card-title">Playlist Generator</h2>
-        <p class="card-subtitle">Find real tracks that match synthetic collaboration predictions</p>
-        <div class="search-section">
-          <div class="search-group autocomplete-container">
-            <label for="playlistSrcInput">Artist 1</label>
-            <input type="text" id="playlistSrcInput" placeholder="Artist name..." autocomplete="off" />
-            <div class="autocomplete-list"></div>
-          </div>
-          <div class="search-group autocomplete-container">
-            <label for="playlistDstInput">Artist 2</label>
-            <input type="text" id="playlistDstInput" placeholder="Artist name..." autocomplete="off" />
-            <div class="autocomplete-list"></div>
-          </div>
-          <button class="btn btn-primary" id="playlistBtn">Build Playlist</button>
-        </div>
-      </div>
-
-      <!-- Playlist Result -->
-      <div class="card" id="playlistCard" style="display:none;">
-        <h3 class="card-title" id="playlistTitle">Generated Playlist</h3>
+        <p class="card-subtitle">Real tracks matching the synthetic collaboration predictions for Billie Eilish × The Weeknd</p>
         <div id="playlistContent"></div>
       </div>
 

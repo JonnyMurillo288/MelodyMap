@@ -385,108 +385,7 @@ function generateWhatIfTracks(src, dst, prob) {
   ];
 }
 
-function addWhatIfArtist() {
-  const container = $('#whatifArtists');
-  const count = container.querySelectorAll('.whatif-artist-input').length;
-  if (count >= 4) return;
-  const group = document.createElement('div');
-  group.className = 'search-group autocomplete-container';
-  group.innerHTML = `
-    <input type="text" class="whatif-artist-input" placeholder="Artist ${count + 1}..." autocomplete="off" />
-    <div class="autocomplete-list"></div>
-    <button class="whatif-remove-btn" onclick="this.parentElement.remove()" title="Remove">&times;</button>`;
-  container.appendChild(group);
-  createAutocomplete(group.querySelector('input'));
-  if (count + 1 >= 4) $('#addArtistBtn').style.display = 'none';
-}
-
-function runWhatIf() {
-  const inputs = document.querySelectorAll('.whatif-artist-input');
-  const artists = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
-  if (artists.length < 2) return alert('Enter at least 2 artists');
-
-  show('#whatifCard');
-  $('#whatifTitle').textContent = `Collaboration Scenarios: ${artists.join(' × ')}`;
-
-  // Build permutations
-  const pairs = [];
-  for (let i = 0; i < artists.length; i++) {
-    for (let j = i + 1; j < artists.length; j++) {
-      const key = artists[i] + '+' + artists[j];
-      const revKey = artists[j] + '+' + artists[i];
-      const testData = WHATIF_TEST_DATA[key] || WHATIF_TEST_DATA[revKey] || {
-        probability: 0.30 + Math.random() * 0.5,
-        genre: "experimental",
-        mood: "exploratory"
-      };
-      pairs.push({
-        src: artists[i], dst: artists[j],
-        ...testData,
-        tracks: generateWhatIfTracks(artists[i], artists[j], testData.probability)
-      });
-    }
-  }
-  pairs.sort((a, b) => b.probability - a.probability);
-
-  // Render network visualization
-  const networkHtml = `
-    <div class="whatif-network-grid">
-      ${artists.map((a, i) => {
-        const angle = (i / artists.length) * 2 * Math.PI - Math.PI / 2;
-        const x = 50 + 35 * Math.cos(angle);
-        const y = 50 + 35 * Math.sin(angle);
-        return `<div class="whatif-node" style="left:${x}%;top:${y}%;">${escHtml(a)}</div>`;
-      }).join('')}
-      <svg class="whatif-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
-        ${pairs.map(p => {
-          const si = artists.indexOf(p.src), di = artists.indexOf(p.dst);
-          const a1 = (si / artists.length) * 2 * Math.PI - Math.PI / 2;
-          const a2 = (di / artists.length) * 2 * Math.PI - Math.PI / 2;
-          const x1 = 50 + 35 * Math.cos(a1), y1 = 50 + 35 * Math.sin(a1);
-          const x2 = 50 + 35 * Math.cos(a2), y2 = 50 + 35 * Math.sin(a2);
-          const opacity = 0.3 + p.probability * 0.7;
-          const width = 0.3 + p.probability * 1.2;
-          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--accent)" stroke-opacity="${opacity}" stroke-width="${width}"/>`;
-        }).join('')}
-      </svg>
-    </div>`;
-  $('#whatifNetwork').innerHTML = networkHtml;
-
-  // Render pair cards
-  $('#whatifPairs').innerHTML = pairs.map((p, idx) => `
-    <div class="whatif-pair-card">
-      <div class="whatif-pair-header" onclick="toggleWhatIfPair(${idx})">
-        <div class="whatif-pair-artists">
-          <span class="whatif-artist-name src">${escHtml(p.src)}</span>
-          <span class="whatif-x">&times;</span>
-          <span class="whatif-artist-name dst">${escHtml(p.dst)}</span>
-        </div>
-        <div class="whatif-pair-meta">
-          <span class="prob-badge ${probClass(p.probability)}">${(p.probability * 100).toFixed(1)}%</span>
-          <span class="whatif-genre-tag">${p.genre}</span>
-          <span class="whatif-mood-tag">${p.mood}</span>
-          <span class="expand-arrow" id="whatif-arrow-${idx}">&#9654;</span>
-        </div>
-      </div>
-      <div class="whatif-pair-body" id="whatif-body-${idx}" style="display:none;">
-        <div class="whatif-tracks-section">
-          <h4>Synthetic Tracks</h4>
-          <div class="tracks-grid">${renderTrackCards(p.tracks)}</div>
-        </div>
-        <div class="whatif-similar-section">
-          <h4>Similar Real Tracks</h4>
-          ${p.tracks.map(t => t.similar_real_tracks.map(s => `
-            <div class="similar-track-row">
-              <span class="similar-track-name">${escHtml(s.recording)}</span>
-              <span class="similar-track-artist">${escHtml(s.artist)}</span>
-              <span class="prob-badge ${probClass(s.similarity)}">${(s.similarity * 100).toFixed(0)}% match</span>
-            </div>
-          `).join('')).join('')}
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
+// (What-If input/button functions removed — preview cards auto-render with fixed data)
 
 function toggleWhatIfPair(idx) {
   const body = document.getElementById(`whatif-body-${idx}`);
@@ -590,151 +489,7 @@ function generateSynthFeatures(src, dst) {
   };
 }
 
-function runSynthFeatures() {
-  const src = $('#synthSrcInput').value.trim();
-  const dst = $('#synthDstInput').value.trim();
-  if (!src || !dst) return alert('Enter both artists');
-
-  show('#synthFeatCard');
-  $('#synthFeatTitle').textContent = `Track Analysis: ${src} × ${dst}`;
-
-  const data = generateSynthFeatures(src, dst);
-  const container = $('#synthFeatContent');
-
-  container.innerHTML = data.tracks.map((track, ti) => `
-    <div class="synth-track-deep ${ti > 0 ? 'synth-track-border' : ''}">
-      <div class="synth-track-header">
-        <span class="track-id">Track #${track.track_id}</span>
-        <span class="synth-popularity-badge">Popularity: ${track.popularity.predicted}/100</span>
-      </div>
-
-      <div class="synth-sections-grid">
-        <!-- Instrumentation -->
-        <div class="synth-section">
-          <h4>Instrumentation</h4>
-          <div class="instrument-list">
-            ${Object.entries(track.instrumentation.confidence)
-              .sort((a, b) => b[1] - a[1])
-              .map(([inst, conf]) => {
-                const isPrimary = track.instrumentation.primary.includes(inst);
-                return `<div class="instrument-row">
-                  <span class="instrument-icon">${instrumentIcon(inst)}</span>
-                  <span class="instrument-name${isPrimary ? ' primary' : ''}">${inst.replace(/_/g, ' ')}</span>
-                  <div class="instrument-bar-bg">
-                    <div class="instrument-bar-fill" style="width:${(conf * 100).toFixed(0)}%;background:${isPrimary ? '#3b82f6' : '#64748b'};"></div>
-                  </div>
-                  <span class="instrument-val">${(conf * 100).toFixed(0)}%</span>
-                </div>`;
-              }).join('')}
-          </div>
-        </div>
-
-        <!-- Lyric Assessment -->
-        <div class="synth-section">
-          <h4>Lyric Assessment</h4>
-          <div class="lyric-info">
-            <div class="lyric-mood-display">
-              <span class="lyric-label">Mood</span>
-              <span class="lyric-mood-value">${track.lyric_assessment.mood}</span>
-            </div>
-            <div class="lyric-mood-display">
-              <span class="lyric-label">Vocal Style</span>
-              <span class="lyric-mood-value">${track.lyric_assessment.vocal_style.replace(/_/g, ' ')}</span>
-            </div>
-            <div class="lyric-themes">
-              ${track.lyric_assessment.themes.map(t => `<span class="theme-tag">${t}</span>`).join('')}
-            </div>
-            <div class="lyric-meters">
-              <div class="lyric-meter">
-                <span class="lyric-label">Density</span>
-                <div class="lyric-meter-bar"><div class="lyric-meter-fill" style="width:${(track.lyric_assessment.density * 100)}%;"></div></div>
-                <span class="lyric-meter-val">${(track.lyric_assessment.density * 100).toFixed(0)}%</span>
-              </div>
-              <div class="lyric-meter">
-                <span class="lyric-label">Sentiment</span>
-                <div class="lyric-meter-bar sentiment">
-                  <div class="lyric-meter-fill sentiment" style="width:${50 + track.lyric_assessment.sentiment * 50}%;background:${track.lyric_assessment.sentiment >= 0 ? '#22c55e' : '#ef4444'};"></div>
-                </div>
-                <span class="lyric-meter-val">${track.lyric_assessment.sentiment > 0 ? '+' : ''}${track.lyric_assessment.sentiment.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Genre Style -->
-        <div class="synth-section">
-          <h4>Genre Style</h4>
-          <div class="genre-style-display">
-            <div class="genre-primary">${track.genre_style.primary}</div>
-            <div class="genre-subs">${track.genre_style.subs.map(s => `<span class="genre-sub-tag">${s}</span>`).join('')}</div>
-            <div class="genre-meta-row">
-              <span>Era: <strong>${track.genre_style.era}</strong></span>
-              <span>Blend: <strong>${(track.genre_style.blend_score * 100).toFixed(0)}%</strong></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Audio Features Radar (simplified as bars) -->
-        <div class="synth-section">
-          <h4>Audio Features</h4>
-          ${Object.entries(track.audio_features).map(([key, val]) => {
-            const pct = Math.min(100, Math.max(0, val * 100));
-            const label = key.replace(/^(genre_dortmund_|mood_|voice_instrumental_|timbre_)/, '');
-            return `<div class="feat-row">
-              <span class="feat-label">${label}</span>
-              <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(0)}%;background:#8b5cf6;"></div></div>
-              <span class="feat-val">${pct.toFixed(0)}%</span>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-
-      <!-- Regional Popularity Map -->
-      <div class="region-section">
-        <h4>Popularity by Region</h4>
-        <div class="region-map">
-          ${Object.entries(track.popularity.by_region).map(([region, data]) => {
-            const hue = data.score > 70 ? 142 : data.score > 50 ? 45 : 0;
-            return `<div class="region-card" style="border-color:hsl(${hue},70%,50%);">
-              <div class="region-name">${region}</div>
-              <div class="region-score" style="color:hsl(${hue},70%,60%);">${data.score}</div>
-              <div class="region-bar-bg">
-                <div class="region-bar-fill" style="width:${data.percentile}%;background:hsl(${hue},70%,50%);"></div>
-              </div>
-              <div class="region-percentile">Top ${100 - data.percentile}%</div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-
-      <!-- Consumer Segments -->
-      <div class="consumer-section">
-        <h4>Appeal by Consumer Type</h4>
-        <div class="consumer-grid">
-          ${Object.entries(track.popularity.by_consumer).map(([type, data]) => {
-            const appealPct = (data.appeal * 100).toFixed(0);
-            const skipPct = (data.skip_rate * 100).toFixed(0);
-            return `<div class="consumer-card" onclick="this.classList.toggle('flipped')">
-              <div class="consumer-front">
-                <div class="consumer-type">${type}</div>
-                <div class="consumer-appeal-ring" style="background:conic-gradient(#3b82f6 ${appealPct}%, rgba(255,255,255,0.08) 0);">
-                  <span>${appealPct}%</span>
-                </div>
-                <div class="consumer-label">Appeal</div>
-              </div>
-              <div class="consumer-back">
-                <div class="consumer-type">${type}</div>
-                <div class="consumer-stat">Skip Rate: <strong>${skipPct}%</strong></div>
-                <div class="consumer-skip-bar"><div style="width:${skipPct}%;background:#ef4444;height:100%;border-radius:4px;"></div></div>
-                <div class="consumer-label flip-hint">Click to flip back</div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-    </div>
-  `).join('<hr class="synth-divider"/>');
-}
+// (Synth features input/button function removed — preview card auto-renders with fixed data)
 
 function instrumentIcon(name) {
   const icons = {
@@ -763,80 +518,252 @@ const PLAYLIST_TRACKS = [
   { name: "One More Time", artist: "Daft Punk", similarity: 0.76, genre: "french-house", popularity: 87, features: { energy: 0.82, danceability: 0.89, valence: 0.96 } },
 ];
 
-function runPlaylist() {
-  const src = $('#playlistSrcInput').value.trim();
-  const dst = $('#playlistDstInput').value.trim();
-  if (!src || !dst) return alert('Enter both artists');
-
-  show('#playlistCard');
-  $('#playlistTitle').textContent = `Playlist: ${src} × ${dst}`;
-
-  // Simulate a delay then show
-  const container = $('#playlistContent');
-  container.innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Finding matching tracks...</div>';
-
-  setTimeout(() => {
-    const tracks = PLAYLIST_TRACKS;
-    container.innerHTML = `
-      <div class="playlist-header-bar">
-        <div class="playlist-cover">
-          <div class="playlist-cover-grid">
-            <div style="background:#3b82f6;"></div>
-            <div style="background:#8b5cf6;"></div>
-            <div style="background:#ec4899;"></div>
-            <div style="background:#f59e0b;"></div>
-          </div>
-        </div>
-        <div class="playlist-info-block">
-          <div class="playlist-type-label">GENERATED PLAYLIST</div>
-          <div class="playlist-name-big">${escHtml(src)} × ${escHtml(dst)}</div>
-          <div class="playlist-meta-info">${tracks.length} tracks &bull; Based on synthetic collaboration analysis</div>
-        </div>
-      </div>
-      <div class="playlist-tracks-list">
-        ${tracks.map((t, i) => `
-          <div class="playlist-track-row${i === 0 ? ' now-playing' : ''}" onclick="togglePlaylistDetail(this)">
-            <div class="playlist-track-main">
-              <span class="playlist-track-num">${i + 1}</span>
-              <div class="playlist-track-info">
-                <span class="playlist-track-name">${escHtml(t.name)}</span>
-                <span class="playlist-track-artist">${escHtml(t.artist)}</span>
-              </div>
-              <span class="playlist-track-genre">${t.genre}</span>
-              <div class="playlist-track-match">
-                <div class="match-bar-bg"><div class="match-bar-fill" style="width:${(t.similarity * 100).toFixed(0)}%;"></div></div>
-                <span>${(t.similarity * 100).toFixed(0)}%</span>
-              </div>
-              <span class="playlist-track-pop">${t.popularity}</span>
-            </div>
-            <div class="playlist-track-detail">
-              <div class="detail-bars">
-                <div class="detail-bar-item">
-                  <span>Energy</span>
-                  <div class="detail-bar-bg"><div class="detail-bar-fill energy" style="width:${(t.features.energy * 100)}%;"></div></div>
-                  <span>${(t.features.energy * 100).toFixed(0)}%</span>
-                </div>
-                <div class="detail-bar-item">
-                  <span>Danceability</span>
-                  <div class="detail-bar-bg"><div class="detail-bar-fill dance" style="width:${(t.features.danceability * 100)}%;"></div></div>
-                  <span>${(t.features.danceability * 100).toFixed(0)}%</span>
-                </div>
-                <div class="detail-bar-item">
-                  <span>Valence</span>
-                  <div class="detail-bar-bg"><div class="detail-bar-fill valence" style="width:${(t.features.valence * 100)}%;"></div></div>
-                  <span>${(t.features.valence * 100).toFixed(0)}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }, 800);
-}
+// (Playlist input/button function removed — preview card auto-renders with fixed data)
 
 function togglePlaylistDetail(row) {
   row.classList.toggle('expanded');
+}
+
+// ---- Auto-render preview cards with fixed demo data ----
+function renderPreviewCards() {
+  // What-If: prefill with 4 artists
+  runWhatIfPreview(["Billie Eilish", "The Weeknd", "Daft Punk", "Tame Impala"]);
+
+  // Synthetic Track Deep Dive: prefill
+  runSynthFeaturesPreview("Billie Eilish", "Tame Impala");
+
+  // Playlist: prefill
+  runPlaylistPreview("Billie Eilish", "The Weeknd");
+}
+
+function runWhatIfPreview(artists) {
+  const pairs = [];
+  for (let i = 0; i < artists.length; i++) {
+    for (let j = i + 1; j < artists.length; j++) {
+      const key = artists[i] + '+' + artists[j];
+      const revKey = artists[j] + '+' + artists[i];
+      const testData = WHATIF_TEST_DATA[key] || WHATIF_TEST_DATA[revKey] || {
+        probability: 0.30 + Math.random() * 0.5, genre: "experimental", mood: "exploratory"
+      };
+      pairs.push({
+        src: artists[i], dst: artists[j], ...testData,
+        tracks: generateWhatIfTracks(artists[i], artists[j], testData.probability)
+      });
+    }
+  }
+  pairs.sort((a, b) => b.probability - a.probability);
+
+  // Network
+  $('#whatifNetwork').innerHTML = `
+    <div class="whatif-network-grid">
+      ${artists.map((a, i) => {
+        const angle = (i / artists.length) * 2 * Math.PI - Math.PI / 2;
+        const x = 50 + 35 * Math.cos(angle);
+        const y = 50 + 35 * Math.sin(angle);
+        return `<div class="whatif-node" style="left:${x}%;top:${y}%;">${escHtml(a)}</div>`;
+      }).join('')}
+      <svg class="whatif-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+        ${pairs.map(p => {
+          const si = artists.indexOf(p.src), di = artists.indexOf(p.dst);
+          const a1 = (si / artists.length) * 2 * Math.PI - Math.PI / 2;
+          const a2 = (di / artists.length) * 2 * Math.PI - Math.PI / 2;
+          const x1 = 50 + 35 * Math.cos(a1), y1 = 50 + 35 * Math.sin(a1);
+          const x2 = 50 + 35 * Math.cos(a2), y2 = 50 + 35 * Math.sin(a2);
+          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--accent)" stroke-opacity="${0.3 + p.probability * 0.7}" stroke-width="${0.3 + p.probability * 1.2}"/>`;
+        }).join('')}
+      </svg>
+    </div>`;
+
+  // Pairs
+  $('#whatifPairs').innerHTML = pairs.map((p, idx) => `
+    <div class="whatif-pair-card">
+      <div class="whatif-pair-header" onclick="toggleWhatIfPair(${idx})">
+        <div class="whatif-pair-artists">
+          <span class="whatif-artist-name src">${escHtml(p.src)}</span>
+          <span class="whatif-x">&times;</span>
+          <span class="whatif-artist-name dst">${escHtml(p.dst)}</span>
+        </div>
+        <div class="whatif-pair-meta">
+          <span class="prob-badge ${probClass(p.probability)}">${(p.probability * 100).toFixed(1)}%</span>
+          <span class="whatif-genre-tag">${p.genre}</span>
+          <span class="whatif-mood-tag">${p.mood}</span>
+          <span class="expand-arrow" id="whatif-arrow-${idx}">&#9654;</span>
+        </div>
+      </div>
+      <div class="whatif-pair-body" id="whatif-body-${idx}" style="display:none;">
+        <div class="whatif-tracks-section">
+          <h4>Synthetic Tracks</h4>
+          <div class="tracks-grid">${renderTrackCards(p.tracks)}</div>
+        </div>
+        <div class="whatif-similar-section">
+          <h4>Similar Real Tracks</h4>
+          ${p.tracks.map(t => t.similar_real_tracks.map(s => `
+            <div class="similar-track-row">
+              <span class="similar-track-name">${escHtml(s.recording)}</span>
+              <span class="similar-track-artist">${escHtml(s.artist)}</span>
+              <span class="prob-badge ${probClass(s.similarity)}">${(s.similarity * 100).toFixed(0)}% match</span>
+            </div>
+          `).join('')).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function runSynthFeaturesPreview(src, dst) {
+  const data = generateSynthFeatures(src, dst);
+  const container = $('#synthFeatContent');
+  // Reuse the same rendering logic from runSynthFeatures
+  container.innerHTML = data.tracks.map((track, ti) => buildSynthTrackHtml(track, ti)).join('<hr class="synth-divider"/>');
+}
+
+function buildSynthTrackHtml(track, ti) {
+  return `
+    <div class="synth-track-deep ${ti > 0 ? 'synth-track-border' : ''}">
+      <div class="synth-track-header">
+        <span class="track-id">Track #${track.track_id}</span>
+        <span class="synth-popularity-badge">Popularity: ${track.popularity.predicted}/100</span>
+      </div>
+      <div class="synth-sections-grid">
+        <div class="synth-section">
+          <h4>Instrumentation</h4>
+          <div class="instrument-list">
+            ${Object.entries(track.instrumentation.confidence)
+              .sort((a, b) => b[1] - a[1])
+              .map(([inst, conf]) => {
+                const isPrimary = track.instrumentation.primary.includes(inst);
+                return `<div class="instrument-row">
+                  <span class="instrument-icon">${instrumentIcon(inst)}</span>
+                  <span class="instrument-name${isPrimary ? ' primary' : ''}">${inst.replace(/_/g, ' ')}</span>
+                  <div class="instrument-bar-bg"><div class="instrument-bar-fill" style="width:${(conf * 100).toFixed(0)}%;background:${isPrimary ? '#3b82f6' : '#64748b'};"></div></div>
+                  <span class="instrument-val">${(conf * 100).toFixed(0)}%</span>
+                </div>`;
+              }).join('')}
+          </div>
+        </div>
+        <div class="synth-section">
+          <h4>Lyric Assessment</h4>
+          <div class="lyric-info">
+            <div class="lyric-mood-display"><span class="lyric-label">Mood</span><span class="lyric-mood-value">${track.lyric_assessment.mood}</span></div>
+            <div class="lyric-mood-display"><span class="lyric-label">Vocal Style</span><span class="lyric-mood-value">${track.lyric_assessment.vocal_style.replace(/_/g, ' ')}</span></div>
+            <div class="lyric-themes">${track.lyric_assessment.themes.map(t => `<span class="theme-tag">${t}</span>`).join('')}</div>
+            <div class="lyric-meters">
+              <div class="lyric-meter">
+                <span class="lyric-label">Density</span>
+                <div class="lyric-meter-bar"><div class="lyric-meter-fill" style="width:${(track.lyric_assessment.density * 100)}%;"></div></div>
+                <span class="lyric-meter-val">${(track.lyric_assessment.density * 100).toFixed(0)}%</span>
+              </div>
+              <div class="lyric-meter">
+                <span class="lyric-label">Sentiment</span>
+                <div class="lyric-meter-bar sentiment"><div class="lyric-meter-fill sentiment" style="width:${50 + track.lyric_assessment.sentiment * 50}%;background:${track.lyric_assessment.sentiment >= 0 ? '#22c55e' : '#ef4444'};"></div></div>
+                <span class="lyric-meter-val">${track.lyric_assessment.sentiment > 0 ? '+' : ''}${track.lyric_assessment.sentiment.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="synth-section">
+          <h4>Genre Style</h4>
+          <div class="genre-style-display">
+            <div class="genre-primary">${track.genre_style.primary}</div>
+            <div class="genre-subs">${track.genre_style.subs.map(s => `<span class="genre-sub-tag">${s}</span>`).join('')}</div>
+            <div class="genre-meta-row"><span>Era: <strong>${track.genre_style.era}</strong></span><span>Blend: <strong>${(track.genre_style.blend_score * 100).toFixed(0)}%</strong></span></div>
+          </div>
+        </div>
+        <div class="synth-section">
+          <h4>Audio Features</h4>
+          ${Object.entries(track.audio_features).map(([key, val]) => {
+            const pct = Math.min(100, Math.max(0, val * 100));
+            return `<div class="feat-row">
+              <span class="feat-label">${key.replace(/^(genre_dortmund_|mood_|voice_instrumental_|timbre_)/, '')}</span>
+              <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(0)}%;background:#8b5cf6;"></div></div>
+              <span class="feat-val">${pct.toFixed(0)}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="region-section">
+        <h4>Popularity by Region</h4>
+        <div class="region-map">
+          ${Object.entries(track.popularity.by_region).map(([region, data]) => {
+            const hue = data.score > 70 ? 142 : data.score > 50 ? 45 : 0;
+            return `<div class="region-card" style="border-color:hsl(${hue},70%,50%);">
+              <div class="region-name">${region}</div>
+              <div class="region-score" style="color:hsl(${hue},70%,60%);">${data.score}</div>
+              <div class="region-bar-bg"><div class="region-bar-fill" style="width:${data.percentile}%;background:hsl(${hue},70%,50%);"></div></div>
+              <div class="region-percentile">Top ${100 - data.percentile}%</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="consumer-section">
+        <h4>Appeal by Consumer Type</h4>
+        <div class="consumer-grid">
+          ${Object.entries(track.popularity.by_consumer).map(([type, data]) => {
+            const appealPct = (data.appeal * 100).toFixed(0);
+            const skipPct = (data.skip_rate * 100).toFixed(0);
+            return `<div class="consumer-card" onclick="this.classList.toggle('flipped')">
+              <div class="consumer-front">
+                <div class="consumer-type">${type}</div>
+                <div class="consumer-appeal-ring" style="background:conic-gradient(#3b82f6 ${appealPct}%, rgba(255,255,255,0.08) 0);"><span>${appealPct}%</span></div>
+                <div class="consumer-label">Appeal</div>
+              </div>
+              <div class="consumer-back">
+                <div class="consumer-type">${type}</div>
+                <div class="consumer-stat">Skip Rate: <strong>${skipPct}%</strong></div>
+                <div class="consumer-skip-bar"><div style="width:${skipPct}%;background:#ef4444;height:100%;border-radius:4px;"></div></div>
+                <div class="consumer-label flip-hint">Click to flip back</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function runPlaylistPreview(src, dst) {
+  const tracks = PLAYLIST_TRACKS;
+  $('#playlistContent').innerHTML = `
+    <div class="playlist-header-bar">
+      <div class="playlist-cover">
+        <div class="playlist-cover-grid">
+          <div style="background:#3b82f6;"></div>
+          <div style="background:#8b5cf6;"></div>
+          <div style="background:#ec4899;"></div>
+          <div style="background:#f59e0b;"></div>
+        </div>
+      </div>
+      <div class="playlist-info-block">
+        <div class="playlist-type-label">GENERATED PLAYLIST</div>
+        <div class="playlist-name-big">${escHtml(src)} &times; ${escHtml(dst)}</div>
+        <div class="playlist-meta-info">${tracks.length} tracks &bull; Based on synthetic collaboration analysis</div>
+      </div>
+    </div>
+    <div class="playlist-tracks-list">
+      ${tracks.map((t, i) => `
+        <div class="playlist-track-row${i === 0 ? ' now-playing' : ''}" onclick="togglePlaylistDetail(this)">
+          <div class="playlist-track-main">
+            <span class="playlist-track-num">${i + 1}</span>
+            <div class="playlist-track-info">
+              <span class="playlist-track-name">${escHtml(t.name)}</span>
+              <span class="playlist-track-artist">${escHtml(t.artist)}</span>
+            </div>
+            <span class="playlist-track-genre">${t.genre}</span>
+            <div class="playlist-track-match">
+              <div class="match-bar-bg"><div class="match-bar-fill" style="width:${(t.similarity * 100).toFixed(0)}%;"></div></div>
+              <span>${(t.similarity * 100).toFixed(0)}%</span>
+            </div>
+            <span class="playlist-track-pop">${t.popularity}</span>
+          </div>
+          <div class="playlist-track-detail">
+            <div class="detail-bars">
+              <div class="detail-bar-item"><span>Energy</span><div class="detail-bar-bg"><div class="detail-bar-fill energy" style="width:${(t.features.energy * 100)}%;"></div></div><span>${(t.features.energy * 100).toFixed(0)}%</span></div>
+              <div class="detail-bar-item"><span>Danceability</span><div class="detail-bar-bg"><div class="detail-bar-fill dance" style="width:${(t.features.danceability * 100)}%;"></div></div><span>${(t.features.danceability * 100).toFixed(0)}%</span></div>
+              <div class="detail-bar-item"><span>Valence</span><div class="detail-bar-bg"><div class="detail-bar-fill valence" style="width:${(t.features.valence * 100)}%;"></div></div><span>${(t.features.valence * 100).toFixed(0)}%</span></div>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
 }
 
 // ---- Event Listeners ----
@@ -844,30 +771,20 @@ document.addEventListener('DOMContentLoaded', () => {
   initApiKey();
   loadArtistNames();
 
-  // Autocomplete on all artist inputs
+  // Autocomplete on live inputs only
   createAutocomplete($('#srcInput'));
   createAutocomplete($('#dstInput'));
   createAutocomplete($('#neighborInput'));
-  createAutocomplete($('#synthSrcInput'));
-  createAutocomplete($('#synthDstInput'));
-  createAutocomplete($('#playlistSrcInput'));
-  createAutocomplete($('#playlistDstInput'));
-  document.querySelectorAll('.whatif-artist-input').forEach(el => createAutocomplete(el));
 
-  // Buttons
+  // Live buttons
   $('#predictBtn').addEventListener('click', predictConnection);
   $('#neighborBtn').addEventListener('click', discoverNeighbors);
-  $('#whatifBtn').addEventListener('click', runWhatIf);
-  $('#addArtistBtn').addEventListener('click', addWhatIfArtist);
-  $('#synthFeatBtn').addEventListener('click', runSynthFeatures);
-  $('#playlistBtn').addEventListener('click', runPlaylist);
 
   // Enter key support
   $('#srcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#dstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#neighborInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') discoverNeighbors(); });
-  $('#synthSrcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runSynthFeatures(); });
-  $('#synthDstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runSynthFeatures(); });
-  $('#playlistSrcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runPlaylist(); });
-  $('#playlistDstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runPlaylist(); });
+
+  // Auto-render preview cards with test data
+  renderPreviewCards();
 });
