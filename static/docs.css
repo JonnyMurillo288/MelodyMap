@@ -21,12 +21,12 @@ main {
 
 main h2 {
   margin: 0 0 0.75rem;
-  font-size: 2rem;
+  font-size: 2.2rem;
 }
 
 main h3 {
   margin: 1.25rem 0 0.5rem;
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   color: var(--text-main);
 }
 
