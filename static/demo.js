@@ -116,11 +116,11 @@ function renderTrackCards(tracks) {
 }
 
 function showSyntheticTracks(tracks) {
-  show('#tracksCard');
   if (tracks && tracks.length > 0) {
+    show('#tracksCard');
     $('#tracksGrid').innerHTML = renderTrackCards(tracks);
   } else {
-    $('#tracksGrid').innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1.5rem;">No synthetic tracks generated for this pair yet.</div>';
+    hide('#tracksCard');
   }
 }
 
