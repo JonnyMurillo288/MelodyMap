@@ -914,6 +914,39 @@
         out.textContent = 'Error: ' + e.message;
       }
     }
+
+    // ---- Collapsible cards ----
+    document.querySelectorAll('main > .card:not(.card-compact)').forEach(card => {
+      const h2 = card.querySelector('h2');
+      if (!h2) return;
+
+      card.classList.add('collapsible');
+
+      // Wrap everything after h2 in collapsible-body
+      const body = document.createElement('div');
+      body.className = 'collapsible-body';
+      const siblings = [];
+      let el = h2.nextSibling;
+      while (el) {
+        siblings.push(el);
+        el = el.nextSibling;
+      }
+      siblings.forEach(s => body.appendChild(s));
+      card.appendChild(body);
+
+      // Inject collapse button
+      const btn = document.createElement('button');
+      btn.className = 'collapse-btn';
+      btn.title = 'Collapse / Expand';
+      btn.innerHTML = '<span class="collapse-icon">&#9660;</span>';
+      card.insertBefore(btn, card.firstChild);
+
+      const toggle = () => card.classList.toggle('collapsed');
+      btn.addEventListener('click', toggle);
+      h2.addEventListener('click', toggle);
+      h2.style.cursor = 'pointer';
+      h2.style.paddingRight = '2.5rem';
+    });
   </script>
 </body>
 </html>
