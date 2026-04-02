@@ -334,21 +334,540 @@ function createAutocomplete(inputEl) {
   });
 }
 
+// ====================================================================
+// WHAT-IF EXPLORER — test data for /api/v1/explore/what-if
+// ====================================================================
+
+const WHATIF_TEST_DATA = {
+  "Billie Eilish+The Weeknd": { probability: 0.81, genre: "dark-pop", mood: "melancholic" },
+  "Billie Eilish+Daft Punk": { probability: 0.43, genre: "electro-pop", mood: "atmospheric" },
+  "Billie Eilish+Tame Impala": { probability: 0.56, genre: "dream-pop", mood: "dreamy" },
+  "The Weeknd+Daft Punk": { probability: 0.94, genre: "synth-funk", mood: "euphoric" },
+  "The Weeknd+Tame Impala": { probability: 0.67, genre: "psychedelic-rnb", mood: "nocturnal" },
+  "Daft Punk+Tame Impala": { probability: 0.71, genre: "space-disco", mood: "cosmic" },
+};
+
+function generateWhatIfTracks(src, dst, prob) {
+  const seed = (src + dst).length;
+  return [
+    {
+      track_id: 5000 + seed,
+      genre_dortmund_electronic: 0.40 + prob * 0.3,
+      genre_dortmund_pop: 0.15 + (1 - prob) * 0.2,
+      genre_dortmund_alternative: 0.10 + Math.random() * 0.2,
+      mood_electronic: 0.50 + prob * 0.2,
+      mood_relaxed: 0.30 + Math.random() * 0.3,
+      danceability: 0.50 + prob * 0.3,
+      timbre_dark: 0.40 + Math.random() * 0.3,
+      voice_instrumental_voice: 0.60 + Math.random() * 0.2,
+      predicted_popularity: Math.round(60 + prob * 30),
+      similar_real_tracks: [
+        { recording: "Track by " + src, artist: src, similarity: 0.85 + Math.random() * 0.1 },
+        { recording: "Track by " + dst, artist: dst, similarity: 0.78 + Math.random() * 0.1 },
+      ]
+    },
+    {
+      track_id: 5100 + seed,
+      genre_dortmund_electronic: 0.35 + prob * 0.25,
+      genre_dortmund_pop: 0.20 + (1 - prob) * 0.15,
+      genre_dortmund_alternative: 0.15 + Math.random() * 0.15,
+      mood_electronic: 0.45 + prob * 0.25,
+      mood_happy: 0.20 + Math.random() * 0.3,
+      danceability: 0.45 + prob * 0.35,
+      timbre_bright: 0.35 + Math.random() * 0.3,
+      voice_instrumental_voice: 0.55 + Math.random() * 0.25,
+      predicted_popularity: Math.round(55 + prob * 28),
+      similar_real_tracks: [
+        { recording: "Another by " + dst, artist: dst, similarity: 0.80 + Math.random() * 0.1 },
+        { recording: "Another by " + src, artist: src, similarity: 0.74 + Math.random() * 0.1 },
+      ]
+    }
+  ];
+}
+
+function addWhatIfArtist() {
+  const container = $('#whatifArtists');
+  const count = container.querySelectorAll('.whatif-artist-input').length;
+  if (count >= 4) return;
+  const group = document.createElement('div');
+  group.className = 'search-group autocomplete-container';
+  group.innerHTML = `
+    <input type="text" class="whatif-artist-input" placeholder="Artist ${count + 1}..." autocomplete="off" />
+    <div class="autocomplete-list"></div>
+    <button class="whatif-remove-btn" onclick="this.parentElement.remove()" title="Remove">&times;</button>`;
+  container.appendChild(group);
+  createAutocomplete(group.querySelector('input'));
+  if (count + 1 >= 4) $('#addArtistBtn').style.display = 'none';
+}
+
+function runWhatIf() {
+  const inputs = document.querySelectorAll('.whatif-artist-input');
+  const artists = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+  if (artists.length < 2) return alert('Enter at least 2 artists');
+
+  show('#whatifCard');
+  $('#whatifTitle').textContent = `Collaboration Scenarios: ${artists.join(' × ')}`;
+
+  // Build permutations
+  const pairs = [];
+  for (let i = 0; i < artists.length; i++) {
+    for (let j = i + 1; j < artists.length; j++) {
+      const key = artists[i] + '+' + artists[j];
+      const revKey = artists[j] + '+' + artists[i];
+      const testData = WHATIF_TEST_DATA[key] || WHATIF_TEST_DATA[revKey] || {
+        probability: 0.30 + Math.random() * 0.5,
+        genre: "experimental",
+        mood: "exploratory"
+      };
+      pairs.push({
+        src: artists[i], dst: artists[j],
+        ...testData,
+        tracks: generateWhatIfTracks(artists[i], artists[j], testData.probability)
+      });
+    }
+  }
+  pairs.sort((a, b) => b.probability - a.probability);
+
+  // Render network visualization
+  const networkHtml = `
+    <div class="whatif-network-grid">
+      ${artists.map((a, i) => {
+        const angle = (i / artists.length) * 2 * Math.PI - Math.PI / 2;
+        const x = 50 + 35 * Math.cos(angle);
+        const y = 50 + 35 * Math.sin(angle);
+        return `<div class="whatif-node" style="left:${x}%;top:${y}%;">${escHtml(a)}</div>`;
+      }).join('')}
+      <svg class="whatif-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+        ${pairs.map(p => {
+          const si = artists.indexOf(p.src), di = artists.indexOf(p.dst);
+          const a1 = (si / artists.length) * 2 * Math.PI - Math.PI / 2;
+          const a2 = (di / artists.length) * 2 * Math.PI - Math.PI / 2;
+          const x1 = 50 + 35 * Math.cos(a1), y1 = 50 + 35 * Math.sin(a1);
+          const x2 = 50 + 35 * Math.cos(a2), y2 = 50 + 35 * Math.sin(a2);
+          const opacity = 0.3 + p.probability * 0.7;
+          const width = 0.3 + p.probability * 1.2;
+          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--accent)" stroke-opacity="${opacity}" stroke-width="${width}"/>`;
+        }).join('')}
+      </svg>
+    </div>`;
+  $('#whatifNetwork').innerHTML = networkHtml;
+
+  // Render pair cards
+  $('#whatifPairs').innerHTML = pairs.map((p, idx) => `
+    <div class="whatif-pair-card">
+      <div class="whatif-pair-header" onclick="toggleWhatIfPair(${idx})">
+        <div class="whatif-pair-artists">
+          <span class="whatif-artist-name src">${escHtml(p.src)}</span>
+          <span class="whatif-x">&times;</span>
+          <span class="whatif-artist-name dst">${escHtml(p.dst)}</span>
+        </div>
+        <div class="whatif-pair-meta">
+          <span class="prob-badge ${probClass(p.probability)}">${(p.probability * 100).toFixed(1)}%</span>
+          <span class="whatif-genre-tag">${p.genre}</span>
+          <span class="whatif-mood-tag">${p.mood}</span>
+          <span class="expand-arrow" id="whatif-arrow-${idx}">&#9654;</span>
+        </div>
+      </div>
+      <div class="whatif-pair-body" id="whatif-body-${idx}" style="display:none;">
+        <div class="whatif-tracks-section">
+          <h4>Synthetic Tracks</h4>
+          <div class="tracks-grid">${renderTrackCards(p.tracks)}</div>
+        </div>
+        <div class="whatif-similar-section">
+          <h4>Similar Real Tracks</h4>
+          ${p.tracks.map(t => t.similar_real_tracks.map(s => `
+            <div class="similar-track-row">
+              <span class="similar-track-name">${escHtml(s.recording)}</span>
+              <span class="similar-track-artist">${escHtml(s.artist)}</span>
+              <span class="prob-badge ${probClass(s.similarity)}">${(s.similarity * 100).toFixed(0)}% match</span>
+            </div>
+          `).join('')).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleWhatIfPair(idx) {
+  const body = document.getElementById(`whatif-body-${idx}`);
+  const arrow = document.getElementById(`whatif-arrow-${idx}`);
+  if (body.style.display !== 'none') {
+    body.style.display = 'none';
+    arrow.innerHTML = '&#9654;';
+  } else {
+    body.style.display = '';
+    arrow.innerHTML = '&#9660;';
+  }
+}
+
+// ====================================================================
+// SYNTHETIC TRACK FEATURES — test data for /api/v1/explore/synthetic-track-features
+// ====================================================================
+
+function generateSynthFeatures(src, dst) {
+  const seed = (src + dst).length;
+  const prob = 0.40 + (seed % 50) / 100;
+  return {
+    probability: prob,
+    tracks: [
+      {
+        track_id: 7001 + seed,
+        audio_features: {
+          genre_dortmund_alternative: 0.48, genre_dortmund_electronic: 0.39,
+          mood_relaxed: 0.65, mood_sad: 0.38, danceability: 0.55,
+          timbre_dark: 0.52, voice_instrumental_voice: 0.73
+        },
+        instrumentation: {
+          primary: ["synth", "bass"],
+          secondary: ["guitar", "drum_machine"],
+          confidence: { synth: 0.89, bass: 0.82, guitar: 0.71, drum_machine: 0.65, strings: 0.22, piano: 0.18 }
+        },
+        lyric_assessment: {
+          mood: "introspective", themes: ["isolation", "self-reflection", "longing"],
+          vocal_style: "breathy", density: 0.42, sentiment: -0.15, explicit_prob: 0.12
+        },
+        genre_style: {
+          primary: "psychedelic-pop", subs: ["dream-pop", "electro-pop", "indie"],
+          era: "2020s", blend_score: 0.74
+        },
+        popularity: {
+          predicted: 79,
+          by_region: {
+            "North America": { score: 84, percentile: 92 },
+            "Europe": { score: 81, percentile: 89 },
+            "Latin America": { score: 62, percentile: 71 },
+            "Asia Pacific": { score: 70, percentile: 78 },
+            "Africa & Middle East": { score: 48, percentile: 60 }
+          },
+          by_consumer: {
+            "Casual Listener": { appeal: 0.72, skip_rate: 0.18 },
+            "Genre Enthusiast": { appeal: 0.88, skip_rate: 0.06 },
+            "Playlist Curator": { appeal: 0.81, skip_rate: 0.10 },
+            "Discovery Seeker": { appeal: 0.90, skip_rate: 0.05 },
+            "Passive Streamer": { appeal: 0.60, skip_rate: 0.28 }
+          }
+        }
+      },
+      {
+        track_id: 7101 + seed,
+        audio_features: {
+          genre_dortmund_alternative: 0.52, genre_dortmund_electronic: 0.34,
+          mood_relaxed: 0.71, mood_electronic: 0.30, danceability: 0.60,
+          timbre_bright: 0.44, voice_instrumental_voice: 0.68
+        },
+        instrumentation: {
+          primary: ["guitar", "synth"],
+          secondary: ["bass", "reverb_vocals"],
+          confidence: { guitar: 0.87, synth: 0.80, bass: 0.74, reverb_vocals: 0.69, drums: 0.58, piano: 0.15 }
+        },
+        lyric_assessment: {
+          mood: "dreamy", themes: ["escape", "nostalgia", "wonder"],
+          vocal_style: "layered_harmonies", density: 0.35, sentiment: 0.22, explicit_prob: 0.04
+        },
+        genre_style: {
+          primary: "dream-pop", subs: ["shoegaze", "art-pop", "synth-pop"],
+          era: "2010s", blend_score: 0.81
+        },
+        popularity: {
+          predicted: 74,
+          by_region: {
+            "North America": { score: 78, percentile: 85 },
+            "Europe": { score: 80, percentile: 88 },
+            "Latin America": { score: 55, percentile: 63 },
+            "Asia Pacific": { score: 65, percentile: 72 },
+            "Africa & Middle East": { score: 42, percentile: 54 }
+          },
+          by_consumer: {
+            "Casual Listener": { appeal: 0.65, skip_rate: 0.22 },
+            "Genre Enthusiast": { appeal: 0.91, skip_rate: 0.04 },
+            "Playlist Curator": { appeal: 0.78, skip_rate: 0.12 },
+            "Discovery Seeker": { appeal: 0.85, skip_rate: 0.07 },
+            "Passive Streamer": { appeal: 0.52, skip_rate: 0.32 }
+          }
+        }
+      }
+    ]
+  };
+}
+
+function runSynthFeatures() {
+  const src = $('#synthSrcInput').value.trim();
+  const dst = $('#synthDstInput').value.trim();
+  if (!src || !dst) return alert('Enter both artists');
+
+  show('#synthFeatCard');
+  $('#synthFeatTitle').textContent = `Track Analysis: ${src} × ${dst}`;
+
+  const data = generateSynthFeatures(src, dst);
+  const container = $('#synthFeatContent');
+
+  container.innerHTML = data.tracks.map((track, ti) => `
+    <div class="synth-track-deep ${ti > 0 ? 'synth-track-border' : ''}">
+      <div class="synth-track-header">
+        <span class="track-id">Track #${track.track_id}</span>
+        <span class="synth-popularity-badge">Popularity: ${track.popularity.predicted}/100</span>
+      </div>
+
+      <div class="synth-sections-grid">
+        <!-- Instrumentation -->
+        <div class="synth-section">
+          <h4>Instrumentation</h4>
+          <div class="instrument-list">
+            ${Object.entries(track.instrumentation.confidence)
+              .sort((a, b) => b[1] - a[1])
+              .map(([inst, conf]) => {
+                const isPrimary = track.instrumentation.primary.includes(inst);
+                return `<div class="instrument-row">
+                  <span class="instrument-icon">${instrumentIcon(inst)}</span>
+                  <span class="instrument-name${isPrimary ? ' primary' : ''}">${inst.replace(/_/g, ' ')}</span>
+                  <div class="instrument-bar-bg">
+                    <div class="instrument-bar-fill" style="width:${(conf * 100).toFixed(0)}%;background:${isPrimary ? '#3b82f6' : '#64748b'};"></div>
+                  </div>
+                  <span class="instrument-val">${(conf * 100).toFixed(0)}%</span>
+                </div>`;
+              }).join('')}
+          </div>
+        </div>
+
+        <!-- Lyric Assessment -->
+        <div class="synth-section">
+          <h4>Lyric Assessment</h4>
+          <div class="lyric-info">
+            <div class="lyric-mood-display">
+              <span class="lyric-label">Mood</span>
+              <span class="lyric-mood-value">${track.lyric_assessment.mood}</span>
+            </div>
+            <div class="lyric-mood-display">
+              <span class="lyric-label">Vocal Style</span>
+              <span class="lyric-mood-value">${track.lyric_assessment.vocal_style.replace(/_/g, ' ')}</span>
+            </div>
+            <div class="lyric-themes">
+              ${track.lyric_assessment.themes.map(t => `<span class="theme-tag">${t}</span>`).join('')}
+            </div>
+            <div class="lyric-meters">
+              <div class="lyric-meter">
+                <span class="lyric-label">Density</span>
+                <div class="lyric-meter-bar"><div class="lyric-meter-fill" style="width:${(track.lyric_assessment.density * 100)}%;"></div></div>
+                <span class="lyric-meter-val">${(track.lyric_assessment.density * 100).toFixed(0)}%</span>
+              </div>
+              <div class="lyric-meter">
+                <span class="lyric-label">Sentiment</span>
+                <div class="lyric-meter-bar sentiment">
+                  <div class="lyric-meter-fill sentiment" style="width:${50 + track.lyric_assessment.sentiment * 50}%;background:${track.lyric_assessment.sentiment >= 0 ? '#22c55e' : '#ef4444'};"></div>
+                </div>
+                <span class="lyric-meter-val">${track.lyric_assessment.sentiment > 0 ? '+' : ''}${track.lyric_assessment.sentiment.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Genre Style -->
+        <div class="synth-section">
+          <h4>Genre Style</h4>
+          <div class="genre-style-display">
+            <div class="genre-primary">${track.genre_style.primary}</div>
+            <div class="genre-subs">${track.genre_style.subs.map(s => `<span class="genre-sub-tag">${s}</span>`).join('')}</div>
+            <div class="genre-meta-row">
+              <span>Era: <strong>${track.genre_style.era}</strong></span>
+              <span>Blend: <strong>${(track.genre_style.blend_score * 100).toFixed(0)}%</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audio Features Radar (simplified as bars) -->
+        <div class="synth-section">
+          <h4>Audio Features</h4>
+          ${Object.entries(track.audio_features).map(([key, val]) => {
+            const pct = Math.min(100, Math.max(0, val * 100));
+            const label = key.replace(/^(genre_dortmund_|mood_|voice_instrumental_|timbre_)/, '');
+            return `<div class="feat-row">
+              <span class="feat-label">${label}</span>
+              <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${pct.toFixed(0)}%;background:#8b5cf6;"></div></div>
+              <span class="feat-val">${pct.toFixed(0)}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Regional Popularity Map -->
+      <div class="region-section">
+        <h4>Popularity by Region</h4>
+        <div class="region-map">
+          ${Object.entries(track.popularity.by_region).map(([region, data]) => {
+            const hue = data.score > 70 ? 142 : data.score > 50 ? 45 : 0;
+            return `<div class="region-card" style="border-color:hsl(${hue},70%,50%);">
+              <div class="region-name">${region}</div>
+              <div class="region-score" style="color:hsl(${hue},70%,60%);">${data.score}</div>
+              <div class="region-bar-bg">
+                <div class="region-bar-fill" style="width:${data.percentile}%;background:hsl(${hue},70%,50%);"></div>
+              </div>
+              <div class="region-percentile">Top ${100 - data.percentile}%</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Consumer Segments -->
+      <div class="consumer-section">
+        <h4>Appeal by Consumer Type</h4>
+        <div class="consumer-grid">
+          ${Object.entries(track.popularity.by_consumer).map(([type, data]) => {
+            const appealPct = (data.appeal * 100).toFixed(0);
+            const skipPct = (data.skip_rate * 100).toFixed(0);
+            return `<div class="consumer-card" onclick="this.classList.toggle('flipped')">
+              <div class="consumer-front">
+                <div class="consumer-type">${type}</div>
+                <div class="consumer-appeal-ring" style="background:conic-gradient(#3b82f6 ${appealPct}%, rgba(255,255,255,0.08) 0);">
+                  <span>${appealPct}%</span>
+                </div>
+                <div class="consumer-label">Appeal</div>
+              </div>
+              <div class="consumer-back">
+                <div class="consumer-type">${type}</div>
+                <div class="consumer-stat">Skip Rate: <strong>${skipPct}%</strong></div>
+                <div class="consumer-skip-bar"><div style="width:${skipPct}%;background:#ef4444;height:100%;border-radius:4px;"></div></div>
+                <div class="consumer-label flip-hint">Click to flip back</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('<hr class="synth-divider"/>');
+}
+
+function instrumentIcon(name) {
+  const icons = {
+    synth: '🎹', bass: '🎸', guitar: '🎸', drum_machine: '🥁', drums: '🥁',
+    strings: '🎻', piano: '🎹', reverb_vocals: '🎤', vocals: '🎤'
+  };
+  return icons[name] || '🎵';
+}
+
+// ====================================================================
+// PLAYLIST GENERATOR — test data for /api/v1/generate/playlist
+// ====================================================================
+
+const PLAYLIST_TRACKS = [
+  { name: "Blinding Lights", artist: "The Weeknd", similarity: 0.94, genre: "synth-pop", popularity: 95, features: { energy: 0.73, danceability: 0.51, valence: 0.34 } },
+  { name: "bad guy", artist: "Billie Eilish", similarity: 0.91, genre: "electro-pop", popularity: 92, features: { energy: 0.43, danceability: 0.70, valence: 0.56 } },
+  { name: "The Less I Know the Better", artist: "Tame Impala", similarity: 0.88, genre: "psychedelic-pop", popularity: 88, features: { energy: 0.74, danceability: 0.72, valence: 0.68 } },
+  { name: "Starboy", artist: "The Weeknd", similarity: 0.87, genre: "electro-rnb", popularity: 93, features: { energy: 0.59, danceability: 0.68, valence: 0.49 } },
+  { name: "everything i wanted", artist: "Billie Eilish", similarity: 0.85, genre: "dream-pop", popularity: 86, features: { energy: 0.23, danceability: 0.51, valence: 0.24 } },
+  { name: "Let It Happen", artist: "Tame Impala", similarity: 0.84, genre: "psychedelic-rock", popularity: 82, features: { energy: 0.85, danceability: 0.52, valence: 0.46 } },
+  { name: "Get Lucky", artist: "Daft Punk", similarity: 0.83, genre: "disco-funk", popularity: 90, features: { energy: 0.78, danceability: 0.87, valence: 0.93 } },
+  { name: "Save Your Tears", artist: "The Weeknd", similarity: 0.82, genre: "synth-pop", popularity: 94, features: { energy: 0.64, danceability: 0.68, valence: 0.59 } },
+  { name: "lovely", artist: "Billie Eilish", similarity: 0.80, genre: "dark-pop", popularity: 89, features: { energy: 0.30, danceability: 0.35, valence: 0.12 } },
+  { name: "Instant Crush", artist: "Daft Punk", similarity: 0.79, genre: "synth-rock", popularity: 78, features: { energy: 0.60, danceability: 0.52, valence: 0.40 } },
+  { name: "Borderline", artist: "Tame Impala", similarity: 0.77, genre: "synth-pop", popularity: 75, features: { energy: 0.72, danceability: 0.71, valence: 0.74 } },
+  { name: "One More Time", artist: "Daft Punk", similarity: 0.76, genre: "french-house", popularity: 87, features: { energy: 0.82, danceability: 0.89, valence: 0.96 } },
+];
+
+function runPlaylist() {
+  const src = $('#playlistSrcInput').value.trim();
+  const dst = $('#playlistDstInput').value.trim();
+  if (!src || !dst) return alert('Enter both artists');
+
+  show('#playlistCard');
+  $('#playlistTitle').textContent = `Playlist: ${src} × ${dst}`;
+
+  // Simulate a delay then show
+  const container = $('#playlistContent');
+  container.innerHTML = '<div class="loading-inline"><div class="spinner-sm"></div>Finding matching tracks...</div>';
+
+  setTimeout(() => {
+    const tracks = PLAYLIST_TRACKS;
+    container.innerHTML = `
+      <div class="playlist-header-bar">
+        <div class="playlist-cover">
+          <div class="playlist-cover-grid">
+            <div style="background:#3b82f6;"></div>
+            <div style="background:#8b5cf6;"></div>
+            <div style="background:#ec4899;"></div>
+            <div style="background:#f59e0b;"></div>
+          </div>
+        </div>
+        <div class="playlist-info-block">
+          <div class="playlist-type-label">GENERATED PLAYLIST</div>
+          <div class="playlist-name-big">${escHtml(src)} × ${escHtml(dst)}</div>
+          <div class="playlist-meta-info">${tracks.length} tracks &bull; Based on synthetic collaboration analysis</div>
+        </div>
+      </div>
+      <div class="playlist-tracks-list">
+        ${tracks.map((t, i) => `
+          <div class="playlist-track-row${i === 0 ? ' now-playing' : ''}" onclick="togglePlaylistDetail(this)">
+            <div class="playlist-track-main">
+              <span class="playlist-track-num">${i + 1}</span>
+              <div class="playlist-track-info">
+                <span class="playlist-track-name">${escHtml(t.name)}</span>
+                <span class="playlist-track-artist">${escHtml(t.artist)}</span>
+              </div>
+              <span class="playlist-track-genre">${t.genre}</span>
+              <div class="playlist-track-match">
+                <div class="match-bar-bg"><div class="match-bar-fill" style="width:${(t.similarity * 100).toFixed(0)}%;"></div></div>
+                <span>${(t.similarity * 100).toFixed(0)}%</span>
+              </div>
+              <span class="playlist-track-pop">${t.popularity}</span>
+            </div>
+            <div class="playlist-track-detail">
+              <div class="detail-bars">
+                <div class="detail-bar-item">
+                  <span>Energy</span>
+                  <div class="detail-bar-bg"><div class="detail-bar-fill energy" style="width:${(t.features.energy * 100)}%;"></div></div>
+                  <span>${(t.features.energy * 100).toFixed(0)}%</span>
+                </div>
+                <div class="detail-bar-item">
+                  <span>Danceability</span>
+                  <div class="detail-bar-bg"><div class="detail-bar-fill dance" style="width:${(t.features.danceability * 100)}%;"></div></div>
+                  <span>${(t.features.danceability * 100).toFixed(0)}%</span>
+                </div>
+                <div class="detail-bar-item">
+                  <span>Valence</span>
+                  <div class="detail-bar-bg"><div class="detail-bar-fill valence" style="width:${(t.features.valence * 100)}%;"></div></div>
+                  <span>${(t.features.valence * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }, 800);
+}
+
+function togglePlaylistDetail(row) {
+  row.classList.toggle('expanded');
+}
+
 // ---- Event Listeners ----
 document.addEventListener('DOMContentLoaded', () => {
   initApiKey();
   loadArtistNames();
 
-  // Autocomplete on artist inputs
+  // Autocomplete on all artist inputs
   createAutocomplete($('#srcInput'));
   createAutocomplete($('#dstInput'));
   createAutocomplete($('#neighborInput'));
+  createAutocomplete($('#synthSrcInput'));
+  createAutocomplete($('#synthDstInput'));
+  createAutocomplete($('#playlistSrcInput'));
+  createAutocomplete($('#playlistDstInput'));
+  document.querySelectorAll('.whatif-artist-input').forEach(el => createAutocomplete(el));
 
+  // Buttons
   $('#predictBtn').addEventListener('click', predictConnection);
   $('#neighborBtn').addEventListener('click', discoverNeighbors);
+  $('#whatifBtn').addEventListener('click', runWhatIf);
+  $('#addArtistBtn').addEventListener('click', addWhatIfArtist);
+  $('#synthFeatBtn').addEventListener('click', runSynthFeatures);
+  $('#playlistBtn').addEventListener('click', runPlaylist);
 
   // Enter key support
   $('#srcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#dstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#neighborInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') discoverNeighbors(); });
+  $('#synthSrcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runSynthFeatures(); });
+  $('#synthDstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runSynthFeatures(); });
+  $('#playlistSrcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runPlaylist(); });
+  $('#playlistDstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runPlaylist(); });
 });
