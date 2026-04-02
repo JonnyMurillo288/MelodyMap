@@ -37,16 +37,7 @@ function probClass(p) {
 
 function setCollapseTitle(sel, text) {
   const el = typeof sel === 'string' ? $(sel) : sel;
-  if (!el) return;
-  const arrow = el.querySelector('.collapse-arrow');
-  el.textContent = text + ' ';
-  if (arrow) el.appendChild(arrow);
-  else {
-    const span = document.createElement('span');
-    span.className = 'collapse-arrow';
-    span.innerHTML = '&#9660;';
-    el.appendChild(span);
-  }
+  if (el) el.textContent = text;
 }
 
 function loading(container, msg = 'Loading...') {
@@ -964,11 +955,18 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#dstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#neighborInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') discoverNeighbors(); });
 
-  // Collapsible cards
-  document.querySelectorAll('.collapsible-toggle').forEach(toggle => {
-    toggle.addEventListener('click', () => {
-      toggle.closest('.collapsible').classList.toggle('collapsed');
-    });
+  // Collapsible cards — inject button + wire toggle
+  document.querySelectorAll('.collapsible').forEach(card => {
+    const btn = document.createElement('button');
+    btn.className = 'collapse-btn';
+    btn.title = 'Collapse / Expand';
+    btn.innerHTML = '<span class="collapse-icon">&#9660;</span>';
+    card.insertBefore(btn, card.firstChild);
+
+    const toggle = card.querySelector('.collapsible-toggle');
+    const handler = () => card.classList.toggle('collapsed');
+    btn.addEventListener('click', handler);
+    if (toggle) toggle.addEventListener('click', handler);
   });
 
   // Auto-render preview cards with test data

@@ -697,25 +697,47 @@ main {
 }
 
 /* ---- Collapsible Cards ---- */
+.collapsible {
+  position: relative;
+}
+.collapse-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  transition: background 0.2s, border-color 0.2s, transform 0.25s;
+  z-index: 3;
+  padding: 0;
+  line-height: 1;
+}
+.collapse-btn:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+.collapse-btn .collapse-icon {
+  transition: transform 0.25s ease;
+  display: block;
+}
+.collapsible.collapsed .collapse-btn .collapse-icon {
+  transform: rotate(-90deg);
+}
 .collapsible-toggle {
   cursor: pointer;
   user-select: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding-right: 2.5rem;
 }
 .collapsible-toggle:hover {
   opacity: 0.85;
-}
-.collapse-arrow {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  transition: transform 0.25s ease;
-  flex-shrink: 0;
-  margin-left: 0.5rem;
-}
-.collapsible.collapsed .collapse-arrow {
-  transform: rotate(-90deg);
 }
 .collapsible-body {
   overflow: hidden;
