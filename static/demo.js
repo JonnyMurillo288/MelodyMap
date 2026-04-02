@@ -163,8 +163,27 @@ async function predictConnection() {
       <span>Tracks: <span class="meta-tag">${(d.tracks || []).length}</span></span>
     `;
 
-    // Show synthetic tracks
-    showSyntheticTracks(d.tracks || []);
+    // Show synthetic tracks — if none returned, generate them
+    let tracks = d.tracks || [];
+    const hasFeatures = tracks.length > 0 && tracks.some(t => Object.keys(t).length > 1);
+
+    if (!hasFeatures) {
+      try {
+        const genRes = await api('/api/v1/generate/tracks', {
+          method: 'POST',
+          body: JSON.stringify({
+            src_artist: src,
+            dst_artist: dst,
+            num_tracks: 5,
+          }),
+        });
+        tracks = genRes.data?.tracks || genRes.tracks || [];
+      } catch (genErr) {
+        console.warn('Track generation fallback failed:', genErr.message);
+      }
+    }
+
+    showSyntheticTracks(tracks);
 
   } catch (e) {
     $('#connectionMeta').innerHTML = `<span style="color:var(--error);">${e.message}</span>`;
