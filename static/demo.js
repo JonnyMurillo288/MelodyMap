@@ -629,10 +629,95 @@ function runWhatIfPreview(artists) {
   `).join('');
 }
 
+// ---- Prediction Score & Insights ----
+
+function renderPredictionScore(data, src, dst) {
+  const track = data.tracks[0];
+  const score = track.popularity.predicted;
+  const regions = track.popularity.by_region;
+
+  // Find best and worst regions
+  const sorted = Object.entries(regions).sort((a, b) => b[1].score - a[1].score);
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+
+  const scoreClass = score >= 75 ? 'score-high' : score >= 55 ? 'score-mid' : 'score-low';
+
+  $('#predictionScore').innerHTML = `
+    <div class="prediction-score-card">
+      <div class="prediction-score-ring ${scoreClass}">
+        <span class="prediction-score-num">${score}</span>
+        <span class="prediction-score-label">/ 100</span>
+      </div>
+      <div class="prediction-score-text">
+        <div class="prediction-score-title">Predicted Performance</div>
+        <div class="prediction-score-subtitle">Strong in ${best[0]} (${best[1].score}), weaker in ${worst[0]} (${worst[1].score})</div>
+      </div>
+    </div>`;
+}
+
+function generateInsights(data, src, dst) {
+  const track = data.tracks[0];
+  const regions = track.popularity.by_region;
+  const consumers = track.popularity.by_consumer;
+  const genre = track.genre_style;
+
+  const insights = [];
+
+  // Best market
+  const bestRegion = Object.entries(regions).sort((a, b) => b[1].score - a[1].score)[0];
+  insights.push({ text: `Best market: ${bestRegion[0]}`, type: 'positive' });
+
+  // Strongest genre alignment
+  insights.push({ text: `Strongest genre alignment: ${genre.primary.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')}`, type: 'positive' });
+
+  // Comparable artists
+  insights.push({ text: `Comparable to: ${src} × ${dst} archetype`, type: 'neutral' });
+
+  // Consumer insight — find lowest skip rate
+  const lowestSkip = Object.entries(consumers).sort((a, b) => a[1].skip_rate - b[1].skip_rate)[0];
+  if (lowestSkip[1].skip_rate < 0.10) {
+    insights.push({ text: `${lowestSkip[0]}s rarely skip (${(lowestSkip[1].skip_rate * 100).toFixed(0)}% skip rate) — strong core audience`, type: 'positive' });
+  }
+
+  // Regional weakness
+  const worstRegion = Object.entries(regions).sort((a, b) => a[1].score - b[1].score)[0];
+  if (worstRegion[1].score < 55) {
+    insights.push({ text: `Weak in ${worstRegion[0]} — consider localized marketing`, type: 'warning' });
+  }
+
+  // Genre crossover
+  if (genre.blend_score > 0.7) {
+    insights.push({ text: `High crossover appeal across ${genre.subs.slice(0, 2).join(' and ')} audiences`, type: 'positive' });
+  }
+
+  return insights.slice(0, 4); // cap at 4
+}
+
+function renderInsights(insights) {
+  $('#synthInsights').innerHTML = `
+    <div class="insights-list">
+      ${insights.map(i => `
+        <div class="insight-item insight-${i.type}">
+          <span class="insight-icon">${i.type === 'positive' ? '&#9650;' : i.type === 'warning' ? '&#9888;' : '&#8594;'}</span>
+          <span class="insight-text">${i.text}</span>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
 function runSynthFeaturesPreview(src, dst) {
   const data = generateSynthFeatures(src, dst);
+
+  // 1. Prediction Score
+  renderPredictionScore(data, src, dst);
+
+  // 2. Insights
+  const insights = generateInsights(data, src, dst);
+  renderInsights(insights);
+
+  // 3. Full track breakdown
   const container = $('#synthFeatContent');
-  // Reuse the same rendering logic from runSynthFeatures
   container.innerHTML = data.tracks.map((track, ti) => buildSynthTrackHtml(track, ti)).join('<hr class="synth-divider"/>');
 }
 

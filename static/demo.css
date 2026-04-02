@@ -696,6 +696,94 @@ main {
   50% { opacity: 1; text-shadow: 0 0 12px rgba(96, 165, 250, 0.5); }
 }
 
+/* ---- Prediction Score ---- */
+.prediction-score-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.6));
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 14px;
+}
+.prediction-score-ring {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.prediction-score-ring.score-high { border-color: #22c55e; }
+.prediction-score-ring.score-mid { border-color: #eab308; }
+.prediction-score-ring.score-low { border-color: #ef4444; }
+.prediction-score-num {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+}
+.prediction-score-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.prediction-score-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.3rem;
+}
+.prediction-score-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ---- Insights ---- */
+.insights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.insight-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-left: 3px solid;
+}
+.insight-positive {
+  background: rgba(34, 197, 94, 0.08);
+  border-left-color: #22c55e;
+  color: #86efac;
+}
+.insight-warning {
+  background: rgba(234, 179, 8, 0.08);
+  border-left-color: #eab308;
+  color: #fde68a;
+}
+.insight-neutral {
+  background: rgba(96, 165, 250, 0.08);
+  border-left-color: #60a5fa;
+  color: #93c5fd;
+}
+.insight-icon {
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+}
+.insight-text { flex: 1; }
+
 /* ---- Coming Soon Banner ---- */
 .coming-soon-banner {
   background: linear-gradient(90deg, rgba(234, 179, 8, 0.1), rgba(234, 179, 8, 0.05));
