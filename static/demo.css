@@ -54,7 +54,11 @@ main {
 /* Cards with active dropdowns must be above subsequent cards */
 .card {
   position: relative;
+  z-index: 1;
   overflow: visible !important;
+}
+.card.dropdown-active {
+  z-index: 9999;
 }
 .search-section {
   overflow: visible !important;

@@ -297,12 +297,14 @@ function createAutocomplete(inputEl) {
   if (!container) return;
   const listEl = container.querySelector('.autocomplete-list');
   if (!listEl) return;
+  const parentCard = inputEl.closest('.card');
   let currentIndex = -1;
 
   function closeList() {
     listEl.style.display = 'none';
     listEl.innerHTML = '';
     currentIndex = -1;
+    if (parentCard) parentCard.classList.remove('dropdown-active');
   }
 
   async function updateSuggestions() {
@@ -332,6 +334,7 @@ function createAutocomplete(inputEl) {
       listEl.appendChild(item);
     });
     listEl.style.display = 'block';
+    if (parentCard) parentCard.classList.add('dropdown-active');
   }
 
   inputEl.addEventListener('input', updateSuggestions);
