@@ -35,6 +35,20 @@ function probClass(p) {
   return 'low';
 }
 
+function setCollapseTitle(sel, text) {
+  const el = typeof sel === 'string' ? $(sel) : sel;
+  if (!el) return;
+  const arrow = el.querySelector('.collapse-arrow');
+  el.textContent = text + ' ';
+  if (arrow) el.appendChild(arrow);
+  else {
+    const span = document.createElement('span');
+    span.className = 'collapse-arrow';
+    span.innerHTML = '&#9660;';
+    el.appendChild(span);
+  }
+}
+
 function loading(container, msg = 'Loading...') {
   if (typeof container === 'string') container = $(container);
   container.innerHTML = `<div class="loading-inline"><div class="spinner-sm"></div>${msg}</div>`;
@@ -199,7 +213,7 @@ async function discoverNeighbors() {
   if (!artist) return alert('Enter an artist');
 
   show('#neighborsCard');
-  $('#neighborsTitle').textContent = 'Predicted Collaborators';
+  setCollapseTitle('#neighborsTitle', 'Predicted Collaborators');
   $('#neighborsBody').innerHTML = '<tr><td colspan="5"><div class="loading-inline"><div class="spinner-sm"></div>Running ML pipeline — this can take up to 60 seconds for uncached artists...</div></td></tr>';
 
   try {
@@ -210,7 +224,7 @@ async function discoverNeighbors() {
 
     const d = res.data;
     const title = d.artist_name ? `Top Predicted Collaborators for ${d.artist_name}` : 'Top Predicted Collaborators';
-    $('#neighborsTitle').textContent = title;
+    setCollapseTitle('#neighborsTitle', title);
 
     neighborsData = d.neighbors || [];
     if (neighborsData.length === 0) {
@@ -721,6 +735,66 @@ function runSynthFeaturesPreview(src, dst) {
   container.innerHTML = data.tracks.map((track, ti) => buildSynthTrackHtml(track, ti)).join('<hr class="synth-divider"/>');
 }
 
+function regionColor(score) {
+  if (score > 75) return 'hsl(142, 70%, 40%)';
+  if (score > 60) return 'hsl(142, 50%, 30%)';
+  if (score > 45) return 'hsl(45, 70%, 40%)';
+  return 'hsl(0, 50%, 35%)';
+}
+
+function renderWorldMap(byRegion) {
+  const na = byRegion["North America"] || { score: 0 };
+  const eu = byRegion["Europe"] || { score: 0 };
+  const la = byRegion["Latin America"] || { score: 0 };
+  const ap = byRegion["Asia Pacific"] || { score: 0 };
+  const af = byRegion["Africa & Middle East"] || { score: 0 };
+
+  return `<div class="world-map-container">
+    <svg viewBox="0 0 800 400" class="world-map-svg">
+      <!-- North America -->
+      <path d="M50,50 L220,50 L240,80 L230,120 L200,160 L160,180 L120,170 L80,140 L50,100 Z" fill="${regionColor(na.score)}" class="map-region" data-region="North America" data-score="${na.score}">
+        <title>North America: ${na.score}/100</title>
+      </path>
+      <text x="145" y="110" class="map-label">NA</text>
+      <text x="145" y="128" class="map-score">${na.score}</text>
+
+      <!-- Latin America -->
+      <path d="M140,185 L190,185 L210,220 L200,280 L180,330 L160,360 L140,340 L130,290 L120,240 Z" fill="${regionColor(la.score)}" class="map-region" data-region="Latin America" data-score="${la.score}">
+        <title>Latin America: ${la.score}/100</title>
+      </path>
+      <text x="165" y="265" class="map-label">LA</text>
+      <text x="165" y="283" class="map-score">${la.score}</text>
+
+      <!-- Europe -->
+      <path d="M340,40 L440,35 L470,60 L460,100 L440,130 L400,140 L360,130 L340,100 L330,70 Z" fill="${regionColor(eu.score)}" class="map-region" data-region="Europe" data-score="${eu.score}">
+        <title>Europe: ${eu.score}/100</title>
+      </path>
+      <text x="395" y="85" class="map-label">EU</text>
+      <text x="395" y="103" class="map-score">${eu.score}</text>
+
+      <!-- Africa & Middle East -->
+      <path d="M370,145 L450,140 L480,170 L470,240 L440,300 L400,310 L370,280 L360,220 L355,170 Z" fill="${regionColor(af.score)}" class="map-region" data-region="Africa & Middle East" data-score="${af.score}">
+        <title>Africa & Middle East: ${af.score}/100</title>
+      </path>
+      <text x="415" y="215" class="map-label">AF/ME</text>
+      <text x="415" y="233" class="map-score">${af.score}</text>
+
+      <!-- Asia Pacific -->
+      <path d="M520,50 L700,45 L740,80 L730,150 L700,220 L650,260 L580,250 L530,200 L510,140 L515,80 Z" fill="${regionColor(ap.score)}" class="map-region" data-region="Asia Pacific" data-score="${ap.score}">
+        <title>Asia Pacific: ${ap.score}/100</title>
+      </path>
+      <text x="620" y="140" class="map-label">APAC</text>
+      <text x="620" y="158" class="map-score">${ap.score}</text>
+    </svg>
+    <div class="map-legend">
+      <span class="legend-item"><span class="legend-dot" style="background:hsl(142,70%,40%);"></span>75+</span>
+      <span class="legend-item"><span class="legend-dot" style="background:hsl(142,50%,30%);"></span>60-74</span>
+      <span class="legend-item"><span class="legend-dot" style="background:hsl(45,70%,40%);"></span>45-59</span>
+      <span class="legend-item"><span class="legend-dot" style="background:hsl(0,50%,35%);"></span>&lt;45</span>
+    </div>
+  </div>`;
+}
+
 function buildSynthTrackHtml(track, ti) {
   return `
     <div class="synth-track-deep ${ti > 0 ? 'synth-track-border' : ''}">
@@ -787,6 +861,7 @@ function buildSynthTrackHtml(track, ti) {
       </div>
       <div class="region-section">
         <h4>Popularity by Region</h4>
+        ${renderWorldMap(track.popularity.by_region)}
         <div class="region-map">
           ${Object.entries(track.popularity.by_region).map(([region, data]) => {
             const hue = data.score > 70 ? 142 : data.score > 50 ? 45 : 0;
@@ -888,6 +963,13 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#srcInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#dstInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') predictConnection(); });
   $('#neighborInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') discoverNeighbors(); });
+
+  // Collapsible cards
+  document.querySelectorAll('.collapsible-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      toggle.closest('.collapsible').classList.toggle('collapsed');
+    });
+  });
 
   // Auto-render preview cards with test data
   renderPreviewCards();

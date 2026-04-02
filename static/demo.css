@@ -696,6 +696,39 @@ main {
   50% { opacity: 1; text-shadow: 0 0 12px rgba(96, 165, 250, 0.5); }
 }
 
+/* ---- Collapsible Cards ---- */
+.collapsible-toggle {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.collapsible-toggle:hover {
+  opacity: 0.85;
+}
+.collapse-arrow {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+.collapsible.collapsed .collapse-arrow {
+  transform: rotate(-90deg);
+}
+.collapsible-body {
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+  max-height: 5000px;
+  opacity: 1;
+}
+.collapsible.collapsed .collapsible-body {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
+
 /* ---- Prediction Score ---- */
 .prediction-score-card {
   display: flex;
@@ -1184,6 +1217,66 @@ main {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+/* World Map */
+.world-map-container {
+  margin-bottom: 1rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 10px;
+  padding: 1rem;
+}
+.world-map-svg {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  display: block;
+}
+.map-region {
+  stroke: rgba(148, 163, 184, 0.2);
+  stroke-width: 1.5;
+  cursor: default;
+  transition: opacity 0.2s;
+}
+.map-region:hover {
+  opacity: 0.8;
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 2;
+}
+.map-label {
+  fill: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.map-score {
+  fill: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 500;
+  text-anchor: middle;
+  font-family: monospace;
+  pointer-events: none;
+}
+.map-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
 .region-map {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

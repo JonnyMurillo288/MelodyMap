@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Interlude API Demo</title>
   <link rel="stylesheet" href="static/style.css?v=2" type="text/css" />
-  <link rel="stylesheet" href="static/demo.css?v=2" type="text/css" />
+  <link rel="stylesheet" href="static/demo.css?v=3" type="text/css" />
 </head>
 
 <body>
@@ -52,157 +52,175 @@
       </div>
 
       <!-- Card 2: API Endpoints Reference -->
-      <div class="card">
-        <h2 class="card-title">API Endpoints</h2>
-        <p class="card-subtitle">Documentation and API usage — all endpoints available at <code>/api/v1/</code></p>
-        <div class="endpoints-grid">
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/api/v1/predict/connection</span>
-            <span class="endpoint-desc">Predict collaboration probability between two artists</span>
+      <div class="card collapsible">
+        <h2 class="card-title collapsible-toggle">API Endpoints <span class="collapse-arrow">&#9660;</span></h2>
+        <div class="collapsible-body">
+          <p class="card-subtitle">Documentation and API usage — all endpoints available at <code>/api/v1/</code></p>
+          <div class="endpoints-grid">
+            <div class="endpoint-item">
+              <span class="endpoint-method post">POST</span>
+              <span class="endpoint-path">/api/v1/predict/connection</span>
+              <span class="endpoint-desc">Predict collaboration probability between two artists</span>
+            </div>
+            <div class="endpoint-item">
+              <span class="endpoint-method post">POST</span>
+              <span class="endpoint-path">/api/v1/predict/neighbors</span>
+              <span class="endpoint-desc">Top-k predicted collaborators for an artist</span>
+            </div>
+            <div class="endpoint-item">
+              <span class="endpoint-method post">POST</span>
+              <span class="endpoint-path">/api/v1/predict/batch</span>
+              <span class="endpoint-desc">Bulk predictions for up to 1,000 artist pairs</span>
+            </div>
+            <div class="endpoint-item">
+              <span class="endpoint-method post">POST</span>
+              <span class="endpoint-path">/api/v1/explore/what-if</span>
+              <span class="endpoint-desc">"What if X and Y collaborated?" — synthetic tracks scenario</span>
+            </div>
+            <div class="endpoint-item">
+              <span class="endpoint-method post">POST</span>
+              <span class="endpoint-path">/api/v1/explore/synthetic-track-features</span>
+              <span class="endpoint-desc">Synthetic tracks with popularity, instrumentation, and lyric analysis</span>
+            </div>
+            <div class="endpoint-item">
+              <span class="endpoint-method post">POST</span>
+              <span class="endpoint-path">/api/v1/generate/tracks</span>
+              <span class="endpoint-desc">Generate synthetic track features via CVAE</span>
+            </div>
           </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/api/v1/predict/neighbors</span>
-            <span class="endpoint-desc">Top-k predicted collaborators for an artist</span>
+          <div class="endpoint-formats">
+            <h4>Input / Output Formats</h4>
+            <p>All endpoints accept and return JSON. Authentication via <code>X-API-Key</code> header.</p>
           </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/api/v1/predict/batch</span>
-            <span class="endpoint-desc">Bulk predictions for up to 1,000 artist pairs</span>
+          <div style="text-align:center;margin-top:1rem;">
+            <a class="btn btn-primary" href="/docs">View Full Documentation</a>
           </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/api/v1/explore/what-if</span>
-            <span class="endpoint-desc">"What if X and Y collaborated?" — synthetic tracks scenario</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/api/v1/explore/synthetic-track-features</span>
-            <span class="endpoint-desc">Synthetic tracks with popularity, instrumentation, and lyric analysis</span>
-          </div>
-          <div class="endpoint-item">
-            <span class="endpoint-method post">POST</span>
-            <span class="endpoint-path">/api/v1/generate/tracks</span>
-            <span class="endpoint-desc">Generate synthetic track features via CVAE</span>
-          </div>
-        </div>
-        <div class="endpoint-formats">
-          <h4>Input / Output Formats</h4>
-          <p>All endpoints accept and return JSON. Authentication via <code>X-API-Key</code> header.</p>
-        </div>
-        <div style="text-align:center;margin-top:1rem;">
-          <a class="btn btn-primary" href="/docs">View Full Documentation</a>
         </div>
       </div>
 
       <!-- Card 3: Predict a Collaboration (Demo) -->
       <div class="try-it-banner">Try It Live</div>
-      <div class="card">
-        <h2 class="card-title">Predict a Collaboration</h2>
-        <p class="card-subtitle">Enter two artists to predict their collaboration probability</p>
-        <div class="search-section">
-          <div class="search-group autocomplete-container">
-            <label for="srcInput">Artist 1</label>
-            <input type="text" id="srcInput" placeholder="Artist name or MBID..." autocomplete="off" />
-            <div class="autocomplete-list"></div>
+      <div class="card collapsible">
+        <h2 class="card-title collapsible-toggle">Predict a Collaboration <span class="collapse-arrow">&#9660;</span></h2>
+        <div class="collapsible-body">
+          <p class="card-subtitle">Enter two artists to predict their collaboration probability</p>
+          <div class="search-section">
+            <div class="search-group autocomplete-container">
+              <label for="srcInput">Artist 1</label>
+              <input type="text" id="srcInput" placeholder="Artist name or MBID..." autocomplete="off" />
+              <div class="autocomplete-list"></div>
+            </div>
+            <div class="search-group autocomplete-container">
+              <label for="dstInput">Artist 2</label>
+              <input type="text" id="dstInput" placeholder="Artist name or MBID..." autocomplete="off" />
+              <div class="autocomplete-list"></div>
+            </div>
+            <button class="btn btn-primary" id="predictBtn">Predict</button>
           </div>
-          <div class="search-group autocomplete-container">
-            <label for="dstInput">Artist 2</label>
-            <input type="text" id="dstInput" placeholder="Artist name or MBID..." autocomplete="off" />
-            <div class="autocomplete-list"></div>
-          </div>
-          <button class="btn btn-primary" id="predictBtn">Predict</button>
         </div>
       </div>
 
       <!-- Connection Result -->
-      <div class="card" id="connectionCard" style="display:none;">
-        <h3 class="card-title">Connection Prediction</h3>
-        <div class="connection-result">
-          <div class="artist-pair">
-            <div class="artist-badge src" id="srcBadge">?</div>
-            <div class="connection-line">
-              <div class="prob-ring" id="probRing">
-                <span class="prob-value" id="probValue">--</span>
+      <div class="card collapsible" id="connectionCard" style="display:none;">
+        <h3 class="card-title collapsible-toggle">Connection Prediction <span class="collapse-arrow">&#9660;</span></h3>
+        <div class="collapsible-body">
+          <div class="connection-result">
+            <div class="artist-pair">
+              <div class="artist-badge src" id="srcBadge">?</div>
+              <div class="connection-line">
+                <div class="prob-ring" id="probRing">
+                  <span class="prob-value" id="probValue">--</span>
+                </div>
               </div>
+              <div class="artist-badge dst" id="dstBadge">?</div>
             </div>
-            <div class="artist-badge dst" id="dstBadge">?</div>
+            <div class="meta-row" id="connectionMeta"></div>
           </div>
-          <div class="meta-row" id="connectionMeta"></div>
         </div>
       </div>
 
       <!-- Synthetic Tracks (shown after prediction) -->
-      <div class="card" id="tracksCard" style="display:none;">
-        <h3 class="card-title">Synthetic Tracks Generated</h3>
-        <p class="card-subtitle">CVAE-generated track features for this hypothetical collaboration</p>
-        <div class="tracks-grid" id="tracksGrid"></div>
+      <div class="card collapsible" id="tracksCard" style="display:none;">
+        <h3 class="card-title collapsible-toggle">Synthetic Tracks Generated <span class="collapse-arrow">&#9660;</span></h3>
+        <div class="collapsible-body">
+          <p class="card-subtitle">CVAE-generated track features for this hypothetical collaboration</p>
+          <div class="tracks-grid" id="tracksGrid"></div>
+        </div>
       </div>
 
       <!-- Card 4: Discover Collaborations -->
-      <div class="card">
-        <h2 class="card-title">Discover Collaborations</h2>
-        <p class="card-subtitle">Find the top predicted collaborators for any artist, ranked by probability</p>
-        <div class="search-section">
-          <div class="search-group autocomplete-container" style="flex:1;">
-            <label for="neighborInput">Artist</label>
-            <input type="text" id="neighborInput" placeholder="Artist name or MBID..." autocomplete="off" />
-            <div class="autocomplete-list"></div>
+      <div class="card collapsible">
+        <h2 class="card-title collapsible-toggle">Discover Collaborations <span class="collapse-arrow">&#9660;</span></h2>
+        <div class="collapsible-body">
+          <p class="card-subtitle">Find the top predicted collaborators for any artist, ranked by probability</p>
+          <div class="search-section">
+            <div class="search-group autocomplete-container" style="flex:1;">
+              <label for="neighborInput">Artist</label>
+              <input type="text" id="neighborInput" placeholder="Artist name or MBID..." autocomplete="off" />
+              <div class="autocomplete-list"></div>
+            </div>
+            <button class="btn btn-primary" id="neighborBtn">Find Collaborators</button>
           </div>
-          <button class="btn btn-primary" id="neighborBtn">Find Collaborators</button>
         </div>
       </div>
 
       <!-- Neighbors Table -->
-      <div class="card" id="neighborsCard" style="display:none;">
-        <h3 class="card-title" id="neighborsTitle">Predicted Collaborators</h3>
-        <div class="table-container">
-          <table class="demo-table" id="neighborsTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Artist</th>
-                <th>Probability</th>
-                <th>Tracks</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="neighborsBody"></tbody>
-          </table>
+      <div class="card collapsible" id="neighborsCard" style="display:none;">
+        <h3 class="card-title collapsible-toggle" id="neighborsTitle">Predicted Collaborators <span class="collapse-arrow">&#9660;</span></h3>
+        <div class="collapsible-body">
+          <div class="table-container">
+            <table class="demo-table" id="neighborsTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Artist</th>
+                  <th>Probability</th>
+                  <th>Tracks</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="neighborsBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- Card 5: What-If Explorer -->
-      <div class="card">
+      <div class="card collapsible">
         <div class="coming-soon-banner">Preview — Not yet in production, currently underway</div>
-        <h2 class="card-title">What-If Explorer</h2>
-        <p class="card-subtitle">What would happen if Billie Eilish, The Weeknd, Daft Punk, and Tame Impala collaborated? All pair permutations below.</p>
-        <div class="whatif-network" id="whatifNetwork"></div>
-        <div class="whatif-pairs" id="whatifPairs"></div>
+        <h2 class="card-title collapsible-toggle">What-If Explorer <span class="collapse-arrow">&#9660;</span></h2>
+        <div class="collapsible-body">
+          <p class="card-subtitle">What would happen if Billie Eilish, The Weeknd, Daft Punk, and Tame Impala collaborated? All pair permutations below.</p>
+          <div class="whatif-network" id="whatifNetwork"></div>
+          <div class="whatif-pairs" id="whatifPairs"></div>
+        </div>
       </div>
 
       <!-- Card 6: Simulated Release Performance -->
-      <div class="card">
+      <div class="card collapsible">
         <div class="coming-soon-banner">Preview — Not yet in production, currently underway</div>
-        <h2 class="card-title">Simulated Release Performance</h2>
-        <p class="card-subtitle">If Billie Eilish and Tame Impala released a track together, here's what would happen</p>
-        <div id="predictionScore"></div>
-        <div id="synthInsights"></div>
-        <div id="synthFeatContent"></div>
+        <h2 class="card-title collapsible-toggle">Simulated Release Performance <span class="collapse-arrow">&#9660;</span></h2>
+        <div class="collapsible-body">
+          <p class="card-subtitle">If Billie Eilish and Tame Impala released a track together, here's what would happen</p>
+          <div id="predictionScore"></div>
+          <div id="synthInsights"></div>
+          <div id="synthFeatContent"></div>
+        </div>
       </div>
 
       <!-- Card 7: Playlist Generator -->
-      <div class="card">
+      <div class="card collapsible">
         <div class="coming-soon-banner">Preview — Not yet in production, currently underway</div>
-        <h2 class="card-title">Playlist Generator</h2>
-        <p class="card-subtitle">Real tracks matching the synthetic collaboration predictions for Billie Eilish × The Weeknd</p>
-        <div id="playlistContent"></div>
+        <h2 class="card-title collapsible-toggle">Playlist Generator <span class="collapse-arrow">&#9660;</span></h2>
+        <div class="collapsible-body">
+          <p class="card-subtitle">Real tracks matching the synthetic collaboration predictions for Billie Eilish × The Weeknd</p>
+          <div id="playlistContent"></div>
+        </div>
       </div>
 
     </main>
   </div>
 
-  <script src="static/demo.js?v=3"></script>
+  <script src="static/demo.js?v=4"></script>
 </body>
 </html>
