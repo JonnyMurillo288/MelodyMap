@@ -1,0 +1,66 @@
+{
+  "experiment_id": "EXP-006",
+  "hypothesis": "Broader hyperparameter search and alternative PU methods improve recall",
+  "configs_tested": [
+    "elkanoto_broad",
+    "elkanoto_recall",
+    "bagging_pu"
+  ],
+  "results": [
+    {
+      "config": "elkanoto_broad",
+      "pu_method": "elkanoto",
+      "scoring": "f1",
+      "roc_auc": 0.9829,
+      "pr_auc": 0.995,
+      "best_params": {
+        "pu_logit__estimator__l1_ratio": 0.9,
+        "pu_logit__estimator__C": 10.0
+      },
+      "optimal_threshold": 0.5,
+      "optimal_precision": 0.9692,
+      "optimal_link_recall": 0.9595,
+      "optimal_nolink_recall": 0.8983,
+      "optimal_balanced_recall": 0.9289,
+      "optimal_f1": 0.9643
+    },
+    {
+      "config": "elkanoto_recall",
+      "pu_method": "elkanoto",
+      "scoring": "recall",
+      "roc_auc": 0.9816,
+      "pr_auc": 0.9948,
+      "best_params": {
+        "pu_logit__estimator__l1_ratio": 0.3,
+        "pu_logit__estimator__C": 0.01
+      },
+      "optimal_threshold": 0.5,
+      "optimal_precision": 0.9572,
+      "optimal_link_recall": 0.9625,
+      "optimal_nolink_recall": 0.8567,
+      "optimal_balanced_recall": 0.9096,
+      "optimal_f1": 0.9599
+    },
+    {
+      "config": "bagging_pu",
+      "pu_method": "bagging",
+      "scoring": "f1",
+      "roc_auc": 0.9836,
+      "pr_auc": 0.9955,
+      "best_params": {
+        "pu_logit__estimator__C": 0.730953983591291,
+        "pu_logit__estimator__l1_ratio": 0.3329833121584336
+      },
+      "optimal_threshold": 0.5,
+      "optimal_precision": 0.9726,
+      "optimal_link_recall": 0.957,
+      "optimal_nolink_recall": 0.91,
+      "optimal_balanced_recall": 0.9335,
+      "optimal_f1": 0.9647
+    }
+  ],
+  "best_config": "bagging_pu",
+  "best_balanced_recall": 0.9335,
+  "carry_forward": true,
+  "decision": "BEST: bagging_pu"
+}

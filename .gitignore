@@ -50,6 +50,11 @@ var/data/*.json
 .vscode/
 .qodo/
 .claude/settings.local.json
+.claude/settings.json
+.mcp.json
+
+# Database dumps
+*.dump
 
 # ------------------------------------------------------------------------------
 # Python

@@ -1,0 +1,39 @@
+{
+  "experiment_id": "EXP-004",
+  "hypothesis": "Higher neg_ratio creates harder negatives, improving discrimination",
+  "results": [
+    {
+      "neg_ratio": 0.3,
+      "dataset_size": 13000,
+      "n_pos": 10000,
+      "n_neg": 3000,
+      "roc_auc": 0.9753,
+      "pr_auc": 0.9897,
+      "optimal_threshold": 0.5,
+      "optimal_precision": 0.9639,
+      "optimal_link_recall": 0.9625,
+      "optimal_nolink_recall": 0.88,
+      "optimal_balanced_recall": 0.9212,
+      "optimal_f1": 0.9632
+    },
+    {
+      "neg_ratio": 0.5,
+      "dataset_size": 15000,
+      "n_pos": 10000,
+      "n_neg": 5000,
+      "roc_auc": 0.9675,
+      "pr_auc": 0.9828,
+      "optimal_threshold": 0.5,
+      "optimal_precision": 0.9442,
+      "optimal_link_recall": 0.931,
+      "optimal_nolink_recall": 0.89,
+      "optimal_balanced_recall": 0.9105,
+      "optimal_f1": 0.9376
+    }
+  ],
+  "best_neg_ratio": 0.3,
+  "best_balanced_recall": 0.9212,
+  "best_precision": 0.9639,
+  "carry_forward": true,
+  "decision": "CARRY FORWARD: neg_ratio=0.3"
+}

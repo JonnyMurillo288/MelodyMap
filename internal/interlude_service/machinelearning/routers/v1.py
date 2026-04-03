@@ -42,9 +42,22 @@ from config.config import LINK_PREDICTION_FEATURES
 from config.cvae_config import C_COLS, Y_CONT_COLS, Y_BIN_COLS
 from utils.database import get_pg_conn
 
-# Snapshot the original 11 features BEFORE pipeline_links mutates the global list
-# by appending genre similarity columns. The model was trained on these 11.
+# Snapshot the default feature list. When a model carries its own feature_names
+# (LinkPredictor saved with .feature_names), prefer that list so the feature
+# matrix always matches what the model was trained on.  This keeps v5 (11 feats)
+# and v6 (14 feats) both working through the same code path.
 _LOGIT_FEATURES = list(LINK_PREDICTION_FEATURES)
+
+
+def _features_for_model(model) -> list:
+    """Return the feature list a loaded model expects.
+
+    LinkPredictor instances store model.feature_names at train time.
+    Fall back to the global _LOGIT_FEATURES for legacy raw-sklearn models.
+    """
+    if hasattr(model, "feature_names") and model.feature_names is not None:
+        return list(model.feature_names)
+    return list(_LOGIT_FEATURES)
 
 v1 = APIRouter(prefix="/api/v1", tags=["v1"])
 
@@ -286,7 +299,8 @@ async def predict_connection(req: ConnectionRequest, request: Request):
     from features.pipeline_links import build_link_prediction_embeddings_from_artist_list
     artist_embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
 
-    X = artist_embeddings[_LOGIT_FEATURES].values
+    feats = _features_for_model(model)
+    X = artist_embeddings[feats].values
     probs = model.predict_proba(X)
     if probs.ndim > 1 and probs.shape[1] > 1:
         probs = probs[:, 1]
@@ -319,7 +333,7 @@ async def predict_connection(req: ConnectionRequest, request: Request):
             dst_name=dst_name,
             probability=prob,
             tracks=tracks_with_features,
-            features_used=dict(zip(_LOGIT_FEATURES, X[0].tolist())),
+            features_used=dict(zip(feats, X[0].tolist())),
         ),
         meta=_build_meta(version, (time.time() - start) * 1000, False, request),
     )
@@ -376,7 +390,7 @@ async def predict_neighbors(req: NeighborRequest, request: Request):
         from models.link_predictor import predict_link_features_from_artist
         preds = predict_link_features_from_artist(
             model=model,
-            features=_LOGIT_FEATURES,
+            features=_features_for_model(model),
             THRESHOLD=0.3,
             input_artist_id=src_int,
             num_candidates=582964 // 20,
@@ -442,7 +456,8 @@ async def predict_batch(req: BatchRequest, request: Request):
 
     if pairs:
         embeddings = build_link_prediction_embeddings_from_artist_list(pairs)
-        X = embeddings[_LOGIT_FEATURES].values
+        feats = _features_for_model(model)
+        X = embeddings[feats].values
         probs = model.predict_proba(X)
         if probs.ndim > 1 and probs.shape[1] > 1:
             probs = probs[:, 1]
@@ -479,13 +494,14 @@ async def predict_compare(req: CompareRequest, request: Request):
     dst_int = _resolve_artist(req.dst_artist)
 
     embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
-    X = embeddings[_LOGIT_FEATURES].values
 
     results = []
     for ver in req.versions:
         t0 = time.time()
         try:
             model, actual_ver = registry.get_logit(ver)
+            feats = _features_for_model(model)
+            X = embeddings[feats].values
             probs = model.predict_proba(X)
             if probs.ndim > 1 and probs.shape[1] > 1:
                 probs = probs[:, 1]
@@ -559,7 +575,8 @@ async def generate_tracks(req: TrackGenRequest, request: Request):
     from features.pipeline_links import build_link_prediction_embeddings_from_artist_list
 
     embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
-    X = embeddings[_LOGIT_FEATURES].values
+    feats = _features_for_model(logit_model)
+    X = embeddings[feats].values
     probs = logit_model.predict_proba(X)
     if probs.ndim > 1 and probs.shape[1] > 1:
         probs = probs[:, 1]
@@ -881,7 +898,8 @@ async def explore_what_if(req: WhatIfRequest, request: Request):
             observe_cache("prediction", False)
             from features.pipeline_links import build_link_prediction_embeddings_from_artist_list
             embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
-            X = embeddings[_LOGIT_FEATURES].values
+            feats = _features_for_model(model)
+            X = embeddings[feats].values
             probs = model.predict_proba(X)
             if probs.ndim > 1 and probs.shape[1] > 1:
                 probs = probs[:, 1]
@@ -1119,7 +1137,8 @@ async def populate_daily(request: Request):
             else:
                 from features.pipeline_links import build_link_prediction_embeddings_from_artist_list
                 embeddings = build_link_prediction_embeddings_from_artist_list([(src_int, dst_int)])
-                X = embeddings[_LOGIT_FEATURES].values
+                feats = _features_for_model(model)
+                X = embeddings[feats].values
                 probs = model.predict_proba(X)
                 if probs.ndim > 1 and probs.shape[1] > 1:
                     probs = probs[:, 1]

@@ -1,0 +1,26 @@
+{
+  "experiment_id": "EXP-001",
+  "hypothesis": "Lower threshold improves balanced recall within precision budget",
+  "model": "v5",
+  "model_path": "./feature_engineering/logit_model_v5.joblib",
+  "dataset_params": {
+    "num_true_samples": 10000,
+    "neg_ratio": 0.15,
+    "random_state": 42
+  },
+  "test_set_size": 2300,
+  "roc_auc": 0.9682,
+  "pr_auc": 0.9951,
+  "baseline_threshold": 0.5,
+  "baseline_precision": 0.8035,
+  "optimal_threshold": 0.2,
+  "optimal_metrics": {
+    "threshold": 0.2,
+    "precision": 1.0,
+    "link_recall": 0.7335,
+    "nolink_recall": 1.0,
+    "balanced_recall": 0.8668,
+    "f1": 0.8463,
+    "accuracy": 0.7683
+  }
+}

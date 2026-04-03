@@ -373,8 +373,14 @@ def predict_artist_link(model, src_id, dst_id) -> float:
         raise e
 
     try:
-        print(f"[DEBUG] Extracting features: {LINK_PREDICTION_FEATURES}")
-        X = artist_embeddings[LINK_PREDICTION_FEATURES].values
+        # Use model.feature_names when available so the feature matrix matches
+        # what the model was trained on (supports v5, v6, and future versions).
+        if hasattr(model, 'feature_names') and model.feature_names is not None:
+            _feats = list(model.feature_names)
+        else:
+            _feats = list(LINK_PREDICTION_FEATURES)
+        print(f"[DEBUG] Extracting features: {_feats}")
+        X = artist_embeddings[_feats].values
         # print(f"[DEBUG] X shape: {X.shape}")
         # print(f"[DEBUG] X values: {X}")
     except Exception as e:
@@ -425,8 +431,14 @@ def predict_neighbors(model, src_emb: str | int, limit: int):
 
     proportion_of_total = 20  # Using 1/20th of total artists as candidates
     # This will be 582,964 / 20 = 29,148 candidates
+    # Use model.feature_names when available so the feature matrix matches
+    # what the model was trained on (v5 has 11 features, v6 has 14, etc.).
+    if hasattr(model, 'feature_names') and model.feature_names is not None:
+        _feats = list(model.feature_names)
+    else:
+        _feats = list(LINK_PREDICTION_FEATURES)
     preds = predict_link_features_from_artist(model=model,
-                                             features=LINK_PREDICTION_FEATURES,
+                                             features=_feats,
                                              THRESHOLD=0.3,
                                              input_artist_id=src_emb,
                                              num_candidates=582964//proportion_of_total,

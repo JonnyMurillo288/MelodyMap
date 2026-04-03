@@ -21,18 +21,18 @@ main {
 
 main h2 {
   margin: 0 0 0.75rem;
-  font-size: 2.2rem;
+  font-size: 3.2rem;
 }
 
 main h3 {
   margin: 1.25rem 0 0.5rem;
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   color: var(--text-main);
 }
 
 main p {
   margin: 0.4rem 0;
-  font-size: 0.95rem;
+  font-size: 1.45rem;
   color: var(--text-muted);
   line-height: 1.6;
 }
@@ -42,12 +42,12 @@ code {
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
   font-family: 'Courier New', monospace;
-  font-size: 0.88rem;
+  font-size: 1.28rem;
   color: var(--accent);
 }
 
 .note {
-  font-size: 0.88rem;
+  font-size: 1.28rem;
   color: var(--text-muted);
   font-style: italic;
 }
@@ -70,13 +70,13 @@ code {
   padding: 0.4rem 0.75rem;
   background: rgba(15, 23, 42, 0.5);
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-  font-size: 0.75rem;
+  font-size: 1.28rem;
   color: var(--text-muted);
 }
 .code-block pre {
   margin: 0;
   padding: 0.85rem;
-  font-size: 0.85rem;
+  font-size: 1.28rem;
   font-family: 'Courier New', monospace;
   color: #e2e8f0;
   overflow-x: auto;
@@ -88,7 +88,7 @@ code {
 /* ---- Method Badges ---- */
 .method {
   display: inline-block;
-  font-size: 0.78rem;
+  font-size: 1.28rem;
   font-weight: 700;
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
@@ -135,7 +135,7 @@ code {
 }
 .params h4 {
   margin: 0 0 0.4rem;
-  font-size: 0.85rem;
+  font-size: 1.28rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -143,7 +143,7 @@ code {
 .params table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  font-size: 1.28rem;
 }
 .params td {
   padding: 0.4rem 0.6rem;
@@ -158,7 +158,7 @@ code {
 }
 .params td:nth-child(2) {
   color: var(--text-muted);
-  font-size: 0.84rem;
+  font-size: 1.28rem;
   width: 140px;
 }
 
@@ -198,7 +198,7 @@ code {
   text-align: left;
 }
 .tier-card li {
-  font-size: 0.88rem;
+  font-size: 1.28rem;
   color: var(--text-muted);
   padding: 0.3rem 0;
   border-bottom: 1px solid rgba(148, 163, 184, 0.06);
@@ -209,7 +209,7 @@ code {
 .docs-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 1.28rem;
 }
 .docs-table td {
   padding: 0.6rem 0.75rem;
@@ -226,7 +226,7 @@ code {
 .docs-table td:nth-child(3) {
   color: #22c55e;
   font-family: 'Courier New', monospace;
-  font-size: 0.8rem;
+  font-size: 1.28rem;
 }
 
 /* ---- Try It Sections ---- */
@@ -239,7 +239,7 @@ code {
 }
 .try-it h4 {
   margin: 0 0 0.5rem;
-  font-size: 0.9rem;
+  font-size: 1.28rem;
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -254,7 +254,7 @@ code {
   flex: 1;
   min-width: 150px;
   padding: 0.45rem 0.7rem;
-  font-size: 0.9rem;
+  font-size: 1.28rem;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 6px;
@@ -267,7 +267,7 @@ code {
 .try-output {
   margin: 0;
   padding: 0.85rem;
-  font-size: 0.84rem;
+  font-size: 1.28rem;
   font-family: 'Courier New', monospace;
   color: #e2e8f0;
   background: rgba(10, 15, 30, 0.7);

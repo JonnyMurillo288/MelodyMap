@@ -109,6 +109,12 @@ FEATURE_GROUPS = {
         "popularity_src",
         "popularity_dst",
     ],
+    "popularity_interactions": [
+        "popularity_ratio",
+        "popularity_diff",
+        "popularity_product",
+        "log_popularity_ratio",
+    ],
     "one_hop": [
         "max_cos_srcnbr_dst",
         "mean_cos_srcnbr_dst",
@@ -162,11 +168,16 @@ LINK_PREDICTION_FEATURES = [
     'preferential_attachment',
     'adamic_adar',
     'jaccard_neighbors',
+    # v6 popularity interaction features
+    'popularity_ratio',
+    'popularity_diff',
+    'popularity_product',
+    'log_popularity_ratio',
 ]
 
 # LOGIT Model Version - If changing below or training new, update this to new version
-LOGIT_MODEL_VERSION = "v5"
-LOGIT_MODEL_ID = 5
+LOGIT_MODEL_VERSION = "v6"
+LOGIT_MODEL_ID = 6
 LOGIT_MODEL_DESC = """
 Logistic Regression with PUSCAR with the following X variables:
 TO_USE = {

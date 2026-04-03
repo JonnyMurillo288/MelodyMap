@@ -460,7 +460,7 @@ These files are in the repo and ready to use:
 Phase 2.1 — Cloud MVP Deployment
 
 DATABASE
-[ ] Export your local database
+[x] Export your local database
     pg_dump -U postgres -d musicbrainz_db \
       --no-owner --no-acl -F custom -f musicbrainz_db.dump
     # Estimated size: ~1.2 GB

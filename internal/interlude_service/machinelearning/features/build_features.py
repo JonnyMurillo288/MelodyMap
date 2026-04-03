@@ -10,6 +10,36 @@ from tqdm import tqdm
 from utils.metrics import l2_normalize
 
 
+def compute_popularity_interactions(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Derive popularity interaction features from existing popularity_src and
+    popularity_dst columns.  The result is written back into *df* in-place and
+    the same DataFrame is returned for convenience.
+
+    Features added
+    --------------
+    popularity_ratio        max(src, dst) / (min(src, dst) + 1e-8)
+    popularity_diff         |src - dst|
+    popularity_product      src * dst
+    log_popularity_ratio    log1p(popularity_ratio)
+
+    These are additive -- callers that load an older model simply ignore the
+    extra columns via model.feature_names selection.
+    """
+    pop_src = df["popularity_src"]
+    pop_dst = df["popularity_dst"]
+
+    pop_max = np.maximum(pop_src, pop_dst)
+    pop_min = np.minimum(pop_src, pop_dst)
+
+    df["popularity_ratio"] = pop_max / (pop_min + 1e-8)
+    df["popularity_diff"] = np.abs(pop_src - pop_dst)
+    df["popularity_product"] = pop_src * pop_dst
+    df["log_popularity_ratio"] = np.log1p(df["popularity_ratio"])
+
+    return df
+
+
 def build_feature_row(src, dst, embedding_lookup, neighbors, topk=3):
     """
     Build feature row for a src-dst pair
@@ -244,4 +274,10 @@ def build_features_for_pairs(
 
     print("Number of skipped src,dst is",bad,round(bad/len(pairs_df)))
     df_features = pd.DataFrame(rows)
+
+    # Derive popularity interaction features so they are available for all
+    # model versions.  Older models simply ignore the extra columns.
+    if "popularity_src" in df_features.columns and "popularity_dst" in df_features.columns:
+        compute_popularity_interactions(df_features)
+
     return df_features
