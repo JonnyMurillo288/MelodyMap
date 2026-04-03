@@ -366,12 +366,12 @@ function createAutocomplete(inputEl) {
 // ====================================================================
 
 const WHATIF_TEST_DATA = {
-  "SZA+Anderson .Paak":    { probability: 0.72, genre: "neo-soul",        mood: "intimate" },
-  "SZA+Tame Impala":       { probability: 0.38, genre: "psychedelic-rnb", mood: "dreamy" },
-  "SZA+Gorillaz":          { probability: 0.29, genre: "art-pop",         mood: "melancholic" },
-  "Anderson .Paak+Tame Impala": { probability: 0.54, genre: "funk-rock",  mood: "groovy" },
-  "Anderson .Paak+Gorillaz":    { probability: 0.67, genre: "alt-funk",   mood: "euphoric" },
-  "Tame Impala+Gorillaz":       { probability: 0.61, genre: "psych-electronic", mood: "cosmic" },
+  "Eminem+Thundercat":          { probability: 0.754, genre: "bass-funk",        mood: "energetic" },
+  "Travis Scott+MGMT":          { probability: 0.506, genre: "psych-trap",       mood: "cosmic" },
+  "Eminem+Travis Scott":        { probability: 0.392, genre: "trap-rap",         mood: "aggressive" },
+  "Travis Scott+Thundercat":    { probability: 0.394, genre: "funk-trap",        mood: "groovy" },
+  "Thundercat+MGMT":            { probability: 0.441, genre: "psych-funk",       mood: "dreamy" },
+  "Eminem+MGMT":                { probability: 0.310, genre: "electro-rap",      mood: "euphoric" },
 };
 
 function generateWhatIfTracks(src, dst, prob) {
@@ -432,83 +432,85 @@ function toggleWhatIfPair(idx) {
 
 function generateSynthFeatures(src, dst) {
   const seed = (src + dst).length;
-  const prob = 0.72;
+  const prob = 0.754;
   return {
     probability: prob,
     tracks: [
       {
         track_id: 7001 + seed,
         audio_features: {
-          genre_dortmund_alternative: 0.31, genre_dortmund_electronic: 0.28,
-          mood_relaxed: 0.72, mood_happy: 0.41, danceability: 0.74,
-          timbre_bright: 0.58, voice_instrumental_voice: 0.85
+          genre_dortmund_alternative: 0.05, genre_dortmund_electronic: 0.86,
+          genre_dortmund_raphiphop: 0.02, genre_dortmund_funksoulrnb: 0.04,
+          mood_electronic: 0.93, mood_happy: 0.27, danceability: 0.99,
+          timbre_dark: 0.85, voice_instrumental_voice: 0.31
         },
         instrumentation: {
-          primary: ["drums", "bass"],
-          secondary: ["guitar", "piano"],
-          confidence: { drums: 0.91, bass: 0.87, guitar: 0.74, piano: 0.68, synth: 0.42, strings: 0.21 }
+          primary: ["bass", "drums"],
+          secondary: ["synth", "vocals"],
+          confidence: { bass: 0.94, drums: 0.91, synth: 0.78, vocals: 0.72, guitar: 0.38, piano: 0.22 }
         },
         lyric_assessment: {
-          mood: "intimate", themes: ["love", "vulnerability", "growth"],
-          vocal_style: "soulful_duet", density: 0.52, sentiment: 0.28, explicit_prob: 0.18
+          mood: "intense", themes: ["ambition", "resilience", "chaos"],
+          vocal_style: "rapid_fire_flow", density: 0.68, sentiment: -0.12, explicit_prob: 0.45
         },
         genre_style: {
-          primary: "neo-soul", subs: ["funk", "alt-rnb", "jazz-pop"],
-          era: "2020s", blend_score: 0.82
+          primary: "bass-funk", subs: ["trap", "electro-funk", "hip-hop"],
+          era: "2020s", blend_score: 0.86
         },
         popularity: {
-          predicted: 83,
+          predicted: 87,
           by_region: {
-            "North America": { score: 88, percentile: 94 },
-            "Europe": { score: 74, percentile: 82 },
-            "Latin America": { score: 65, percentile: 73 },
-            "Asia Pacific": { score: 58, percentile: 66 },
-            "Africa & Middle East": { score: 71, percentile: 79 }
+            "North America": { score: 92, percentile: 96 },
+            "Europe": { score: 78, percentile: 85 },
+            "Latin America": { score: 69, percentile: 76 },
+            "Asia Pacific": { score: 61, percentile: 68 },
+            "Africa & Middle East": { score: 65, percentile: 72 }
           },
           by_consumer: {
-            "Casual Listener": { appeal: 0.78, skip_rate: 0.14 },
-            "Genre Enthusiast": { appeal: 0.92, skip_rate: 0.04 },
-            "Playlist Curator": { appeal: 0.86, skip_rate: 0.08 },
-            "Discovery Seeker": { appeal: 0.84, skip_rate: 0.09 },
-            "Passive Streamer": { appeal: 0.65, skip_rate: 0.24 }
+            "Casual Listener": { appeal: 0.72, skip_rate: 0.18 },
+            "Genre Enthusiast": { appeal: 0.94, skip_rate: 0.03 },
+            "Playlist Curator": { appeal: 0.88, skip_rate: 0.06 },
+            "Discovery Seeker": { appeal: 0.85, skip_rate: 0.08 },
+            "Passive Streamer": { appeal: 0.58, skip_rate: 0.28 }
           }
         }
       },
       {
         track_id: 7101 + seed,
         audio_features: {
-          genre_dortmund_alternative: 0.38, genre_dortmund_electronic: 0.33,
-          mood_relaxed: 0.58, mood_happy: 0.52, danceability: 0.81,
-          timbre_bright: 0.64, voice_instrumental_voice: 0.79
+          genre_dortmund_alternative: 0.03, genre_dortmund_electronic: 0.91,
+          genre_dortmund_raphiphop: 0.01, genre_dortmund_funksoulrnb: 0.03,
+          mood_electronic: 0.98, mood_happy: 0.62, danceability: 0.99,
+          timbre_bright: 0.76, voice_instrumental_voice: 0.15
         },
         instrumentation: {
-          primary: ["bass", "guitar"],
-          secondary: ["drums", "synth"],
-          confidence: { bass: 0.90, guitar: 0.84, drums: 0.82, synth: 0.65, piano: 0.38, vocals: 0.95 }
+          primary: ["synth", "bass"],
+          secondary: ["drum_machine", "vocals"],
+          confidence: { synth: 0.92, bass: 0.88, drum_machine: 0.85, vocals: 0.68, guitar: 0.32, strings: 0.18 }
         },
         lyric_assessment: {
-          mood: "playful", themes: ["summer", "confidence", "celebration"],
-          vocal_style: "call_and_response", density: 0.46, sentiment: 0.55, explicit_prob: 0.10
+          mood: "euphoric", themes: ["nightlife", "energy", "confidence"],
+          vocal_style: "chant_hook", density: 0.41, sentiment: 0.55, explicit_prob: 0.32
         },
         genre_style: {
-          primary: "funk-soul", subs: ["disco-pop", "groove", "future-funk"],
-          era: "2020s", blend_score: 0.78
+          primary: "electro-funk", subs: ["future-bass", "trap-soul", "g-funk"],
+          era: "2020s", blend_score: 0.79
         },
         popularity: {
-          predicted: 77,
+          predicted: 81,
           by_region: {
-            "North America": { score: 82, percentile: 90 },
-            "Europe": { score: 70, percentile: 78 },
-            "Latin America": { score: 72, percentile: 80 },
-            "Asia Pacific": { score: 54, percentile: 62 },
-            "Africa & Middle East": { score: 66, percentile: 74 }
+            "North America": { score: 86, percentile: 92 },
+            "Europe": { score: 74, percentile: 81 },
+            "Latin America": { score: 72, percentile: 79 },
+            "Asia Pacific": { score: 56, percentile: 63 },
+            "Africa & Middle East": { score: 68, percentile: 75 }
           },
           by_consumer: {
-            "Casual Listener": { appeal: 0.74, skip_rate: 0.16 },
-            "Genre Enthusiast": { appeal: 0.88, skip_rate: 0.06 },
-            "Playlist Curator": { appeal: 0.82, skip_rate: 0.10 },
-            "Discovery Seeker": { appeal: 0.80, skip_rate: 0.11 },
-            "Passive Streamer": { appeal: 0.68, skip_rate: 0.22 }
+            "Casual Listener": { appeal: 0.76, skip_rate: 0.15 },
+            "Genre Enthusiast": { appeal: 0.90, skip_rate: 0.05 },
+            "Playlist Curator": { appeal: 0.84, skip_rate: 0.09 },
+            "Discovery Seeker": { appeal: 0.82, skip_rate: 0.10 },
+            "Passive Streamer": { appeal: 0.62, skip_rate: 0.25 }
           }
         }
       }
@@ -531,18 +533,18 @@ function instrumentIcon(name) {
 // ====================================================================
 
 const PLAYLIST_TRACKS = [
-  { name: "Kill Bill", artist: "SZA", similarity: 0.94, genre: "neo-soul", popularity: 95, features: { energy: 0.55, danceability: 0.72, valence: 0.48 } },
-  { name: "Come Down", artist: "Anderson .Paak", similarity: 0.91, genre: "funk-soul", popularity: 85, features: { energy: 0.82, danceability: 0.78, valence: 0.71 } },
-  { name: "The Less I Know the Better", artist: "Tame Impala", similarity: 0.88, genre: "psychedelic-pop", popularity: 88, features: { energy: 0.74, danceability: 0.72, valence: 0.68 } },
-  { name: "Feel Good Inc.", artist: "Gorillaz", similarity: 0.87, genre: "alt-hip-hop", popularity: 91, features: { energy: 0.77, danceability: 0.69, valence: 0.52 } },
-  { name: "Good Days", artist: "SZA", similarity: 0.85, genre: "psychedelic-rnb", popularity: 89, features: { energy: 0.42, danceability: 0.66, valence: 0.54 } },
-  { name: "Let It Happen", artist: "Tame Impala", similarity: 0.84, genre: "psychedelic-rock", popularity: 82, features: { energy: 0.85, danceability: 0.52, valence: 0.46 } },
-  { name: "Dang!", artist: "Anderson .Paak", similarity: 0.83, genre: "future-funk", popularity: 78, features: { energy: 0.58, danceability: 0.84, valence: 0.82 } },
-  { name: "On Melancholy Hill", artist: "Gorillaz", similarity: 0.82, genre: "synth-pop", popularity: 84, features: { energy: 0.48, danceability: 0.55, valence: 0.62 } },
-  { name: "Snooze", artist: "SZA", similarity: 0.80, genre: "alt-rnb", popularity: 90, features: { energy: 0.35, danceability: 0.58, valence: 0.31 } },
-  { name: "DARE", artist: "Gorillaz", similarity: 0.79, genre: "electro-pop", popularity: 80, features: { energy: 0.79, danceability: 0.88, valence: 0.85 } },
-  { name: "Borderline", artist: "Tame Impala", similarity: 0.77, genre: "synth-pop", popularity: 75, features: { energy: 0.72, danceability: 0.71, valence: 0.74 } },
-  { name: "Tints", artist: "Anderson .Paak", similarity: 0.76, genre: "neo-soul", popularity: 76, features: { energy: 0.68, danceability: 0.75, valence: 0.78 } },
+  { name: "Lose Yourself", artist: "Eminem", similarity: 0.94, genre: "hip-hop", popularity: 96, features: { energy: 0.91, danceability: 0.68, valence: 0.38 } },
+  { name: "SICKO MODE", artist: "Travis Scott", similarity: 0.91, genre: "trap-rap", popularity: 94, features: { energy: 0.88, danceability: 0.83, valence: 0.45 } },
+  { name: "Them Changes", artist: "Thundercat", similarity: 0.89, genre: "bass-funk", popularity: 82, features: { energy: 0.72, danceability: 0.81, valence: 0.74 } },
+  { name: "Electric Feel", artist: "MGMT", similarity: 0.87, genre: "synth-pop", popularity: 88, features: { energy: 0.76, danceability: 0.85, valence: 0.82 } },
+  { name: "Without Me", artist: "Eminem", similarity: 0.85, genre: "rap-rock", popularity: 93, features: { energy: 0.84, danceability: 0.76, valence: 0.62 } },
+  { name: "goosebumps", artist: "Travis Scott", similarity: 0.84, genre: "psychedelic-trap", popularity: 91, features: { energy: 0.79, danceability: 0.84, valence: 0.41 } },
+  { name: "Dragonball Durag", artist: "Thundercat", similarity: 0.82, genre: "future-funk", popularity: 78, features: { energy: 0.58, danceability: 0.77, valence: 0.85 } },
+  { name: "Little Dark Age", artist: "MGMT", similarity: 0.81, genre: "dark-synth", popularity: 86, features: { energy: 0.71, danceability: 0.72, valence: 0.28 } },
+  { name: "The Real Slim Shady", artist: "Eminem", similarity: 0.79, genre: "pop-rap", popularity: 92, features: { energy: 0.82, danceability: 0.79, valence: 0.71 } },
+  { name: "HIGHEST IN THE ROOM", artist: "Travis Scott", similarity: 0.78, genre: "ambient-trap", popularity: 89, features: { energy: 0.65, danceability: 0.71, valence: 0.35 } },
+  { name: "Friend Zone", artist: "Thundercat", similarity: 0.76, genre: "jazz-funk", popularity: 74, features: { energy: 0.52, danceability: 0.68, valence: 0.61 } },
+  { name: "Kids", artist: "MGMT", similarity: 0.75, genre: "indie-electronic", popularity: 85, features: { energy: 0.78, danceability: 0.74, valence: 0.76 } },
 ];
 
 // (Playlist input/button function removed — preview card auto-renders with fixed data)
@@ -554,13 +556,13 @@ function togglePlaylistDetail(row) {
 // ---- Auto-render preview cards with fixed demo data ----
 function renderPreviewCards() {
   // What-If: prefill with 4 artists
-  runWhatIfPreview(["SZA", "Anderson .Paak", "Tame Impala", "Gorillaz"]);
+  runWhatIfPreview(["Eminem", "Travis Scott", "Thundercat", "MGMT"]);
 
   // Synthetic Track Deep Dive: prefill
-  runSynthFeaturesPreview("SZA", "Anderson .Paak");
+  runSynthFeaturesPreview("Eminem", "Thundercat");
 
   // Playlist: prefill
-  runPlaylistPreview("SZA", "Gorillaz");
+  runPlaylistPreview("Eminem", "MGMT");
 }
 
 // What-If Explorer: calls backend /api/v1/predict/connection for each (i,j) pair.
