@@ -366,12 +366,12 @@ function createAutocomplete(inputEl) {
 // ====================================================================
 
 const WHATIF_TEST_DATA = {
-  "Billie Eilish+The Weeknd": { probability: 0.81, genre: "dark-pop", mood: "melancholic" },
-  "Billie Eilish+Daft Punk": { probability: 0.43, genre: "electro-pop", mood: "atmospheric" },
-  "Billie Eilish+Tame Impala": { probability: 0.56, genre: "dream-pop", mood: "dreamy" },
-  "The Weeknd+Daft Punk": { probability: 0.94, genre: "synth-funk", mood: "euphoric" },
-  "The Weeknd+Tame Impala": { probability: 0.67, genre: "psychedelic-rnb", mood: "nocturnal" },
-  "Daft Punk+Tame Impala": { probability: 0.71, genre: "space-disco", mood: "cosmic" },
+  "SZA+Anderson .Paak":    { probability: 0.72, genre: "neo-soul",        mood: "intimate" },
+  "SZA+Tame Impala":       { probability: 0.38, genre: "psychedelic-rnb", mood: "dreamy" },
+  "SZA+Gorillaz":          { probability: 0.29, genre: "art-pop",         mood: "melancholic" },
+  "Anderson .Paak+Tame Impala": { probability: 0.54, genre: "funk-rock",  mood: "groovy" },
+  "Anderson .Paak+Gorillaz":    { probability: 0.67, genre: "alt-funk",   mood: "euphoric" },
+  "Tame Impala+Gorillaz":       { probability: 0.61, genre: "psych-electronic", mood: "cosmic" },
 };
 
 function generateWhatIfTracks(src, dst, prob) {
@@ -432,83 +432,83 @@ function toggleWhatIfPair(idx) {
 
 function generateSynthFeatures(src, dst) {
   const seed = (src + dst).length;
-  const prob = 0.40 + (seed % 50) / 100;
+  const prob = 0.72;
   return {
     probability: prob,
     tracks: [
       {
         track_id: 7001 + seed,
         audio_features: {
-          genre_dortmund_alternative: 0.48, genre_dortmund_electronic: 0.39,
-          mood_relaxed: 0.65, mood_sad: 0.38, danceability: 0.55,
-          timbre_dark: 0.52, voice_instrumental_voice: 0.73
+          genre_dortmund_alternative: 0.31, genre_dortmund_electronic: 0.28,
+          mood_relaxed: 0.72, mood_happy: 0.41, danceability: 0.74,
+          timbre_bright: 0.58, voice_instrumental_voice: 0.85
         },
         instrumentation: {
-          primary: ["synth", "bass"],
-          secondary: ["guitar", "drum_machine"],
-          confidence: { synth: 0.89, bass: 0.82, guitar: 0.71, drum_machine: 0.65, strings: 0.22, piano: 0.18 }
+          primary: ["drums", "bass"],
+          secondary: ["guitar", "piano"],
+          confidence: { drums: 0.91, bass: 0.87, guitar: 0.74, piano: 0.68, synth: 0.42, strings: 0.21 }
         },
         lyric_assessment: {
-          mood: "introspective", themes: ["isolation", "self-reflection", "longing"],
-          vocal_style: "breathy", density: 0.42, sentiment: -0.15, explicit_prob: 0.12
+          mood: "intimate", themes: ["love", "vulnerability", "growth"],
+          vocal_style: "soulful_duet", density: 0.52, sentiment: 0.28, explicit_prob: 0.18
         },
         genre_style: {
-          primary: "psychedelic-pop", subs: ["dream-pop", "electro-pop", "indie"],
-          era: "2020s", blend_score: 0.74
+          primary: "neo-soul", subs: ["funk", "alt-rnb", "jazz-pop"],
+          era: "2020s", blend_score: 0.82
         },
         popularity: {
-          predicted: 79,
+          predicted: 83,
           by_region: {
-            "North America": { score: 84, percentile: 92 },
-            "Europe": { score: 81, percentile: 89 },
-            "Latin America": { score: 62, percentile: 71 },
-            "Asia Pacific": { score: 70, percentile: 78 },
-            "Africa & Middle East": { score: 48, percentile: 60 }
+            "North America": { score: 88, percentile: 94 },
+            "Europe": { score: 74, percentile: 82 },
+            "Latin America": { score: 65, percentile: 73 },
+            "Asia Pacific": { score: 58, percentile: 66 },
+            "Africa & Middle East": { score: 71, percentile: 79 }
           },
           by_consumer: {
-            "Casual Listener": { appeal: 0.72, skip_rate: 0.18 },
-            "Genre Enthusiast": { appeal: 0.88, skip_rate: 0.06 },
-            "Playlist Curator": { appeal: 0.81, skip_rate: 0.10 },
-            "Discovery Seeker": { appeal: 0.90, skip_rate: 0.05 },
-            "Passive Streamer": { appeal: 0.60, skip_rate: 0.28 }
+            "Casual Listener": { appeal: 0.78, skip_rate: 0.14 },
+            "Genre Enthusiast": { appeal: 0.92, skip_rate: 0.04 },
+            "Playlist Curator": { appeal: 0.86, skip_rate: 0.08 },
+            "Discovery Seeker": { appeal: 0.84, skip_rate: 0.09 },
+            "Passive Streamer": { appeal: 0.65, skip_rate: 0.24 }
           }
         }
       },
       {
         track_id: 7101 + seed,
         audio_features: {
-          genre_dortmund_alternative: 0.52, genre_dortmund_electronic: 0.34,
-          mood_relaxed: 0.71, mood_electronic: 0.30, danceability: 0.60,
-          timbre_bright: 0.44, voice_instrumental_voice: 0.68
+          genre_dortmund_alternative: 0.38, genre_dortmund_electronic: 0.33,
+          mood_relaxed: 0.58, mood_happy: 0.52, danceability: 0.81,
+          timbre_bright: 0.64, voice_instrumental_voice: 0.79
         },
         instrumentation: {
-          primary: ["guitar", "synth"],
-          secondary: ["bass", "reverb_vocals"],
-          confidence: { guitar: 0.87, synth: 0.80, bass: 0.74, reverb_vocals: 0.69, drums: 0.58, piano: 0.15 }
+          primary: ["bass", "guitar"],
+          secondary: ["drums", "synth"],
+          confidence: { bass: 0.90, guitar: 0.84, drums: 0.82, synth: 0.65, piano: 0.38, vocals: 0.95 }
         },
         lyric_assessment: {
-          mood: "dreamy", themes: ["escape", "nostalgia", "wonder"],
-          vocal_style: "layered_harmonies", density: 0.35, sentiment: 0.22, explicit_prob: 0.04
+          mood: "playful", themes: ["summer", "confidence", "celebration"],
+          vocal_style: "call_and_response", density: 0.46, sentiment: 0.55, explicit_prob: 0.10
         },
         genre_style: {
-          primary: "dream-pop", subs: ["shoegaze", "art-pop", "synth-pop"],
-          era: "2010s", blend_score: 0.81
+          primary: "funk-soul", subs: ["disco-pop", "groove", "future-funk"],
+          era: "2020s", blend_score: 0.78
         },
         popularity: {
-          predicted: 74,
+          predicted: 77,
           by_region: {
-            "North America": { score: 78, percentile: 85 },
-            "Europe": { score: 80, percentile: 88 },
-            "Latin America": { score: 55, percentile: 63 },
-            "Asia Pacific": { score: 65, percentile: 72 },
-            "Africa & Middle East": { score: 42, percentile: 54 }
+            "North America": { score: 82, percentile: 90 },
+            "Europe": { score: 70, percentile: 78 },
+            "Latin America": { score: 72, percentile: 80 },
+            "Asia Pacific": { score: 54, percentile: 62 },
+            "Africa & Middle East": { score: 66, percentile: 74 }
           },
           by_consumer: {
-            "Casual Listener": { appeal: 0.65, skip_rate: 0.22 },
-            "Genre Enthusiast": { appeal: 0.91, skip_rate: 0.04 },
-            "Playlist Curator": { appeal: 0.78, skip_rate: 0.12 },
-            "Discovery Seeker": { appeal: 0.85, skip_rate: 0.07 },
-            "Passive Streamer": { appeal: 0.52, skip_rate: 0.32 }
+            "Casual Listener": { appeal: 0.74, skip_rate: 0.16 },
+            "Genre Enthusiast": { appeal: 0.88, skip_rate: 0.06 },
+            "Playlist Curator": { appeal: 0.82, skip_rate: 0.10 },
+            "Discovery Seeker": { appeal: 0.80, skip_rate: 0.11 },
+            "Passive Streamer": { appeal: 0.68, skip_rate: 0.22 }
           }
         }
       }
@@ -531,18 +531,18 @@ function instrumentIcon(name) {
 // ====================================================================
 
 const PLAYLIST_TRACKS = [
-  { name: "Blinding Lights", artist: "The Weeknd", similarity: 0.94, genre: "synth-pop", popularity: 95, features: { energy: 0.73, danceability: 0.51, valence: 0.34 } },
-  { name: "bad guy", artist: "Billie Eilish", similarity: 0.91, genre: "electro-pop", popularity: 92, features: { energy: 0.43, danceability: 0.70, valence: 0.56 } },
+  { name: "Kill Bill", artist: "SZA", similarity: 0.94, genre: "neo-soul", popularity: 95, features: { energy: 0.55, danceability: 0.72, valence: 0.48 } },
+  { name: "Come Down", artist: "Anderson .Paak", similarity: 0.91, genre: "funk-soul", popularity: 85, features: { energy: 0.82, danceability: 0.78, valence: 0.71 } },
   { name: "The Less I Know the Better", artist: "Tame Impala", similarity: 0.88, genre: "psychedelic-pop", popularity: 88, features: { energy: 0.74, danceability: 0.72, valence: 0.68 } },
-  { name: "Starboy", artist: "The Weeknd", similarity: 0.87, genre: "electro-rnb", popularity: 93, features: { energy: 0.59, danceability: 0.68, valence: 0.49 } },
-  { name: "everything i wanted", artist: "Billie Eilish", similarity: 0.85, genre: "dream-pop", popularity: 86, features: { energy: 0.23, danceability: 0.51, valence: 0.24 } },
+  { name: "Feel Good Inc.", artist: "Gorillaz", similarity: 0.87, genre: "alt-hip-hop", popularity: 91, features: { energy: 0.77, danceability: 0.69, valence: 0.52 } },
+  { name: "Good Days", artist: "SZA", similarity: 0.85, genre: "psychedelic-rnb", popularity: 89, features: { energy: 0.42, danceability: 0.66, valence: 0.54 } },
   { name: "Let It Happen", artist: "Tame Impala", similarity: 0.84, genre: "psychedelic-rock", popularity: 82, features: { energy: 0.85, danceability: 0.52, valence: 0.46 } },
-  { name: "Get Lucky", artist: "Daft Punk", similarity: 0.83, genre: "disco-funk", popularity: 90, features: { energy: 0.78, danceability: 0.87, valence: 0.93 } },
-  { name: "Save Your Tears", artist: "The Weeknd", similarity: 0.82, genre: "synth-pop", popularity: 94, features: { energy: 0.64, danceability: 0.68, valence: 0.59 } },
-  { name: "lovely", artist: "Billie Eilish", similarity: 0.80, genre: "dark-pop", popularity: 89, features: { energy: 0.30, danceability: 0.35, valence: 0.12 } },
-  { name: "Instant Crush", artist: "Daft Punk", similarity: 0.79, genre: "synth-rock", popularity: 78, features: { energy: 0.60, danceability: 0.52, valence: 0.40 } },
+  { name: "Dang!", artist: "Anderson .Paak", similarity: 0.83, genre: "future-funk", popularity: 78, features: { energy: 0.58, danceability: 0.84, valence: 0.82 } },
+  { name: "On Melancholy Hill", artist: "Gorillaz", similarity: 0.82, genre: "synth-pop", popularity: 84, features: { energy: 0.48, danceability: 0.55, valence: 0.62 } },
+  { name: "Snooze", artist: "SZA", similarity: 0.80, genre: "alt-rnb", popularity: 90, features: { energy: 0.35, danceability: 0.58, valence: 0.31 } },
+  { name: "DARE", artist: "Gorillaz", similarity: 0.79, genre: "electro-pop", popularity: 80, features: { energy: 0.79, danceability: 0.88, valence: 0.85 } },
   { name: "Borderline", artist: "Tame Impala", similarity: 0.77, genre: "synth-pop", popularity: 75, features: { energy: 0.72, danceability: 0.71, valence: 0.74 } },
-  { name: "One More Time", artist: "Daft Punk", similarity: 0.76, genre: "french-house", popularity: 87, features: { energy: 0.82, danceability: 0.89, valence: 0.96 } },
+  { name: "Tints", artist: "Anderson .Paak", similarity: 0.76, genre: "neo-soul", popularity: 76, features: { energy: 0.68, danceability: 0.75, valence: 0.78 } },
 ];
 
 // (Playlist input/button function removed — preview card auto-renders with fixed data)
@@ -554,13 +554,13 @@ function togglePlaylistDetail(row) {
 // ---- Auto-render preview cards with fixed demo data ----
 function renderPreviewCards() {
   // What-If: prefill with 4 artists
-  runWhatIfPreview(["Billie Eilish", "The Weeknd", "Daft Punk", "Tame Impala"]);
+  runWhatIfPreview(["SZA", "Anderson .Paak", "Tame Impala", "Gorillaz"]);
 
   // Synthetic Track Deep Dive: prefill
-  runSynthFeaturesPreview("Billie Eilish", "Tame Impala");
+  runSynthFeaturesPreview("SZA", "Anderson .Paak");
 
   // Playlist: prefill
-  runPlaylistPreview("Billie Eilish", "The Weeknd");
+  runPlaylistPreview("SZA", "Gorillaz");
 }
 
 // What-If Explorer: calls backend /api/v1/predict/connection for each (i,j) pair.
