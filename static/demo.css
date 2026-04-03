@@ -1252,10 +1252,13 @@ main {
   border-radius: 10px;
   padding: 1rem;
 }
-.world-map-svg {
+.d3-map-target {
   width: 100%;
   max-width: 750px;
   margin: 0 auto;
+}
+.world-map-svg {
+  width: 100%;
   display: block;
 }
 .map-region {

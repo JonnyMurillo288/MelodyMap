@@ -563,6 +563,10 @@ function renderPreviewCards() {
   runPlaylistPreview("Billie Eilish", "The Weeknd");
 }
 
+// CLAUDE CODE NOTES: I WANT YOU TO CALL THE BACKEND PREDICTION CONNECTIONS FOR EACH I,J, 
+// LIMIT THE USER TO 4 ARTISTS BATCH PREDICTION TO AVOID LONG LOAD TIMES, AND DISPLAY THE RESULTS IN THE WHAT-IF EXPLORER LAYOUT BELOW.
+// FOR THE DEMO CREATE THE ACTUAL PREDICTION SCORES, AND THE SYNTHETIC TRACKS FOR THESE FOUR, 
+// bUT FOR THE POPULARITY METRICS, DO NOT CHANGE
 function runWhatIfPreview(artists) {
   const pairs = [];
   for (let i = 0; i < artists.length; i++) {
@@ -727,6 +731,9 @@ function runSynthFeaturesPreview(src, dst) {
   // 3. Full track breakdown
   const container = $('#synthFeatContent');
   container.innerHTML = data.tracks.map((track, ti) => buildSynthTrackHtml(track, ti)).join('<hr class="synth-divider"/>');
+
+  // 4. Initialize D3 world maps after DOM insertion
+  initPendingMaps();
 }
 
 function regionColor(score) {
@@ -736,90 +743,46 @@ function regionColor(score) {
   return 'hsl(0, 50%, 35%)';
 }
 
+// ---- D3 World Map with real Natural Earth 110m boundaries ----
+let _worldTopoCache = null;
+async function loadWorldTopo() {
+  if (_worldTopoCache) return _worldTopoCache;
+  const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+  _worldTopoCache = await res.json();
+  return _worldTopoCache;
+}
+
+// ISO 3166-1 numeric → macro-region
+const COUNTRY_REGION = {};
+[124,840,484,44,52,84,188,192,212,214,308,320,332,340,388,558,591,630,780,660,28,92,136,222,312,474,500,531,534,535,652,659,662,663,670,796,850]
+  .forEach(id => COUNTRY_REGION[id] = 'North America');
+[32,68,76,152,170,218,238,254,328,600,604,740,858,862]
+  .forEach(id => COUNTRY_REGION[id] = 'Latin America');
+[8,20,40,56,70,100,112,191,196,203,208,233,234,246,250,276,292,300,348,352,372,380,428,438,440,442,470,492,498,499,528,578,616,620,642,674,688,703,705,724,744,752,756,804,807,826,831,832,833,680]
+  .forEach(id => COUNTRY_REGION[id] = 'Europe');
+[12,24,72,86,108,120,132,140,148,174,175,178,180,204,226,231,232,262,266,270,288,324,384,404,426,430,434,450,454,466,478,480,504,508,516,562,566,624,638,646,678,686,694,706,710,716,728,729,732,736,748,768,788,800,834,854,894,31,48,51,268,275,364,368,376,398,400,414,417,422,462,512,586,634,682,760,762,784,792,795,860,887]
+  .forEach(id => COUNTRY_REGION[id] = 'Africa & Middle East');
+[4,50,64,96,104,116,144,156,158,344,360,392,408,410,418,446,458,496,524,608,626,643,702,764,704,798,36,90,184,242,296,520,540,548,554,570,583,584,585,598,612,776,882]
+  .forEach(id => COUNTRY_REGION[id] = 'Asia Pacific');
+
+const REGION_LABELS = {
+  'North America': [-100, 45], 'Latin America': [-58, -15],
+  'Europe': [15, 52], 'Africa & Middle East': [25, 5], 'Asia Pacific': [105, 30],
+};
+const REGION_ABBR = {
+  'North America': 'NA', 'Latin America': 'LATAM',
+  'Europe': 'EU', 'Africa & Middle East': 'AF/ME', 'Asia Pacific': 'APAC',
+};
+
+let _mapIdCounter = 0;
+
 function renderWorldMap(byRegion) {
-  const na = byRegion["North America"] || { score: 0 };
-  const eu = byRegion["Europe"] || { score: 0 };
-  const la = byRegion["Latin America"] || { score: 0 };
-  const ap = byRegion["Asia Pacific"] || { score: 0 };
-  const af = byRegion["Africa & Middle East"] || { score: 0 };
+  const mapId = `d3-world-map-${_mapIdCounter++}`;
+  window._pendingMaps = window._pendingMaps || {};
+  window._pendingMaps[mapId] = byRegion;
 
   return `<div class="world-map-container">
-    <svg viewBox="0 0 1000 500" class="world-map-svg">
-      <!-- Grid lines -->
-      <line x1="0" y1="250" x2="1000" y2="250" stroke="rgba(148,163,184,0.08)" stroke-dasharray="4,4"/>
-      <line x1="0" y1="125" x2="1000" y2="125" stroke="rgba(148,163,184,0.05)" stroke-dasharray="4,4"/>
-      <line x1="0" y1="375" x2="1000" y2="375" stroke="rgba(148,163,184,0.05)" stroke-dasharray="4,4"/>
-
-      <!-- North America: Alaska, Canada, USA, Mexico -->
-      <path d="M30,55 L55,40 L95,35 L120,50 L110,70 L130,65 L165,45 L200,40 L225,55 L245,50
-               L265,60 L275,75 L260,85 L240,80 L220,85 L235,95 L250,100 L260,110 L255,125
-               L240,135 L225,145 L215,160 L200,170 L185,175 L170,165 L155,170 L140,180
-               L125,185 L110,175 L95,160 L80,150 L65,155 L50,145 L40,130 L30,115 L25,95
-               L20,75 Z"
-        fill="${regionColor(na.score)}" class="map-region" data-region="North America" data-score="${na.score}">
-        <title>North America: ${na.score}/100</title>
-      </path>
-      <text x="165" y="110" class="map-label">NA</text>
-      <text x="165" y="130" class="map-score">${na.score}</text>
-
-      <!-- Latin America: Central America, Caribbean, South America -->
-      <path d="M140,185 L155,180 L170,175 L185,180 L200,185 L210,195 L218,205 L222,215
-               L225,230 L230,245 L235,255 L240,265 L245,280 L248,295 L245,310 L240,325
-               L232,340 L225,350 L218,360 L210,370 L200,378 L192,385 L185,392 L178,398
-               L172,402 L168,408 L175,415 L172,425 L162,430 L155,420 L150,408 L148,395
-               L152,382 L155,370 L158,358 L160,345 L158,332 L155,320 L148,310 L140,300
-               L135,288 L132,275 L128,262 L125,250 L122,238 L120,225 L122,212 L128,200
-               L135,192 Z"
-        fill="${regionColor(la.score)}" class="map-region" data-region="Latin America" data-score="${la.score}">
-        <title>Latin America: ${la.score}/100</title>
-      </path>
-      <text x="195" y="305" class="map-label">LATAM</text>
-      <text x="195" y="325" class="map-score">${la.score}</text>
-
-      <!-- Europe: Scandinavia, Western Europe, Eastern Europe, UK, Mediterranean -->
-      <path d="M420,30 L440,25 L460,28 L475,35 L488,28 L500,32 L515,40 L530,45 L540,55
-               L545,68 L548,80 L545,92 L540,102 L535,110 L525,118 L515,122 L505,128
-               L495,132 L485,135 L475,132 L465,128 L455,125 L448,130 L442,138 L438,145
-               L432,140 L425,135 L418,130 L412,122 L408,115 L405,108 L400,100 L398,90
-               L395,82 L392,72 L395,62 L400,52 L408,42 L415,35 Z
-               M388,72 L395,65 L400,72 L398,82 L390,85 L385,80 Z"
-        fill="${regionColor(eu.score)}" class="map-region" data-region="Europe" data-score="${eu.score}">
-        <title>Europe: ${eu.score}/100</title>
-      </path>
-      <text x="468" y="85" class="map-label">EU</text>
-      <text x="468" y="105" class="map-score">${eu.score}</text>
-
-      <!-- Africa & Middle East -->
-      <path d="M430,148 L445,142 L458,138 L470,140 L482,145 L495,148 L510,152 L525,148
-               L540,145 L555,150 L560,160 L558,172 L552,182 L545,190 L538,198 L530,205
-               L522,215 L515,225 L510,238 L508,252 L505,265 L502,278 L498,290 L495,302
-               L492,315 L488,328 L482,340 L475,350 L468,358 L460,362 L452,358 L445,350
-               L438,340 L432,328 L428,315 L425,302 L422,290 L420,278 L418,265 L416,252
-               L415,240 L416,228 L418,218 L420,208 L422,198 L425,188 L428,178 L430,168
-               L430,158 Z"
-        fill="${regionColor(af.score)}" class="map-region" data-region="Africa & Middle East" data-score="${af.score}">
-        <title>Africa & Middle East: ${af.score}/100</title>
-      </path>
-      <text x="478" y="245" class="map-label">AF/ME</text>
-      <text x="478" y="265" class="map-score">${af.score}</text>
-
-      <!-- Asia Pacific: Russia/Central Asia, East Asia, Southeast Asia, India, Australia -->
-      <path d="M555,30 L585,25 L620,22 L660,25 L700,28 L740,32 L775,38 L800,45 L820,55
-               L835,68 L842,82 L845,95 L842,108 L835,120 L825,132 L815,142 L805,150
-               L795,155 L785,158 L775,162 L765,168 L758,175 L752,185 L748,195 L742,205
-               L735,215 L728,222 L718,228 L708,232 L698,228 L690,222 L685,215 L680,205
-               L675,195 L672,185 L665,178 L658,172 L650,168 L640,165 L630,162 L620,160
-               L610,158 L600,155 L590,150 L580,145 L570,138 L562,130 L558,120 L555,108
-               L552,95 L550,82 L548,68 L550,55 L552,42 Z
-               M720,240 L735,235 L752,238 L768,245 L782,255 L795,268 L805,282 L810,298
-               L808,312 L800,325 L788,335 L775,342 L760,345 L745,340 L732,332 L722,322
-               L715,310 L712,298 L710,285 L712,272 L715,260 L718,250 Z"
-        fill="${regionColor(ap.score)}" class="map-region" data-region="Asia Pacific" data-score="${ap.score}">
-        <title>Asia Pacific: ${ap.score}/100</title>
-      </path>
-      <text x="700" y="115" class="map-label">APAC</text>
-      <text x="700" y="135" class="map-score">${ap.score}</text>
-    </svg>
+    <div id="${mapId}" class="d3-map-target"></div>
     <div class="map-legend">
       <span class="legend-item"><span class="legend-dot" style="background:hsl(142,70%,40%);"></span>75+</span>
       <span class="legend-item"><span class="legend-dot" style="background:hsl(142,50%,30%);"></span>60-74</span>
@@ -827,6 +790,70 @@ function renderWorldMap(byRegion) {
       <span class="legend-item"><span class="legend-dot" style="background:hsl(0,50%,35%);"></span>&lt;45</span>
     </div>
   </div>`;
+}
+
+async function initPendingMaps() {
+  if (!window._pendingMaps || !Object.keys(window._pendingMaps).length) return;
+  const topo = await loadWorldTopo();
+  const countries = topojson.feature(topo, topo.objects.countries);
+  const borders = topojson.mesh(topo, topo.objects.countries, (a, b) => a !== b);
+
+  for (const [mapId, byRegion] of Object.entries(window._pendingMaps)) {
+    const el = document.getElementById(mapId);
+    if (!el || el.querySelector('svg')) continue;
+
+    const width = 750, height = 400;
+    const projection = d3.geoNaturalEarth1().scale(145).translate([width / 2, height / 2]);
+    const pathGen = d3.geoPath(projection);
+
+    const svg = d3.select(el).append('svg')
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('class', 'world-map-svg');
+
+    // Ocean background
+    svg.append('rect').attr('width', width).attr('height', height)
+      .attr('fill', 'rgba(8, 12, 28, 0.6)').attr('rx', 8);
+
+    // Graticule grid
+    svg.append('path').datum(d3.geoGraticule10()).attr('d', pathGen)
+      .attr('fill', 'none').attr('stroke', 'rgba(148,163,184,0.06)').attr('stroke-width', 0.5);
+
+    // Country shapes colored by region score
+    svg.selectAll('.country').data(countries.features).join('path')
+      .attr('class', 'map-region')
+      .attr('d', pathGen)
+      .attr('fill', d => {
+        const region = COUNTRY_REGION[+d.id];
+        const rd = region && byRegion[region];
+        return rd ? regionColor(rd.score) : 'rgba(30,41,59,0.5)';
+      })
+      .append('title').text(d => {
+        const region = COUNTRY_REGION[+d.id];
+        const rd = region && byRegion[region];
+        return rd ? `${region}: ${rd.score}/100` : '';
+      });
+
+    // Country borders
+    svg.append('path').datum(borders).attr('d', pathGen)
+      .attr('fill', 'none').attr('stroke', 'rgba(148,163,184,0.15)')
+      .attr('stroke-width', 0.4).attr('stroke-linejoin', 'round');
+
+    // Region labels with background pill
+    for (const [region, [lon, lat]] of Object.entries(REGION_LABELS)) {
+      const rd = byRegion[region];
+      if (!rd) continue;
+      const [x, y] = projection([lon, lat]);
+      const g = svg.append('g');
+      g.append('rect')
+        .attr('x', x - 30).attr('y', y - 14).attr('width', 60).attr('height', 34)
+        .attr('rx', 6).attr('fill', 'rgba(5,7,18,0.7)');
+      g.append('text').attr('x', x).attr('y', y + 2)
+        .attr('class', 'map-label').text(REGION_ABBR[region]);
+      g.append('text').attr('x', x).attr('y', y + 18)
+        .attr('class', 'map-score').text(rd.score);
+    }
+  }
+  window._pendingMaps = {};
 }
 
 function buildSynthTrackHtml(track, ti) {
