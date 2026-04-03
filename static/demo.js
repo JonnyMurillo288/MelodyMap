@@ -563,28 +563,87 @@ function renderPreviewCards() {
   runPlaylistPreview("Billie Eilish", "The Weeknd");
 }
 
-// CLAUDE CODE NOTES: I WANT YOU TO CALL THE BACKEND PREDICTION CONNECTIONS FOR EACH I,J, 
-// LIMIT THE USER TO 4 ARTISTS BATCH PREDICTION TO AVOID LONG LOAD TIMES, AND DISPLAY THE RESULTS IN THE WHAT-IF EXPLORER LAYOUT BELOW.
-// FOR THE DEMO CREATE THE ACTUAL PREDICTION SCORES, AND THE SYNTHETIC TRACKS FOR THESE FOUR, 
-// bUT FOR THE POPULARITY METRICS, DO NOT CHANGE
-function runWhatIfPreview(artists) {
-  const pairs = [];
+// What-If Explorer: calls backend /api/v1/predict/connection for each (i,j) pair.
+// Limited to 4 artists max to keep load times reasonable.
+async function runWhatIfPreview(artists) {
+  artists = artists.slice(0, 4); // hard cap at 4
+
+  // Show loading
+  loading('#whatifNetwork', 'Running ML predictions for all pair permutations...');
+  $('#whatifPairs').innerHTML = '';
+
+  // Build all (i,j) pair requests
+  const pairKeys = [];
   for (let i = 0; i < artists.length; i++) {
     for (let j = i + 1; j < artists.length; j++) {
-      const key = artists[i] + '+' + artists[j];
-      const revKey = artists[j] + '+' + artists[i];
-      const testData = WHATIF_TEST_DATA[key] || WHATIF_TEST_DATA[revKey] || {
-        probability: 0.30 + Math.random() * 0.5, genre: "experimental", mood: "exploratory"
-      };
-      pairs.push({
-        src: artists[i], dst: artists[j], ...testData,
-        tracks: generateWhatIfTracks(artists[i], artists[j], testData.probability)
-      });
+      pairKeys.push([artists[i], artists[j]]);
     }
   }
+
+  // Fetch all pairs in parallel
+  const results = await Promise.allSettled(
+    pairKeys.map(([src, dst]) =>
+      api('/api/v1/predict/connection', {
+        method: 'POST',
+        body: JSON.stringify({ src_artist: src, dst_artist: dst, limit: 3 }),
+      }).then(res => ({ src, dst, res }))
+    )
+  );
+
+  // Fallback genre/mood tags from test data or defaults
+  const MOOD_TAGS = ['melancholic', 'euphoric', 'atmospheric', 'dreamy', 'nocturnal', 'cosmic', 'energetic', 'introspective'];
+  const GENRE_TAGS = ['dark-pop', 'synth-funk', 'electro-pop', 'dream-pop', 'psychedelic-rnb', 'space-disco', 'indie-electronic', 'art-pop'];
+
+  const pairs = [];
+  results.forEach((result, idx) => {
+    const [src, dst] = pairKeys[idx];
+    const key = src + '+' + dst;
+    const revKey = dst + '+' + src;
+    const testFallback = WHATIF_TEST_DATA[key] || WHATIF_TEST_DATA[revKey];
+
+    if (result.status === 'fulfilled') {
+      const { res } = result.value;
+      const d = res.data;
+      const prob = d.probability;
+
+      // Use real tracks from API, but keep fake similar_real_tracks if not provided
+      let tracks = (d.tracks || []).map((t, ti) => ({
+        ...t,
+        similar_real_tracks: t.similar_real_tracks || [
+          { recording: "Track by " + src, artist: src, similarity: 0.85 + Math.random() * 0.1 },
+          { recording: "Track by " + dst, artist: dst, similarity: 0.78 + Math.random() * 0.1 },
+        ]
+      }));
+
+      // If no tracks returned, generate fallback tracks from API probability
+      if (!tracks.length) {
+        tracks = generateWhatIfTracks(src, dst, prob);
+      }
+
+      pairs.push({
+        src: d.src_name || src,
+        dst: d.dst_name || dst,
+        probability: prob,
+        genre: testFallback ? testFallback.genre : GENRE_TAGS[idx % GENRE_TAGS.length],
+        mood: testFallback ? testFallback.mood : MOOD_TAGS[idx % MOOD_TAGS.length],
+        tracks,
+        latency: res.meta ? res.meta.latency_ms : null,
+        model: res.meta ? res.meta.model_version : null,
+      });
+    } else {
+      // API call failed — fall back to test data or generated data
+      const fallback = testFallback || { probability: 0.30 + Math.random() * 0.5, genre: "experimental", mood: "exploratory" };
+      pairs.push({
+        src, dst, ...fallback,
+        tracks: generateWhatIfTracks(src, dst, fallback.probability),
+        error: result.reason?.message || 'API error',
+      });
+    }
+  });
+
   pairs.sort((a, b) => b.probability - a.probability);
 
-  // Network
+  // Network visualization
   $('#whatifNetwork').innerHTML = `
     <div class="whatif-network-grid">
       ${artists.map((a, i) => {
@@ -605,7 +664,7 @@ function runWhatIfPreview(artists) {
       </svg>
     </div>`;
 
-  // Pairs
+  // Pair cards
   $('#whatifPairs').innerHTML = pairs.map((p, idx) => `
     <div class="whatif-pair-card">
       <div class="whatif-pair-header" onclick="toggleWhatIfPair(${idx})">
@@ -618,6 +677,8 @@ function runWhatIfPreview(artists) {
           <span class="prob-badge ${probClass(p.probability)}">${(p.probability * 100).toFixed(1)}%</span>
           <span class="whatif-genre-tag">${p.genre}</span>
           <span class="whatif-mood-tag">${p.mood}</span>
+          ${p.latency ? `<span class="whatif-mood-tag">${p.latency.toFixed(0)}ms</span>` : ''}
+          ${p.error ? `<span class="whatif-mood-tag" style="color:#ef4444;">fallback</span>` : ''}
           <span class="expand-arrow" id="whatif-arrow-${idx}">&#9654;</span>
         </div>
       </div>
@@ -628,7 +689,7 @@ function runWhatIfPreview(artists) {
         </div>
         <div class="whatif-similar-section">
           <h4>Similar Real Tracks</h4>
-          ${p.tracks.map(t => t.similar_real_tracks.map(s => `
+          ${p.tracks.map(t => (t.similar_real_tracks || []).map(s => `
             <div class="similar-track-row">
               <span class="similar-track-name">${escHtml(s.recording)}</span>
               <span class="similar-track-artist">${escHtml(s.artist)}</span>
