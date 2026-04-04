@@ -56,6 +56,18 @@ func exists(path string) bool {
 	return err == nil
 }
 
+// mlServiceURL returns ML_SERVICE_URL with an http:// prefix guarantee.
+func mlServiceURL() string {
+	u := os.Getenv("ML_SERVICE_URL")
+	if u == "" {
+		return "http://127.0.0.1:8000"
+	}
+	if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
+		u = "http://" + u
+	}
+	return strings.TrimRight(u, "/")
+}
+
 // tokenAuth enforces the short-lived anti-scrape token on API routes.
 func tokenAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -102,10 +114,7 @@ func main() {
 
 	// Reverse proxy /api/v1/* to the ML service
 	// On Render, both services have separate URLs so the browser can't reach ML directly.
-	mlURL := os.Getenv("ML_SERVICE_URL")
-	if mlURL == "" {
-		mlURL = "http://127.0.0.1:8000"
-	}
+	mlURL := mlServiceURL()
 	mlTarget, _ := url.Parse(mlURL)
 	mlProxy := httputil.NewSingleHostReverseProxy(mlTarget)
 	mlProxy.Transport = &http.Transport{

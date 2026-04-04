@@ -135,10 +135,7 @@ func dailyPredictHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mlHost := os.Getenv("ML_SERVICE_URL")
-	if mlHost == "" {
-		mlHost = "http://127.0.0.1:8000"
-	}
+	mlHost := mlServiceURL()
 
 	mlURL := mlHost + "/interlude/daily-prediction"
 	fmt.Printf("[daily/predict] Calling ML service at %s with payload: %s\n", mlURL, string(mlPayload))
@@ -238,10 +235,7 @@ func dailyCreatePlaylistHandler(w http.ResponseWriter, r *http.Request) {
 		"num_similar_tracks": 10,
 	})
 
-	mlHost := os.Getenv("ML_SERVICE_URL")
-	if mlHost == "" {
-		mlHost = "http://127.0.0.1:8000"
-	}
+	mlHost := mlServiceURL()
 
 	mlReq, _ := http.NewRequest(http.MethodPost, mlHost+"/ml/synthetic-tracks-similarity", bytes.NewReader(mlPayload))
 	mlReq.Header.Set("Content-Type", "application/json")
@@ -477,10 +471,7 @@ func stripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
 // syncAPITier calls the Python ML service's internal upgrade-tier endpoint
 // to keep the api_users tier in sync with Stripe billing changes.
 func syncAPITier(email, tier string) {
-	mlHost := os.Getenv("ML_SERVICE_URL")
-	if mlHost == "" {
-		mlHost = "http://127.0.0.1:8000"
-	}
+	mlHost := mlServiceURL()
 
 	payload, _ := json.Marshal(map[string]string{"email": email, "tier": tier})
 	req, err := http.NewRequest(http.MethodPost, mlHost+"/api/v1/internal/upgrade-tier", bytes.NewReader(payload))

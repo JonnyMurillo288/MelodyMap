@@ -131,10 +131,7 @@ func HandleMachineLearningMainPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mlHost := os.Getenv("ML_SERVICE_URL")
-	if mlHost == "" {
-		mlHost = "http://127.0.0.1:8000"
-	}
+	mlHost := mlServiceURL()
 
 	mlURL := mlHost + "/ml/predict/artist-neighbors"
 	if getLink {
@@ -315,11 +312,7 @@ func SynthTrackLookupHandlerInterludeServer(w http.ResponseWriter, r *http.Reque
 	//
 
 	// 3. Call ML service (internal, trusted)
-	// Use ML_SERVICE_URL env var if set, otherwise default to localhost for local dev
-	mlHost := os.Getenv("ML_SERVICE_URL")
-	if mlHost == "" {
-		mlHost = "http://127.0.0.1:8000"
-	}
+	mlHost := mlServiceURL()
 
 	mlURL := mlHost + "/ml/predict/artist-neighbors"
 	// Different url to get link between neighbors or certain links
@@ -444,10 +437,7 @@ func createPlaylistFromSavedHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mlHost := os.Getenv("ML_SERVICE_URL")
-	if mlHost == "" {
-		mlHost = "http://127.0.0.1:8000"
-	}
+	mlHost := mlServiceURL()
 	fmt.Printf("[api/createplaylist] Calling ML service at %s/ml/synthetic-tracks-similarity with payload: %s", mlHost, string(mlPayload))
 
 	mlReq, err := http.NewRequest(http.MethodPost, mlHost+"/ml/synthetic-tracks-similarity", bytes.NewReader(mlPayload))

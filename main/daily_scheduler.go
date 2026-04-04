@@ -30,7 +30,7 @@ func initDailyPredictionsTable() error {
 	defer db.Close()
 
 	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS daily_predictions (
+		CREATE TABLE IF NOT EXISTS public.daily_predictions (
 			id SERIAL PRIMARY KEY,
 			date DATE NOT NULL,
 			genre TEXT NOT NULL,
@@ -122,7 +122,7 @@ func generateMissingPredictions() {
 	defer db.Close()
 
 	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM daily_predictions WHERE date = $1", today).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM public.daily_predictions WHERE date = $1", today).Scan(&count)
 	if err != nil {
 		log.Printf("[daily-scheduler] Failed to check existing predictions: %v", err)
 		// Table might not exist yet, that's ok
@@ -137,7 +137,7 @@ func generateMissingPredictions() {
 	log.Printf("[daily-scheduler] Found %d/%d genres for today, generating missing ones", count, len(dailyGenres))
 
 	// Find which genres are missing
-	rows, err := db.Query("SELECT genre FROM daily_predictions WHERE date = $1", today)
+	rows, err := db.Query("SELECT genre FROM public.daily_predictions WHERE date = $1", today)
 	if err != nil {
 		log.Printf("[daily-scheduler] Failed to query existing genres: %v", err)
 		generateAllPredictions(today)
@@ -169,10 +169,7 @@ func generateAllPredictions(date string) {
 
 // generateAndStorePrediction calls the ML service for one genre and stores the result.
 func generateAndStorePrediction(date, genre string) {
-	mlHost := os.Getenv("ML_SERVICE_URL")
-	if mlHost == "" {
-		mlHost = "http://127.0.0.1:8000"
-	}
+	mlHost := mlServiceURL()
 
 	payload, _ := json.Marshal(map[string]any{
 		"date":  date,
@@ -230,7 +227,7 @@ func generateAndStorePrediction(date, genre string) {
 	defer db.Close()
 
 	_, err = db.Exec(`
-		INSERT INTO daily_predictions (date, genre, src_artist_id, src_artist_name, response_json)
+		INSERT INTO public.daily_predictions (date, genre, src_artist_id, src_artist_name, response_json)
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (date, genre) DO UPDATE SET
 			src_artist_id = EXCLUDED.src_artist_id,
@@ -251,10 +248,7 @@ func generateAndStorePrediction(date, genre string) {
 // This runs the DB-first predict+generate pipeline and stores results in both
 // the shared prediction_connections/synthetic_tracks tables and daily_predictions.
 func triggerV1PopulateDaily() {
-	mlHost := os.Getenv("ML_SERVICE_URL")
-	if mlHost == "" {
-		mlHost = "http://127.0.0.1:8000"
-	}
+	mlHost := mlServiceURL()
 
 	log.Println("[daily-scheduler] Calling v1 populate-daily endpoint")
 
@@ -295,7 +289,7 @@ func getDailyPrediction(date, genre string) (json.RawMessage, error) {
 
 	var responseJSON string
 	err = db.QueryRow(
-		"SELECT response_json FROM daily_predictions WHERE date = $1 AND genre = $2",
+		"SELECT response_json FROM public.daily_predictions WHERE date = $1 AND genre = $2",
 		date, genre,
 	).Scan(&responseJSON)
 	if err != nil {
@@ -313,7 +307,7 @@ func getAllDailyPredictions(date string) (map[string]json.RawMessage, error) {
 	defer db.Close()
 
 	rows, err := db.Query(
-		"SELECT genre, response_json FROM daily_predictions WHERE date = $1",
+		"SELECT genre, response_json FROM public.daily_predictions WHERE date = $1",
 		date,
 	)
 	if err != nil {
