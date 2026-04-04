@@ -125,6 +125,25 @@ async def startup_preload():
     registry.preload_defaults()
     print("[startup] Model registry ready:", registry.list_available())
 
+    # Ensure all known model versions exist in predict_connection_model
+    from config.config import LOGIT_MODEL_ID, LOGIT_MODEL_DESC
+    try:
+        conn = get_pg_conn()
+        cur = conn.cursor()
+        cur.execute(
+            """INSERT INTO predict_connection_model (model_id, model_date, model_desc)
+               OVERRIDING SYSTEM VALUE
+               VALUES (%s, NOW(), %s)
+               ON CONFLICT (model_id) DO NOTHING""",
+            (LOGIT_MODEL_ID, LOGIT_MODEL_DESC.strip()),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"[startup] predict_connection_model: model_id={LOGIT_MODEL_ID} registered")
+    except Exception as e:
+        print(f"[startup] predict_connection_model registration skipped: {e}")
+
 # ============================
 # Request Schemas
 # ============================
