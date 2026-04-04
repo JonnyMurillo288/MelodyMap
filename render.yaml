@@ -89,6 +89,6 @@ services:
       - key: SPOTIFY_CLIENT_SECRET
         sync: false
       - key: DEFAULT_LOGIT_VERSION
-        value: v5
+        value: v7
       - key: DEFAULT_CVAE_VERSION
         value: v1

@@ -68,7 +68,7 @@ and discover new music connections.
 
 ## Model Versions
 All prediction endpoints accept an optional `model_version` parameter.
-Available versions: v1, v2, v3, v5 (default). See `GET /api/v1/models`.
+Available versions: v1, v2, v3, v5, v6, v7 (default). See `GET /api/v1/models`.
 """,
     docs_url="/docs",
     redoc_url="/redoc",
