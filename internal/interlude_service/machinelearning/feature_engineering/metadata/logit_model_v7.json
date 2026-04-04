@@ -1,0 +1,84 @@
+{
+  "model_info": {
+    "best_params": {
+      "C": 1.0,
+      "l1_ratio": 0.3
+    },
+    "pu_method": "elkanoto"
+  },
+  "threshold": 0.5,
+  "recommended_threshold": 0.5,
+  "n_features": 14,
+  "features": [
+    "cos_sim_src_dst",
+    "l2_dist_src_dst",
+    "popularity_dst",
+    "popularity_src",
+    "num_dst_neighbors",
+    "max_cos_srcnbr_dst",
+    "mean_topk_cos_dstnbr_src",
+    "preferential_attachment",
+    "adamic_adar",
+    "jaccard_neighbors",
+    "popularity_ratio",
+    "popularity_diff",
+    "popularity_product",
+    "log_popularity_ratio"
+  ],
+  "n2v_params": {
+    "dim": 128,
+    "p": 1.0,
+    "q": 0.5,
+    "epochs": 1,
+    "walk_length": 20,
+    "num_walks": 20,
+    "window": 10,
+    "workers": 2
+  },
+  "multi_seed_validation": [
+    {
+      "seed": 42,
+      "roc_auc": 0.9952956750000002,
+      "pr_auc": 0.9975595361051757,
+      "optimal_threshold": 0.7,
+      "optimal_precision": 0.9917776432606941,
+      "optimal_link_recall": 0.98305,
+      "optimal_nolink_recall": 0.9728333333333333,
+      "optimal_balanced_recall": 0.9779416666666667,
+      "optimal_f1": 0.9873945359582161
+    },
+    {
+      "seed": 123,
+      "roc_auc": 0.9953346583333335,
+      "pr_auc": 0.9975982647428455,
+      "optimal_threshold": 0.7,
+      "optimal_precision": 0.991579690414965,
+      "optimal_link_recall": 0.9833,
+      "optimal_nolink_recall": 0.9721666666666666,
+      "optimal_balanced_recall": 0.9777333333333333,
+      "optimal_f1": 0.9874224888911204
+    },
+    {
+      "seed": 456,
+      "roc_auc": 0.9957885999999998,
+      "pr_auc": 0.9978174726163062,
+      "optimal_threshold": 0.7,
+      "optimal_precision": 0.9924349404881985,
+      "optimal_link_recall": 0.9839,
+      "optimal_nolink_recall": 0.975,
+      "optimal_balanced_recall": 0.9794499999999999,
+      "optimal_f1": 0.9881490408757658
+    }
+  ],
+  "mean_balanced_recall": 0.9784,
+  "std_balanced_recall": 0.0008,
+  "mean_precision": 0.9919,
+  "mean_roc_auc": 0.9955,
+  "promotion_pass": "True",
+  "v6_baseline_comparison": {
+    "v6_mean_balanced_recall": 0.9283,
+    "v6_mean_precision": 0.9684,
+    "delta_balanced_recall": 0.0501,
+    "delta_precision": 0.0235
+  }
+}

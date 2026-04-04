@@ -90,7 +90,7 @@ NODE2VEC_WALK_LENGTH = 20
 NODE2VEC_WINDOW_SIZE = 10
 NODE2VEC_EPOCHS = 1
 NODE2VEC_P = 1.0
-NODE2VEC_Q = 1.0
+NODE2VEC_Q = 0.5
 NODE2VEC_WORKERS = 2
 
 # Genre Type Classification for similarity features
@@ -176,8 +176,8 @@ LINK_PREDICTION_FEATURES = [
 ]
 
 # LOGIT Model Version - If changing below or training new, update this to new version
-LOGIT_MODEL_VERSION = "v6"
-LOGIT_MODEL_ID = 6
+LOGIT_MODEL_VERSION = "v7"
+LOGIT_MODEL_ID = 7
 LOGIT_MODEL_DESC = """
 Logistic Regression with PUSCAR with the following X variables:
 TO_USE = {
