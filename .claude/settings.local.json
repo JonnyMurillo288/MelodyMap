@@ -81,7 +81,12 @@
       "Bash(ls -la /tmp/exp_*)",
       "Bash(ls -la /tmp/artist_*)",
       "Bash(python -c \"from utils.database import get_pg_conn; conn = get_pg_conn\\(\\); cur = conn.cursor\\(\\); cur.execute\\('SELECT COUNT\\(*\\) FROM artist_collab'\\); print\\('artist_collab rows:', cur.fetchone\\(\\)[0]\\); cur.execute\\('SELECT COUNT\\(*\\) FROM artist_embeddings_n2v'\\); print\\('n2v embeddings rows:', cur.fetchone\\(\\)[0]\\); conn.close\\(\\)\")",
-      "Bash(ls -lh /home/jonnym/Desktop/MelodyMap/internal/interlude_service/machinelearning/feature_engineering/metadata/logit_model_v7*)"
+      "Bash(ls -lh /home/jonnym/Desktop/MelodyMap/internal/interlude_service/machinelearning/feature_engineering/metadata/logit_model_v7*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(gh api:*)",
+      "Bash(curl -s http://localhost:8000/api/v1/health)",
+      "Bash(curl -s http://localhost:10000/api/v1/health)",
+      "Bash(python -c ':*)"
     ]
   },
   "enableAllProjectMcpServers": true,

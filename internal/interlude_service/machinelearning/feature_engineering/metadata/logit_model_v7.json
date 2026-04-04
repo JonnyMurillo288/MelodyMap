@@ -1,5 +1,7 @@
 {
   "model_version": "v7",
+  "experiment": "recalibration_final",
+  "hypothesis": "C=0.001 (100x stronger regularization than original C=1.0) compresses coefficients from max=12.8 to max~2.3, producing spread-out probabilities. Threshold set to achieve ~0.9 link recall with meaningful mid-range scores.",
   "n2v_params": {
     "dim": 128,
     "p": 1.0,
@@ -26,50 +28,94 @@
     "popularity_product",
     "log_popularity_ratio"
   ],
-  "threshold": 0.5,
+  "threshold": 0.75,
   "pu_method": "elkanoto",
+  "training_params": {
+    "C": 0.001,
+    "l1_ratio": 0.3,
+    "max_iter": 5000,
+    "hold_out_ratio": 0.2,
+    "num_true_samples": 100000,
+    "neg_ratio": 0.3,
+    "train_test_split": 0.2
+  },
   "mean_metrics": {
     "roc_auc": 1.0,
-    "precision": 0.9997,
+    "precision": 0.998,
     "link_recall": 1.0,
-    "nolink_recall": 0.9989,
-    "balanced_recall": 0.9995
+    "nolink_recall": 0.9934,
+    "balanced_recall": 0.9967
   },
   "seed_results": [
     {
       "seed": 42,
-      "roc_auc": 0.9999096708333333,
-      "train_s": 27.44135594367981,
-      "thr": 0.7,
-      "prec": 0.9996001599360256,
-      "lr": 1.0,
-      "nr": 0.9986666666666667,
-      "br": 0.9993333333333334,
-      "f1": 0.9998000399920016
+      "roc_auc": 0.999918475,
+      "train_s": 0.6283552646636963,
+      "thr": 0.75,
+      "prec": 0.9981036031540074,
+      "link_recall": 1.0,
+      "nolink_recall": 0.9936666666666667,
+      "balanced_recall": 0.9968333333333333,
+      "f1": 0.9990509016434387
     },
     {
       "seed": 123,
-      "roc_auc": 0.99999915,
-      "train_s": 25.86163330078125,
-      "thr": 0.7,
-      "prec": 0.99965012245714,
-      "lr": 1.0,
-      "nr": 0.9988333333333334,
-      "br": 0.9994166666666666,
-      "f1": 0.9998250306196416
+      "roc_auc": 0.9999769500000001,
+      "train_s": 0.6527290344238281,
+      "thr": 0.75,
+      "prec": 0.9979541939024998,
+      "link_recall": 1.0,
+      "nolink_recall": 0.9931666666666666,
+      "balanced_recall": 0.9965833333333334,
+      "f1": 0.998976049549212
     },
     {
       "seed": 456,
-      "roc_auc": 0.9999995416666666,
-      "train_s": 33.724841833114624,
-      "thr": 0.7,
-      "prec": 0.9998000299955007,
-      "lr": 0.99995,
-      "nr": 0.9993333333333333,
-      "br": 0.9996416666666667,
-      "f1": 0.999875009374297
+      "roc_auc": 0.999977,
+      "train_s": 0.6570909023284912,
+      "thr": 0.75,
+      "prec": 0.998003992015968,
+      "link_recall": 1.0,
+      "nolink_recall": 0.9933333333333333,
+      "balanced_recall": 0.9966666666666666,
+      "f1": 0.999000999000999
     }
   ],
+  "test_27_artist_stats": {
+    "total_pairs": 351,
+    "above_0.5": 118,
+    "above_0.3": 160,
+    "above_0.1": 243,
+    "prob_mean": 0.3921,
+    "prob_median": 0.2526,
+    "prob_max": 0.994,
+    "prob_min": 0.0051
+  },
+  "coefficients": {
+    "max_cos_srcnbr_dst": 2.25681,
+    "mean_topk_cos_dstnbr_src": 1.285784,
+    "jaccard_neighbors": 0.532802,
+    "adamic_adar": 0.257843,
+    "popularity_src": 0.056413,
+    "l2_dist_src_dst": 0.0,
+    "num_dst_neighbors": 0.0,
+    "popularity_dst": 0.0,
+    "cos_sim_src_dst": 0.0,
+    "preferential_attachment": 0.0,
+    "popularity_ratio": 0.0,
+    "popularity_diff": 0.0,
+    "popularity_product": 0.0,
+    "log_popularity_ratio": 0.0
+  },
+  "intercept": 2.454956,
+  "pu_c_constant": 0.979303,
+  "previous_model_diagnosis": {
+    "issue": "C=1.0 produced max coef=12.8 and intercept=3.75, making sigmoid binary. Only 2/351 test pairs scored above 0.5. PU c=0.9994 (no correction).",
+    "previous_C": 1.0,
+    "previous_l1_ratio": 0.3,
+    "previous_coef_max": 12.81,
+    "previous_pu_c": 0.9994
+  },
   "v6_baseline": {
     "balanced_recall": 0.9283,
     "precision": 0.9684,
