@@ -12,6 +12,7 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException, Request
 
 from models.model_registry import registry, LOGIT_VERSION_TO_ID
+from models.link_predictor import LinkPredictor
 from schemas.v1 import (
     APIResponse, ResponseMeta, ErrorResponse, APIError,
     ConnectionRequest, ConnectionData,
@@ -288,6 +289,7 @@ async def predict_connection(req: ConnectionRequest, request: Request):
                 src_name=src_name,
                 dst_name=dst_name,
                 probability=prob,
+                connection_potential=int(LinkPredictor.connection_potential_score(np.array([prob]))[0]),
                 tracks=tracks_with_features,
             ),
             meta=_build_meta(version, (time.time() - start) * 1000, True, request),
@@ -332,6 +334,7 @@ async def predict_connection(req: ConnectionRequest, request: Request):
             src_name=src_name,
             dst_name=dst_name,
             probability=prob,
+            connection_potential=int(LinkPredictor.connection_potential_score(np.array([prob]))[0]),
             tracks=tracks_with_features,
             features_used=dict(zip(feats, X[0].tolist())),
         ),

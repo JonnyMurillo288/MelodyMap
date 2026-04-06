@@ -48,6 +48,7 @@ class ConnectionData(BaseModel):
     src_name: str = ""
     dst_name: str = ""
     probability: float
+    connection_potential: int = 0  # 0-100 intuitive score for UX display
     tracks: list = []
     features_used: dict = {}
 

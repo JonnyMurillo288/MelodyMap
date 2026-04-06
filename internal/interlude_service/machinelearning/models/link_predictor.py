@@ -213,6 +213,37 @@ class LinkPredictor:
         proba = self.predict_proba(X)
         return (proba >= self.threshold).astype(int)
 
+    @staticmethod
+    def connection_potential_score(proba: np.ndarray, midpoint: float = 0.3, steepness: float = 6.0) -> np.ndarray:
+        """Transform raw probabilities into an intuitive 0-100 'Connection Potential' score.
+
+        Uses a shifted sigmoid to stretch the mid-range (0.1-0.7) where most
+        exploration-relevant predictions land, so users see meaningful variation
+        instead of a cluster of low numbers.
+
+        Parameters
+        ----------
+        proba : array-like
+            Raw model probabilities in [0, 1].
+        midpoint : float
+            Raw probability that maps to score 50.
+        steepness : float
+            How sharply the curve transitions (higher = steeper S-curve).
+
+        Returns
+        -------
+        np.ndarray
+            Scores in [0, 100], rounded to integers.
+        """
+        proba = np.asarray(proba, dtype=float)
+        # Shifted sigmoid: maps midpoint -> 0.5, then scale to 0-100
+        raw_score = 1.0 / (1.0 + np.exp(-steepness * (proba - midpoint)))
+        # Normalize so 0.0 -> 0 and 1.0 -> 100
+        score_at_zero = 1.0 / (1.0 + np.exp(-steepness * (0.0 - midpoint)))
+        score_at_one = 1.0 / (1.0 + np.exp(-steepness * (1.0 - midpoint)))
+        normalized = (raw_score - score_at_zero) / (score_at_one - score_at_zero)
+        return np.clip(np.round(normalized * 100), 0, 100).astype(int)
+
     def evaluate(self, X, y):
         if hasattr(X, 'values'):
             X = X.values

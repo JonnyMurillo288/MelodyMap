@@ -35,6 +35,7 @@ LOGIT_REGISTRY = {
     "v5": MODEL_DIR / "logit_model_v5.joblib",
     "v6": MODEL_DIR / "logit_model_v6.joblib",
     "v7": MODEL_DIR / "logit_model_v7.joblib",
+    "v8": MODEL_DIR / "logit_model_v8.joblib",
 }
 
 CVAE_REGISTRY = {
@@ -46,7 +47,7 @@ DEFAULT_CVAE = os.getenv("DEFAULT_CVAE_VERSION", "v1")
 
 # Map version strings to the integer model_id stored in prediction_connections.model_id
 # This bridges the registry's string versions with the DB's integer foreign key.
-LOGIT_VERSION_TO_ID = {"v1": 1, "v2": 2, "v3": 3, "v5": 5, "v6": 6, "v7": 7}
+LOGIT_VERSION_TO_ID = {"v1": 1, "v2": 2, "v3": 3, "v5": 5, "v6": 6, "v7": 7, "v8": 8}
 
 
 class ModelCache:

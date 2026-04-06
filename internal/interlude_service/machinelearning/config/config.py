@@ -132,7 +132,13 @@ FEATURE_GROUPS = {
         "preferential_attachment",
     ],
     "genre_similarity": [
-        # Genre similarity features will be added here dynamically
+        'similarity_prop_genre_rosamerica_dan',
+        'similarity_prop_genre_rosamerica_hip',
+        'similarity_prop_genre_rosamerica_jaz',
+        'similarity_prop_genre_rosamerica_pop',
+        'similarity_prop_genre_rosamerica_rhy',
+        'similarity_prop_genre_rosamerica_roc',
+        'similarity_prop_genre_rosamerica_spe',
     ]
 }
 
@@ -173,27 +179,25 @@ LINK_PREDICTION_FEATURES = [
     'popularity_diff',
     'popularity_product',
     'log_popularity_ratio',
+    # v8 genre similarity features (rosamerica classification)
+    'similarity_prop_genre_rosamerica_dan',
+    'similarity_prop_genre_rosamerica_hip',
+    'similarity_prop_genre_rosamerica_jaz',
+    'similarity_prop_genre_rosamerica_pop',
+    'similarity_prop_genre_rosamerica_rhy',
+    'similarity_prop_genre_rosamerica_roc',
+    'similarity_prop_genre_rosamerica_spe',
 ]
 
 # LOGIT Model Version - If changing below or training new, update this to new version
-LOGIT_MODEL_VERSION = "v6"
-LOGIT_MODEL_ID = 6
+LOGIT_MODEL_VERSION = "v8"
+LOGIT_MODEL_ID = 8
 LOGIT_MODEL_DESC = """
-Logistic Regression with PUSCAR with the following X variables:
-TO_USE = {
-    "geometry": ["cos_sim_src_dst","dot_src_dst","l2_dist_src_dst"],
-    "popularity": ["popularity_dst","popularity_src"],
-    "one_hop": ["num_dst_neighbors","max_cos_srcnbr_dst","mean_topk_cos_dstnbr_src"],
-    "two_hop": ["preferential_attachment","adamic_adar","jaccard_neighbors"],
-    "genre_similarity: ['aitchison_score_genre'],
-        "genre_similarity": ['similarity_prop_genre_rosamerica_dan',
-       'similarity_prop_genre_rosamerica_hip',
-       'similarity_prop_genre_rosamerica_jaz',
-       'similarity_prop_genre_rosamerica_pop',
-       'similarity_prop_genre_rosamerica_rhy',
-       'similarity_prop_genre_rosamerica_roc',
-       'similarity_prop_genre_rosamerica_spe']
-}
+v8 Link Predictor — exploration-friendly.
+Relaxed regularization (C=0.01 range), lowered threshold (0.35),
+genre similarity features, and score transformation for intuitive UX.
+Changes vs v7: reactivated geometry/popularity features, added genre signal,
+softer threshold for discovering potential connections.
 """
 
 LOGIT_NUM_PREDICTIONS = 4_000_000
@@ -208,9 +212,9 @@ ELASTIC_NET_MAX_ITER = 20000
 
 # Logistic Regression Parameters
 LOGIT_L1_RATIOS = [0.5, 0.8, 1.0]
-LOGIT_CS_MIN = 0.1
-LOGIT_CS_MAX = 1
+LOGIT_CS_MIN = -2     # 0.01 — relaxed regularization for v8 (exploration-friendly)
+LOGIT_CS_MAX = 0      # 1.0
 LOGIT_CS_NUM = 10
 LOGIT_CV = 10
 LOGIT_MAX_ITER = 3000
-LOGIT_THRESHOLD = 0.75
+LOGIT_THRESHOLD = 0.50  # v8: exploration-friendly compromise (balanced recall 0.819, precision 0.909)
