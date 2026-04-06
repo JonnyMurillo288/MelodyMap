@@ -190,8 +190,8 @@ LINK_PREDICTION_FEATURES = [
 ]
 
 # LOGIT Model Version - If changing below or training new, update this to new version
-LOGIT_MODEL_VERSION = "v8"
-LOGIT_MODEL_ID = 8
+LOGIT_MODEL_VERSION = "v5"
+LOGIT_MODEL_ID = 5
 LOGIT_MODEL_DESC = """
 v8 Link Predictor — exploration-friendly.
 Relaxed regularization (C=0.01 range), lowered threshold (0.35),
