@@ -82,11 +82,6 @@
               <span class="endpoint-path">/api/v1/explore/synthetic-track-features</span>
               <span class="endpoint-desc">Synthetic tracks with popularity, instrumentation, and lyric analysis</span>
             </div>
-            <div class="endpoint-item">
-              <span class="endpoint-method post">POST</span>
-              <span class="endpoint-path">/api/v1/generate/tracks</span>
-              <span class="endpoint-desc">Generate synthetic track features via CVAE</span>
-            </div>
           </div>
           <div class="endpoint-formats">
             <h4>Input / Output Formats</h4>
@@ -99,8 +94,11 @@
       </div>
 
       <!-- Card 3: Predict a Collaboration (Demo) -->
-      <div class="try-it-banner">Try It Live</div>
-      <div class="card collapsible">
+      <div class="try-it-banner">
+        Try It Live
+        <a href="#tryItTarget" class="scroll-down-arrow"><span></span></a>
+      </div>
+      <div class="card collapsible" id="tryItTarget">
         <h2 class="card-title collapsible-toggle">Predict a Collaboration</h2>
         <div class="collapsible-body">
           <p class="card-subtitle">Enter two artists to predict their collaboration probability</p>

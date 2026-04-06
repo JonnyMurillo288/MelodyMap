@@ -700,6 +700,29 @@ main {
   50% { opacity: 1; text-shadow: 0 0 12px rgba(96, 165, 250, 0.5); }
 }
 
+/* Scroll-down arrow on Try It banner */
+.scroll-down-arrow {
+  display: block;
+  margin: 0.5rem auto 0;
+  width: 24px;
+  height: 24px;
+  text-decoration: none;
+}
+.scroll-down-arrow span {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-bottom: 3px solid var(--accent);
+  border-right: 3px solid var(--accent);
+  transform: rotate(45deg);
+  animation: scroll-bounce 2s infinite;
+}
+@keyframes scroll-bounce {
+  0%   { opacity: 0; transform: rotate(45deg) translate(-6px, -6px); }
+  50%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(45deg) translate(6px, 6px); }
+}
+
 /* ---- Collapsible Cards ---- */
 .collapsible {
   position: relative;
