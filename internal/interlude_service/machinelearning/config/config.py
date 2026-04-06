@@ -176,8 +176,8 @@ LINK_PREDICTION_FEATURES = [
 ]
 
 # LOGIT Model Version - If changing below or training new, update this to new version
-LOGIT_MODEL_VERSION = "v7"
-LOGIT_MODEL_ID = 7
+LOGIT_MODEL_VERSION = "v6"
+LOGIT_MODEL_ID = 6
 LOGIT_MODEL_DESC = """
 Logistic Regression with PUSCAR with the following X variables:
 TO_USE = {

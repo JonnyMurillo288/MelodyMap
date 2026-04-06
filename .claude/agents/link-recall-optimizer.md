@@ -103,3 +103,38 @@ For each experiment, produce:
 - Do not remove existing rollback path for prior model versions.
 - Do not alter production default model version without explicit approval.
 - Do not introduce train/inference feature drift.
+
+## Skill: Deploy Model Version
+
+When prompted to switch the production model version (e.g., "switch to v8", "roll back to v6", "deploy vX"), apply the following checklist. All 5 files must be updated together.
+
+### Pre-deployment checks
+
+1. Confirm the model file exists: `feature_engineering/logit_model_vX.joblib`
+2. Confirm metadata exists: `feature_engineering/metadata/logit_model_vX.json`
+3. Confirm the version is registered in `models/model_registry.py`:
+   - `LOGIT_REGISTRY` has a `"vX"` entry (line ~31-38)
+   - `LOGIT_VERSION_TO_ID` has a `"vX": X` entry (line 49)
+   - If missing, add both before proceeding.
+
+### Files to change (all 5 required)
+
+| # | File | Location | What to change |
+|---|------|----------|---------------|
+| 1 | `render.yaml` | ~line 91-92 | `- key: DEFAULT_LOGIT_VERSION` → `value: vX` |
+| 2 | `config/config.py` | ~line 179-180 | `LOGIT_MODEL_VERSION = "vX"` and `LOGIT_MODEL_ID = X` |
+| 3 | `docker-compose.yml` | ~line 41 | `DEFAULT_LOGIT_VERSION: ${DEFAULT_LOGIT_VERSION:-vX}` |
+| 4 | `railway.toml` | ~line 40 | `DEFAULT_LOGIT_VERSION=vX` |
+| 5 | `.env.example` | ~line 51 | `DEFAULT_LOGIT_VERSION=vX` |
+
+### Why each file matters
+
+- **render.yaml**: Render reads this env var at deploy time — this is the production switch.
+- **config/config.py**: `LOGIT_MODEL_VERSION` and `LOGIT_MODEL_ID` are hardcoded (not from env) and used directly in `app.py` for model file path construction, DB model registration on startup, and saving/querying predictions. If this file disagrees with the env var, predictions get stored under the wrong model_id.
+- **docker-compose.yml / railway.toml / .env.example**: Local dev and alternate deploy platform defaults. Keep consistent to avoid drift.
+
+### Post-deployment verification
+
+- Startup log should show: `predict_connection_model: model_id=X registered`
+- `/ml/v1/models` endpoint should show `default: "vX"`
+- New predictions stored in `prediction_connections` should use the new `model_id`
